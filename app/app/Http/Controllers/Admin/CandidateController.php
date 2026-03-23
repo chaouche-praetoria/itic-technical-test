@@ -79,16 +79,27 @@ class CandidateController extends Controller
 
     public function generateLink(Request $request, Candidate $candidate)
     {
-        $request->validate(['test_template_id' => 'required|exists:test_templates,id']);
+        $request->validate([
+            'test_template_id' => 'required|exists:test_templates,id',
+            'send_email' => 'boolean'
+        ]);
 
         $template = TestTemplate::findOrFail($request->test_template_id);
 
         $session = $this->generator->generateSession($candidate, $template);
 
+        $successMessage = "Lien généré: " . route('test.start', $session->token);
+
+        if ($request->send_email) {
+            $session->load(['candidate', 'template.domain']);
+            Mail::to($session->candidate->email)->send(new TestInvitationMail($session));
+            $successMessage .= " et envoyé par email à " . $candidate->first_name;
+        }
+
         $this->webhook->dispatch($session, 'test.link_generated');
 
         return back()->with([
-            'success' => "Lien généré: " . route('test.start', $session->token),
+            'success' => $successMessage,
             'last_session_id' => $session->id
         ]);
     }

@@ -42,7 +42,16 @@ class TestController extends Controller
         }
 
         if ($session->status === 'pending') {
-            $session->update(['status' => 'in_progress', 'started_at' => now(), 'ip_address' => request()->ip()]);
+            return Inertia::render('Test/Welcome', [
+                'session' => [
+                    'id' => $session->id,
+                    'token' => $session->token,
+                    'template_name' => $session->template->name,
+                    'domain_name' => $session->template->domain->name,
+                    'duration_minutes' => $session->template->duration_minutes,
+                ],
+                'candidate' => ['name' => $session->candidate->full_name],
+            ]);
         }
 
         $questions = $session->sessionQuestions->map(fn($sq) => [
@@ -69,6 +78,21 @@ class TestController extends Controller
             'candidate' => ['name' => $session->candidate->full_name],
             'questions' => $questions,
         ]);
+    }
+
+    public function begin(string $token)
+    {
+        $session = TestSession::where('token', $token)
+            ->where('status', 'pending')
+            ->firstOrFail();
+
+        $session->update([
+            'status' => 'in_progress',
+            'started_at' => now(),
+            'ip_address' => request()->ip()
+        ]);
+
+        return redirect()->route('test.start', $token);
     }
 
     public function saveAnswer(Request $request, string $token)

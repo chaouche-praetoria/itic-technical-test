@@ -25,7 +25,10 @@ watch(search, (val) => {
 
 function submit() {
     form.post(route('admin.candidates.store'), {
-        onSuccess: () => { showModal.value = false; form.reset(); },
+        onSuccess: () => { 
+            showModal.value = false; 
+            form.reset(); 
+        },
     });
 }
 </script>
@@ -34,94 +37,143 @@ function submit() {
     <Head title="Candidats" />
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <h2 class="text-xl font-semibold text-gray-800">Candidats</h2>
-                <button @click="showModal = true" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm">
-                    + Nouveau candidat
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Candidats</h2>
+                    <p class="text-sm text-slate-500 font-medium">Gérez les profils et suivez les invitations de tests.</p>
+                </div>
+                <button @click="showModal = true" 
+                    class="bg-slate-900 text-white px-5 py-2.5 rounded-xl hover:bg-slate-800 font-bold text-sm shadow-xl shadow-slate-200 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 w-fit">
+                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                    Nouveau candidat
                 </button>
             </div>
         </template>
 
-        <div class="py-8">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-4">
-                <div class="bg-white rounded-xl shadow p-4">
-                    <div class="relative max-w-sm">
-                        <input v-model="search" type="text" placeholder="Rechercher par nom ou email..."
-                            class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full pr-8" />
-                        <span class="absolute right-2.5 top-1/2 -translate-y-1/2">
-                            <svg v-if="searching" class="w-4 h-4 text-indigo-400 animate-spin" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z"/>
-                            </svg>
-                            <svg v-else-if="search" @click="search = ''" class="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
+        <div class="py-10 animate-reveal">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
+                <!-- Search Section -->
+                <div class="premium-card p-6 glass-card">
+                    <div class="relative max-w-md">
+                        <input v-model="search" type="text" placeholder="Rechercher un candidat..."
+                            class="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all pl-11 font-medium text-slate-700" />
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                            <svg v-if="searching" class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+                            <svg v-else class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         </span>
+                        <button v-if="search && !searching" @click="search = ''" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors">
+                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
                     </div>
                 </div>
 
-                <div class="bg-white rounded-xl shadow overflow-hidden">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
-                            <tr>
-                                <th class="px-6 py-3 text-left">Nom</th>
-                                <th class="px-6 py-3 text-left">Email</th>
-                                <th class="px-6 py-3 text-left">Téléphone</th>
-                                <th class="px-6 py-3 text-left">Sessions</th>
-                                <th class="px-6 py-3 text-left">Inscrit le</th>
-                                <th class="px-6 py-3 text-left">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            <tr v-if="candidates.data.length === 0">
-                                <td colspan="6" class="px-6 py-8 text-center text-gray-400">Aucun candidat</td>
-                            </tr>
-                            <tr v-for="c in candidates.data" :key="c.id" class="hover:bg-gray-50">
-                                <td class="px-6 py-4 font-medium text-gray-800">{{ c.first_name }} {{ c.last_name }}</td>
-                                <td class="px-6 py-4 text-gray-600">{{ c.email }}</td>
-                                <td class="px-6 py-4 text-gray-600">{{ c.phone || '—' }}</td>
-                                <td class="px-6 py-4 text-gray-600">{{ c.test_sessions_count }}</td>
-                                <td class="px-6 py-4 text-gray-500 text-xs">{{ c.created_at }}</td>
-                                <td class="px-6 py-4">
-                                    <Link :href="route('admin.candidates.show', c.id)" class="text-indigo-600 hover:underline text-xs">Voir →</Link>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- Table Section -->
+                <div class="premium-card overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50/50 text-slate-400 text-xs uppercase tracking-widest font-bold">
+                                    <th class="px-8 py-5 text-left border-b border-slate-100 uppercase">Candidat</th>
+                                    <th class="px-8 py-5 text-left border-b border-slate-100 uppercase">Contact</th>
+                                    <th class="px-8 py-5 text-center border-b border-slate-100 uppercase">Sessions</th>
+                                    <th class="px-8 py-5 text-left border-b border-slate-100 uppercase">Inscrit le</th>
+                                    <th class="px-8 py-5 text-right border-b border-slate-100 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                <tr v-if="candidates.data.length === 0">
+                                    <td colspan="5" class="px-8 py-20 text-center text-slate-300 font-medium italic">Aucun candidat trouvé</td>
+                                </tr>
+                                <tr v-for="c in candidates.data" :key="c.id" class="hover:bg-slate-50/80 transition-all group">
+                                    <td class="px-8 py-6">
+                                        <div class="flex items-center gap-4">
+                                            <div class="size-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 font-bold group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-all">
+                                                {{ c.first_name.charAt(0) }}{{ c.last_name.charAt(0) }}
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <span class="font-bold text-slate-800 text-base mb-0.5 group-hover:text-indigo-600 transition-colors">{{ c.first_name }} {{ c.last_name }}</span>
+                                                <span class="text-xs text-slate-400 font-medium">{{ c.email }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <div class="flex flex-col text-slate-600 font-medium">
+                                            <span>{{ c.phone || '—' }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6 text-center">
+                                        <div class="inline-flex size-10 rounded-xl bg-slate-50 text-slate-500 items-center justify-center font-bold border border-slate-100">
+                                            {{ c.test_sessions_count }}
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6 text-slate-400 font-medium text-xs">
+                                        {{ c.created_at }}
+                                    </td>
+                                    <td class="px-8 py-6 text-right">
+                                        <Link :href="route('admin.candidates.show', c.id)" 
+                                            class="inline-flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+                                            Détails
+                                            <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                        </Link>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
 
+    </AuthenticatedLayout>
+
+    <Teleport to="body">
         <!-- New Candidate Modal -->
-        <div v-if="showModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-xl p-6 w-full max-w-md">
-                <h3 class="text-lg font-semibold mb-4">Nouveau candidat</h3>
-                <form @submit.prevent="submit" class="space-y-4">
+        <div v-if="showModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl animate-reveal border border-slate-100">
+                <div class="mb-6">
+                    <h3 class="text-2xl font-bold text-slate-900 mb-1">Nouveau candidat</h3>
+                    <p class="text-sm text-slate-500 font-medium">Inscrivez un nouveau talent sur la plateforme.</p>
+                </div>
+                <form @submit.prevent="submit" class="space-y-6">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
-                            <input v-model="form.first_name" type="text" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Prénom</label>
+                            <input v-model="form.first_name" type="text" required
+                                class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"
+                                placeholder="Jean" />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
-                            <input v-model="form.last_name" type="text" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Nom</label>
+                            <input v-model="form.last_name" type="text" required
+                                class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"
+                                placeholder="Dupont" />
                         </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <input v-model="form.email" type="email" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-                        <p v-if="form.errors.email" class="text-red-500 text-xs mt-1">{{ form.errors.email }}</p>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Email professionnel</label>
+                        <input v-model="form.email" type="email" required
+                            class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"
+                            placeholder="jean.dupont@exemple.com" />
+                        <p v-if="form.errors.email" class="text-rose-500 text-xs mt-2 ml-1 font-bold">{{ form.errors.email }}</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
-                        <input v-model="form.phone" type="tel" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Téléphone (Optionnel)</label>
+                        <input v-model="form.phone" type="tel"
+                            class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"
+                            placeholder="+33 6 00 00 00 00" />
                     </div>
-                    <div class="flex gap-3 justify-end">
-                        <button type="button" @click="showModal = false" class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg">Annuler</button>
-                        <button type="submit" :disabled="form.processing" class="px-4 py-2 text-sm text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50">Créer</button>
+                    <div class="flex gap-4 pt-4">
+                        <button type="button" @click="showModal = false"
+                            class="flex-1 px-6 py-4 text-sm font-bold text-slate-600 bg-slate-100 rounded-2xl hover:bg-slate-200 transition-all active:scale-[0.98]">
+                            Annuler
+                        </button>
+                        <button type="submit" :disabled="form.processing"
+                            class="flex-1 px-6 py-4 text-sm font-bold text-white bg-slate-900 rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 disabled:opacity-50 active:scale-[0.98]">
+                            Enregistrer
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
-    </AuthenticatedLayout>
+    </Teleport>
 </template>

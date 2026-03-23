@@ -15,6 +15,7 @@ Route::get('/', fn() => redirect()->route('admin.dashboard'));
 // Candidate test routes (public, token-based)
 Route::prefix('test')->name('test.')->group(function () {
     Route::get('/{token}', [TestController::class, 'start'])->name('start');
+    Route::post('/{token}/start', [TestController::class, 'begin'])->name('begin');
     Route::post('/{token}/answer', [TestController::class, 'saveAnswer'])->name('answer');
     Route::post('/{token}/execute', [TestController::class, 'executeCode'])->name('execute');
     Route::post('/{token}/submit', [TestController::class, 'submit'])->name('submit');

@@ -24,10 +24,16 @@ mkdir -p storage/framework/{sessions,views,cache/data}
 mkdir -p storage/logs
 chmod -R 775 storage/framework bootstrap/cache 2>/dev/null || true
 
-echo "==> Caching config & routes..."
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache 2>/dev/null || echo "    view:cache skipped (will compile on demand)"
+if [ "$APP_ENV" != "local" ]; then
+  echo "==> Caching config & routes for production..."
+  php artisan config:cache
+  php artisan route:cache
+  php artisan view:cache 2>/dev/null || echo "    view:cache skipped (will compile on demand)"
+else
+  echo "==> Dev mode: skipping cache..."
+  php artisan config:clear
+  php artisan route:clear
+fi
 
 echo "==> Starting PHP-FPM..."
 exec php-fpm

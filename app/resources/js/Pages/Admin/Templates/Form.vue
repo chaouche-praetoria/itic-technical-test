@@ -49,7 +49,12 @@ function submit() {
     <Head :title="template ? 'Modifier le template' : 'Nouveau template'" />
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold text-gray-800">{{ template ? 'Modifier' : 'Nouveau' }} template</h2>
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900 tracking-tight">{{ template ? 'Modifier' : 'Nouveau' }} template</h2>
+                    <p class="text-sm text-slate-500 font-medium">Définissez les règles de génération automatique du test.</p>
+                </div>
+            </div>
         </template>
         <div class="py-8">
             <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
@@ -151,10 +156,10 @@ function submit() {
                         </div>
                     </div>
 
-                    <div class="flex gap-3 justify-end pt-4 border-t border-gray-100">
-                        <a :href="route('admin.templates.index')" class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">Annuler</a>
-                        <button type="submit" :disabled="form.processing" class="px-6 py-2 text-sm text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50">
-                            {{ template ? 'Mettre à jour' : 'Créer le template' }}
+                    <div class="flex gap-4 justify-end pt-8 border-t border-slate-100">
+                        <Link :href="route('admin.templates.index')" class="px-5 py-2.5 text-sm font-bold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all active:scale-[0.98]">Annuler</Link>
+                        <button type="submit" :disabled="form.processing" class="px-8 py-2.5 text-sm font-bold text-white bg-slate-900 rounded-xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 disabled:opacity-50 active:scale-[0.98]">
+                            {{ template ? 'Enregistrer les modifications' : 'Créer le template' }}
                         </button>
                     </div>
                 </form>

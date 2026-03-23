@@ -1,13 +1,16 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const props = defineProps({ candidate: Object, sessions: Array, templates: Array });
 
 const showLinkModal = ref(false);
 const generatedLink = ref('');
-const linkForm = useForm({ test_template_id: '' });
+const linkForm = useForm({ 
+    test_template_id: '',
+    send_email: true
+});
 
 function generateLink() {
     linkForm.post(route('admin.candidates.generate-link', props.candidate.id), {
@@ -21,20 +24,26 @@ function generateLink() {
 }
 
 const statusClass = (status) => ({
-    pending: 'bg-yellow-100 text-yellow-800',
-    in_progress: 'bg-blue-100 text-blue-800',
-    completed: 'bg-green-100 text-green-800',
-    expired: 'bg-red-100 text-red-800',
-}[status] || 'bg-gray-100 text-gray-800');
+    pending: 'bg-amber-50 text-amber-600 border-amber-100',
+    in_progress: 'bg-blue-50 text-blue-600 border-blue-100',
+    completed: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+    expired: 'bg-rose-50 text-rose-600 border-rose-100',
+}[status] || 'bg-slate-50 text-slate-600 border-slate-100');
+
+const statusLabel = (status) => ({
+    pending: 'En attente',
+    in_progress: 'En cours',
+    completed: 'Terminé',
+    expired: 'Expiré',
+}[status] || status);
 
 function copyLink() {
     navigator.clipboard.writeText(generatedLink.value);
-    alert('Lien copié !');
 }
 
 function sendEmail(sessionId) {
     router.post(route('admin.sessions.send-email', sessionId), {}, {
-        onSuccess: () => alert('Email envoyé !'),
+        onSuccess: () => alert('Email envoyé avec succès !'),
     });
 }
 </script>
@@ -43,130 +52,182 @@ function sendEmail(sessionId) {
     <Head :title="`Candidat: ${candidate.first_name} ${candidate.last_name}`" />
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex justify-between items-center">
-                <div>
-                    <h2 class="text-xl font-semibold text-gray-800">{{ candidate.first_name }} {{ candidate.last_name }}</h2>
-                    <p class="text-sm text-gray-500">{{ candidate.email }}</p>
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
+                <div class="flex items-center gap-4">
+                    <div class="size-14 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-bold text-xl shadow-xl shadow-slate-200">
+                        {{ candidate.first_name[0] }}{{ candidate.last_name[0] }}
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">{{ candidate.first_name }} {{ candidate.last_name }} <span class="text-indigo-500 font-black ml-2 text-xs uppercase bg-indigo-50 px-2 py-1 rounded-md tracking-widest border border-indigo-100/50">V1.1</span></h2>
+                        <div class="flex items-center gap-3 mt-1">
+                            <span class="text-sm text-slate-500 font-medium flex items-center gap-1">
+                                <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                {{ candidate.email }}
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <button @click="showLinkModal = true" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm">
-                    Générer un lien de test
+                <button @click="showLinkModal = true" 
+                    class="bg-slate-900 text-white px-5 py-2.5 rounded-xl hover:bg-slate-800 font-bold text-sm shadow-xl shadow-slate-200 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 w-fit">
+                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                    Nouveau test
                 </button>
             </div>
         </template>
 
-        <div class="py-8">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
+        <div class="py-10 animate-reveal">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
 
-                <!-- Generated Link -->
-                <div v-if="generatedLink" class="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center justify-between">
-                    <div class="flex-1">
-                        <p class="text-sm font-bold text-green-800 flex items-center gap-2">
-                             <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                             Lien généré avec succès !
-                        </p>
-                        <p class="text-xs text-green-700 mt-1 font-mono bg-white/50 px-2 py-1 rounded border border-green-100 break-all select-all">{{ generatedLink }}</p>
+                <!-- Generated Link Alert -->
+                <div v-if="generatedLink" class="bg-emerald-50 border border-emerald-100 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm shadow-emerald-50 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10">
+                        <svg class="size-24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
                     </div>
-                    <div class="flex gap-2 ml-4 self-end sm:self-center">
-                        <button @click="copyLink" class="text-xs bg-slate-800 text-white px-3 py-2 rounded-lg font-bold hover:bg-slate-900 transition-all flex items-center gap-2">
-                             <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                             Copier
-                        </button>
-                        <button v-if="$page.props.flash?.last_session_id" @click="sendEmail($page.props.flash.last_session_id)" class="text-xs bg-indigo-600 text-white px-3 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100 flex items-center gap-2">
-                             <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                             Envoyer par mail
+                    <div class="flex-1 relative z-10 w-full">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="size-6 rounded-full bg-emerald-500 text-white flex items-center justify-center">
+                                <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                            <span class="text-sm font-bold text-emerald-800 uppercase tracking-wider">Le lien de test est prêt !</span>
+                        </div>
+                        <div class="bg-white/80 backdrop-blur border border-emerald-100 rounded-xl px-4 py-3 flex items-center gap-3">
+                            <code class="text-xs text-emerald-700 font-mono break-all line-clamp-1 flex-1 select-all">{{ generatedLink }}</code>
+                            <button @click="copyLink" class="shrink-0 text-[10px] font-bold text-slate-500 hover:text-slate-900 uppercase tracking-widest flex items-center gap-1.5 transition-all">
+                                <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                Copier
+                            </button>
+                        </div>
+                    </div>
+                    <div class="shrink-0 w-full md:w-auto relative z-10">
+                        <button v-if="$page.props.flash?.last_session_id" @click="sendEmail($page.props.flash.last_session_id)" 
+                            class="w-full bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 flex items-center justify-center gap-2 group">
+                            <svg class="size-4 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                            Envoyer par email
                         </button>
                     </div>
                 </div>
 
-                <!-- Candidate Info -->
-                <div class="bg-white rounded-xl shadow p-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div>
-                        <p class="text-xs text-gray-500">Prénom</p>
-                        <p class="font-medium">{{ candidate.first_name }}</p>
+                <!-- Sessions List -->
+                <div class="premium-card overflow-hidden">
+                    <div class="px-8 py-6 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
+                        <h3 class="text-lg font-bold text-slate-800">Historique des tests</h3>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ sessions.length }} session(s)</span>
                     </div>
-                    <div>
-                        <p class="text-xs text-gray-500">Nom</p>
-                        <p class="font-medium">{{ candidate.last_name }}</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm border-collapse">
+                            <thead>
+                                <tr class="bg-white text-slate-400 text-[10px] uppercase tracking-widest font-bold">
+                                    <th class="px-8 py-5 text-left border-b border-slate-50">Template & Domaine</th>
+                                    <th class="px-8 py-5 text-center border-b border-slate-50">Statut</th>
+                                    <th class="px-8 py-5 text-center border-b border-slate-50">Score</th>
+                                    <th class="px-8 py-5 text-left border-b border-slate-50">Activité</th>
+                                    <th class="px-8 py-5 text-right border-b border-slate-50">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                <tr v-if="sessions.length === 0">
+                                    <td colspan="5" class="px-8 py-16 text-center text-slate-300 italic font-medium">Aucun test envoyé pour le moment</td>
+                                </tr>
+                                <tr v-for="s in sessions" :key="s.id" class="hover:bg-slate-50/50 transition-all group">
+                                    <td class="px-8 py-6">
+                                        <div class="flex flex-col">
+                                            <span class="font-bold text-slate-800 text-sm mb-0.5">{{ s.template }}</span>
+                                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{{ s.domain }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6 text-center">
+                                        <span :class="statusClass(s.status)" class="px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border">
+                                            {{ statusLabel(s.status) }}
+                                        </span>
+                                    </td>
+                                    <td class="px-8 py-6 text-center">
+                                        <div v-if="s.score !== null">
+                                            <span class="text-lg font-bold" :class="s.score >= 70 ? 'text-emerald-500' : 'text-slate-800'">{{ s.score }}%</span>
+                                        </div>
+                                        <span v-else class="text-slate-300 font-bold text-lg">—</span>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <div class="flex flex-col">
+                                            <span class="text-xs text-slate-600 font-bold flex items-center gap-1.5">
+                                                <svg class="size-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                {{ s.started_at || 'Non démarré' }}
+                                            </span>
+                                            <span v-if="s.duration_seconds" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
+                                                Temps passé: {{ Math.round(s.duration_seconds / 60) }}min
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6 text-right">
+                                        <div class="flex justify-end gap-2">
+                                            <Link v-if="s.status === 'completed'" :href="route('admin.sessions.show', s.id)" 
+                                                class="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all">
+                                                Détails de l'examen
+                                            </Link>
+                                            <template v-if="s.status === 'pending'">
+                                                <button @click="sendEmail(s.id)" class="px-5 py-2.5 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-xl text-xs font-black shadow-sm hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-2 group/btn">
+                                                    <svg class="size-3.5 group-hover/btn:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                                    Envoyer par mail
+                                                </button>
+                                                <a :href="'/test/' + s.token" target="_blank" 
+                                                    class="size-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all">
+                                                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                                </a>
+                                            </template>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                    <div>
-                        <p class="text-xs text-gray-500">Email</p>
-                        <p class="font-medium">{{ candidate.email }}</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-500">Téléphone</p>
-                        <p class="font-medium">{{ candidate.phone || '—' }}</p>
-                    </div>
-                </div>
-
-                <!-- Sessions -->
-                <div class="bg-white rounded-xl shadow overflow-hidden">
-                    <div class="p-6 border-b border-gray-100">
-                        <h3 class="text-lg font-semibold text-gray-800">Sessions de test</h3>
-                    </div>
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-50 text-gray-600 text-xs uppercase">
-                            <tr>
-                                <th class="px-6 py-3 text-left">Template</th>
-                                <th class="px-6 py-3 text-left">Domaine</th>
-                                <th class="px-6 py-3 text-left">Statut</th>
-                                <th class="px-6 py-3 text-left">Score</th>
-                                <th class="px-6 py-3 text-left">Démarré le</th>
-                                <th class="px-6 py-3 text-left">Durée</th>
-                                <th class="px-6 py-3 text-left">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            <tr v-if="sessions.length === 0">
-                                <td colspan="7" class="px-6 py-8 text-center text-gray-400">Aucune session</td>
-                            </tr>
-                            <tr v-for="s in sessions" :key="s.id" class="hover:bg-gray-50">
-                                <td class="px-6 py-4 font-medium">{{ s.template }}</td>
-                                <td class="px-6 py-4 text-gray-600">{{ s.domain }}</td>
-                                <td class="px-6 py-4">
-                                    <span :class="statusClass(s.status)" class="px-2 py-1 rounded-full text-xs font-medium">{{ s.status }}</span>
-                                </td>
-                                <td class="px-6 py-4">{{ s.score !== null ? s.score + '%' : '—' }}</td>
-                                <td class="px-6 py-4 text-gray-500 text-xs">{{ s.started_at || '—' }}</td>
-                                <td class="px-6 py-4 text-gray-500">
-                                    {{ s.duration_seconds ? Math.round(s.duration_seconds / 60) + 'min' : '—' }}
-                                </td>
-                                <td class="px-6 py-4 flex gap-3 items-center">
-                                    <Link v-if="s.status === 'completed'" :href="route('admin.sessions.show', s.id)" class="text-indigo-600 hover:underline text-xs">Détails</Link>
-                                    <template v-if="s.status === 'pending'">
-                                        <a :href="'/test/' + s.token" target="_blank" class="text-gray-500 hover:underline text-xs">Lien →</a>
-                                        <button @click="sendEmail(s.id)" class="text-indigo-600 hover:text-indigo-800 text-xs flex items-center gap-1 border border-indigo-100 px-2 py-1 rounded hover:bg-indigo-50 transition-colors">
-                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                            </svg>
-                                            Envoyer mail
-                                        </button>
-                                    </template>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </div>
 
+    </AuthenticatedLayout>
+
+    <Teleport to="body">
         <!-- Generate Link Modal -->
-        <div v-if="showLinkModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-xl p-6 w-full max-w-md">
-                <h3 class="text-lg font-semibold mb-4">Générer un lien de test</h3>
-                <form @submit.prevent="generateLink" class="space-y-4">
+        <div v-if="showLinkModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl animate-reveal border border-slate-100">
+                <div class="mb-8 text-center">
+                    <div class="size-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-4">
+                        <svg class="size-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-slate-900">Préparer un test</h3>
+                    <p class="text-sm text-slate-500 font-medium">Choisissez le template de test à soumettre au candidat.</p>
+                </div>
+                <form @submit.prevent="generateLink" class="space-y-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Template de test</label>
-                        <select v-model="linkForm.test_template_id" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Modèle d'examen</label>
+                        <select v-model="linkForm.test_template_id" required
+                            class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-bold text-slate-700">
                             <option value="">Sélectionner un template...</option>
                             <option v-for="t in templates" :key="t.id" :value="t.id">{{ t.name }}</option>
                         </select>
                     </div>
-                    <div class="flex gap-3 justify-end">
-                        <button type="button" @click="showLinkModal = false" class="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg">Annuler</button>
-                        <button type="submit" :disabled="linkForm.processing" class="px-4 py-2 text-sm text-white bg-indigo-600 rounded-lg hover:bg-indigo-700">Générer</button>
+                    <div class="flex items-center gap-3 bg-slate-50 p-4 rounded-2xl cursor-pointer hover:bg-slate-100 transition-all border border-transparent" @click="linkForm.send_email = !linkForm.send_email">
+                        <div class="size-6 rounded-lg flex items-center justify-center transition-all"
+                            :class="linkForm.send_email ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-white border border-slate-200 text-transparent'">
+                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-sm font-bold text-slate-700">Envoyer par email</span>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Le lien sera envoyé automatiquement</span>
+                        </div>
+                        <input type="checkbox" v-model="linkForm.send_email" class="hidden">
+                    </div>
+                    <div class="flex gap-4 pt-4">
+                        <button type="button" @click="showLinkModal = false"
+                            class="flex-1 px-6 py-4 text-sm font-bold text-slate-600 bg-slate-100 rounded-2xl hover:bg-slate-200 transition-all active:scale-[0.98]">
+                            Annuler
+                        </button>
+                        <button type="submit" :disabled="linkForm.processing"
+                            class="flex-1 px-6 py-4 text-sm font-bold text-white bg-slate-900 rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 disabled:opacity-50 active:scale-[0.98]">
+                            Générer le lien
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
-    </AuthenticatedLayout>
+    </Teleport>
 </template>

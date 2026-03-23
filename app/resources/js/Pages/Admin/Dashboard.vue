@@ -46,16 +46,15 @@ onUnmounted(() => clearInterval(interval));
     <Head title="Dashboard Admin" />
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-900">Vue d'ensemble</h2>
-                    <p class="text-sm text-slate-500">Bienvenue sur votre tableau de bord d'administration.</p>
+                    <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Vue d'ensemble</h2>
+                    <p class="text-sm text-slate-500 font-medium">Bienvenue sur votre tableau de bord d'administration.</p>
                 </div>
                 <button @click="refresh" :disabled="refreshing"
-                    class="btn-secondary flex items-center gap-2 text-xs">
-                    <svg :class="['w-4 h-4', refreshing && 'animate-spin']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    class="bg-white border border-slate-200 text-slate-600 px-5 py-2.5 rounded-xl hover:bg-slate-50 font-bold text-xs shadow-sm transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 w-fit">
+                    <svg :class="['size-4', refreshing && 'animate-spin']" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
                     <span>Mis à jour {{ lastRefreshed.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) }}</span>
                 </button>
@@ -160,12 +159,12 @@ onUnmounted(() => clearInterval(interval));
 
             <!-- Recent Sessions -->
             <div class="premium-card overflow-hidden">
-                <div class="p-8 flex justify-between items-center border-b border-slate-100 bg-slate-50/50">
+                <div class="p-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6 border-b border-slate-100 bg-slate-50/50">
                     <div>
-                        <h3 class="text-lg font-bold text-slate-900">Sessions récentes</h3>
-                        <p class="text-sm text-slate-500">Les 10 dernières tentatives de tests.</p>
+                        <h3 class="text-xl font-bold text-slate-900 tracking-tight">Sessions récentes</h3>
+                        <p class="text-sm text-slate-500 font-medium">Les 10 dernières tentatives de tests.</p>
                     </div>
-                    <Link :href="route('admin.candidates.index')" class="text-sm font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-4 py-2 rounded-xl transition-colors">Tout voir</Link>
+                    <Link :href="route('admin.candidates.index')" class="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-5 py-2.5 rounded-xl transition-all active:scale-[0.98] border border-indigo-100/50 w-fit">Tout voir</Link>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm border-collapse">
