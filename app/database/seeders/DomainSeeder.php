@@ -16,7 +16,7 @@ class DomainSeeder extends Seeder
         $levels = [
             ['name' => 'BTS', 'slug' => 'bts', 'order' => 1],
             ['name' => 'Bachelor', 'slug' => 'bachelor', 'order' => 2],
-            ['name' => 'Master', 'slug' => 'master', 'order' => 3],
+            ['name' => 'Mastère', 'slug' => 'mastere', 'order' => 3],
         ];
 
         foreach ($levels as $level) {
@@ -26,29 +26,60 @@ class DomainSeeder extends Seeder
         // Domains and Themes
         $domains = [
             [
-                'name' => 'Développement',
+                'name' => 'Informatique & Numérique',
                 'color' => '#3B82F6',
-                'themes' => ['JavaScript', 'PHP', 'Python', 'Algorithmes', 'Base de données', 'React', 'Vue.js'],
+                'themes' => [
+                    'Programmation (PHP, JS, Python)',
+                    'Réseaux & Systèmes',
+                    'Cybersécurité',
+                    'Cloud (AWS, Azure)',
+                    'Base de données (SQL, NoSQL)',
+                    'Intelligence Artificielle'
+                ],
             ],
             [
-                'name' => 'Réseau et Systèmes',
-                'color' => '#10B981',
-                'themes' => ['Linux', 'TCP/IP', 'Sécurité', 'Administration réseau', 'Cloud'],
+                'name' => 'Marketing & Communication',
+                'color' => '#EC4899',
+                'themes' => [
+                    'Marketing Digital',
+                    'SEO & SEM',
+                    'Réseaux Sociaux',
+                    'Communication Interne & Externe',
+                    'Événementiel'
+                ],
             ],
             [
                 'name' => 'Ressources Humaines',
                 'color' => '#F59E0B',
-                'themes' => ['Droit du travail', 'Recrutement', 'Formation', 'Gestion de paie'],
+                'themes' => [
+                    'Droit du travail',
+                    'Gestion de la Paie',
+                    'Recrutement & Sourcing',
+                    'GPEC',
+                    'Relations Sociales'
+                ],
             ],
             [
-                'name' => 'Marketing',
-                'color' => '#EC4899',
-                'themes' => ['Marketing digital', 'SEO', 'Réseaux sociaux', 'Analytics', 'E-commerce'],
+                'name' => 'Commerce & Management',
+                'color' => '#10B981',
+                'themes' => [
+                    'Négociation Commerciale',
+                    'Management d\'équipe',
+                    'Stratégie d\'entreprise',
+                    'Relation Client (CRM)',
+                    'Entrepreneuriat'
+                ],
             ],
             [
-                'name' => 'Communication',
+                'name' => 'Comptabilité & Gestion',
                 'color' => '#8B5CF6',
-                'themes' => ['Communication écrite', 'Communication orale', 'Relations presse', 'Anglais'],
+                'themes' => [
+                    'Comptabilité Générale',
+                    'Contrôle de Gestion',
+                    'Finance d\'entreprise',
+                    'Fiscalité',
+                    'Audit & Conseil'
+                ],
             ],
         ];
 

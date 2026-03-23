@@ -49,6 +49,9 @@ class TestController extends Controller
                     'template_name' => $session->template->name,
                     'domain_name' => $session->template->domain->name,
                     'duration_minutes' => $session->template->duration_minutes,
+                    'question_timer' => $session->template->question_timer,
+                    'question_time_seconds' => $session->template->question_time_seconds,
+                    'total_questions' => $session->sessionQuestions->count(),
                 ],
                 'candidate' => ['name' => $session->candidate->full_name],
             ]);

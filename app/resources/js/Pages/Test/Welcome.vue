@@ -1,6 +1,6 @@
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 const props = defineProps({
     session: Object,
@@ -8,6 +8,16 @@ const props = defineProps({
 });
 
 const starting = ref(false);
+
+const durationDisplay = computed(() => {
+    if (props.session.question_timer) {
+        const totalSec = props.session.total_questions * props.session.question_time_seconds;
+        const m = Math.ceil(totalSec / 60);
+        return `${m} minute${m > 1 ? 's' : ''}`;
+    }
+    const m = props.session.duration_minutes;
+    return `${m} minute${m > 1 ? 's' : ''}`;
+});
 
 function startTest() {
     starting.value = true;
@@ -40,7 +50,7 @@ function startTest() {
                         <div class="relative z-10 mt-20 space-y-6">
                             <div>
                                 <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Durée du test</p>
-                                <p class="text-xl font-bold">{{ session.duration_minutes }} minutes</p>
+                                <p class="text-xl font-bold">{{ durationDisplay }}</p>
                             </div>
                             <div>
                                 <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Plateforme</p>
@@ -66,7 +76,7 @@ function startTest() {
                                 </div>
                                 <div>
                                     <h4 class="font-bold text-slate-900 text-sm">Le temps est compté</h4>
-                                    <p class="text-slate-500 text-sm mt-1 leading-relaxed">Une fois le test lancé, le chronomètre de {{ session.duration_minutes }} minutes ne pourra plus être arrêté.</p>
+                                    <p class="text-slate-500 text-sm mt-1 leading-relaxed">Une fois le test lancé, le chronomètre de {{ durationDisplay }} ne pourra plus être arrêté.</p>
                                 </div>
                             </div>
 

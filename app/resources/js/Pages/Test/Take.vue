@@ -24,7 +24,9 @@ const progress = computed(() => Math.round(((currentIndex.value + 1) / props.que
 
 // Timer
 const startTime = new Date(props.session.started_at).getTime();
-const totalSeconds = props.session.duration_minutes * 60;
+const totalSeconds = props.session.question_timer
+    ? props.questions.length * props.session.question_time_seconds
+    : props.session.duration_minutes * 60;
 const remaining = ref(totalSeconds - Math.floor((Date.now() - startTime) / 1000));
 
 const timerColor = computed(() => {
@@ -214,11 +216,6 @@ function next() {
         currentIndex.value++;
     }
 }
-function prev() {
-    if (currentIndex.value > 0) {
-        currentIndex.value--;
-    }
-}
 
 async function submitTest() {
     if (submitting.value) return;
@@ -319,19 +316,18 @@ const answeredCount = computed(() => Object.keys(answers.value).length);
                     </div>
 
                     <div class="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-4 gap-3">
-                        <button v-for="(q, i) in questions" :key="q.id"
-                            @click="currentIndex = i"
+                        <div v-for="(q, i) in questions" :key="q.id"
                             :class="[
-                                'relative aspect-square rounded-xl text-xs font-black transition-all flex items-center justify-center border-2',
-                                i === currentIndex 
-                                    ? 'bg-slate-900 text-white border-slate-900 shadow-xl shadow-slate-200 scale-110 z-10' 
-                                    : (answers[q.id] !== undefined 
-                                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:border-emerald-200' 
-                                        : 'bg-slate-50 text-slate-400 border-slate-50 hover:bg-slate-100 hover:text-slate-600 hover:border-slate-200')
+                                'relative aspect-square rounded-xl text-xs font-black flex items-center justify-center border-2',
+                                i === currentIndex
+                                    ? 'bg-slate-900 text-white border-slate-900 shadow-xl shadow-slate-200 scale-110 z-10'
+                                    : (answers[q.id] !== undefined
+                                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                        : 'bg-slate-50 text-slate-400 border-slate-50')
                             ]">
                             {{ i + 1 }}
                             <div v-if="answers[q.id] !== undefined && i !== currentIndex" class="absolute -top-1 -right-1 size-3 rounded-full bg-emerald-500 border-2 border-white"></div>
-                        </button>
+                        </div>
                     </div>
 
                     <div class="mt-10 pt-8 border-t border-slate-50 space-y-4">
@@ -484,14 +480,8 @@ const answeredCount = computed(() => Object.keys(answers.value).length);
                         </div>
 
                         <!-- Interaction Navigation -->
-                        <div class="mt-20 pt-10 border-t border-slate-50 flex flex-col sm:flex-row justify-between items-center gap-6">
-                            <button @click="prev" :disabled="currentIndex === 0"
-                                class="w-full sm:w-auto px-8 py-4 text-[10px] font-black text-slate-400 bg-slate-50 rounded-2xl hover:bg-slate-100 hover:text-slate-600 transition-all disabled:opacity-30 uppercase tracking-widest flex items-center justify-center gap-2">
-                                <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-                                Précédente
-                            </button>
-
-                            <div class="grow flex justify-center text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] hidden sm:block">
+                        <div class="mt-20 pt-10 border-t border-slate-50 flex justify-end items-center gap-6">
+                            <div class="grow text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] hidden sm:block">
                                 Test de Compétences Automatisé
                             </div>
 

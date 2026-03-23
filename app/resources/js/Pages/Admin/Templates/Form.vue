@@ -25,6 +25,23 @@ const themes = computed(() => {
     return domain?.themes || [];
 });
 
+const totalQuestions = computed(() => form.rules.reduce((sum, r) => sum + (r.count || 0), 0));
+
+const computedDurationSeconds = computed(() =>
+    form.question_timer && form.question_time_seconds
+        ? totalQuestions.value * form.question_time_seconds
+        : null
+);
+
+const computedDurationDisplay = computed(() => {
+    const s = computedDurationSeconds.value;
+    if (!s) return null;
+    const m = Math.ceil(s / 60);
+    return m >= 60
+        ? `${Math.floor(m / 60)}h${m % 60 > 0 ? ` ${m % 60}min` : ''}`
+        : `${m} min`;
+});
+
 watch(() => form.domain_id, () => {
     form.rules.forEach(r => r.theme_id = '');
 });
@@ -84,7 +101,13 @@ function submit() {
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Durée (minutes)</label>
-                            <input v-model.number="form.duration_minutes" type="number" min="5" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                            <template v-if="form.question_timer && computedDurationDisplay">
+                                <div class="w-full border border-indigo-200 bg-indigo-50 rounded-lg px-3 py-2 text-sm text-indigo-700 font-semibold">
+                                    {{ computedDurationDisplay }}
+                                    <span class="font-normal text-indigo-500 ml-1">({{ totalQuestions }} questions × {{ form.question_time_seconds }}s)</span>
+                                </div>
+                            </template>
+                            <input v-else v-model.number="form.duration_minutes" type="number" min="5" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Expiration du lien (heures)</label>
