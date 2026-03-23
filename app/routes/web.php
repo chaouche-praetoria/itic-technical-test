@@ -1,0 +1,55 @@
+<?php
+
+use App\Http\Controllers\Admin\CandidateController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DomainController;
+use App\Http\Controllers\Admin\QuestionController;
+use App\Http\Controllers\Admin\TestTemplateController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TestController;
+use Illuminate\Support\Facades\Route;
+
+// Redirect root to admin dashboard or login
+Route::get('/', fn() => redirect()->route('admin.dashboard'));
+
+// Candidate test routes (public, token-based)
+Route::prefix('test')->name('test.')->group(function () {
+    Route::get('/{token}', [TestController::class, 'start'])->name('start');
+    Route::post('/{token}/answer', [TestController::class, 'saveAnswer'])->name('answer');
+    Route::post('/{token}/execute', [TestController::class, 'executeCode'])->name('execute');
+    Route::post('/{token}/submit', [TestController::class, 'submit'])->name('submit');
+    Route::post('/{token}/activity', [TestController::class, 'logActivity'])->name('activity');
+    Route::get('/{token}/result', [TestController::class, 'result'])->name('result');
+});
+
+// Admin routes (authenticated)
+Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Profile
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Domains & Themes
+    Route::get('/domains', [DomainController::class, 'index'])->name('domains.index');
+    Route::post('/domains', [DomainController::class, 'store'])->name('domains.store');
+    Route::put('/domains/{domain}', [DomainController::class, 'update'])->name('domains.update');
+    Route::post('/domains/{domain}/themes', [DomainController::class, 'storeTheme'])->name('domains.themes.store');
+
+    // Questions
+    Route::resource('questions', QuestionController::class)->except(['show']);
+
+    // Templates
+    Route::resource('templates', TestTemplateController::class)->except(['show']);
+
+    // Candidates
+    Route::get('/candidates', [CandidateController::class, 'index'])->name('candidates.index');
+    Route::post('/candidates', [CandidateController::class, 'store'])->name('candidates.store');
+    Route::get('/candidates/{candidate}', [CandidateController::class, 'show'])->name('candidates.show');
+    Route::post('/candidates/{candidate}/generate-link', [CandidateController::class, 'generateLink'])->name('candidates.generate-link');
+    Route::post('/sessions/{session}/send-email', [CandidateController::class, 'sendSessionEmail'])->name('sessions.send-email');
+    Route::get('/sessions/{session}', [CandidateController::class, 'sessionDetail'])->name('sessions.show');
+});
+
+require __DIR__.'/auth.php';

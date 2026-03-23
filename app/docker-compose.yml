@@ -1,0 +1,101 @@
+services:
+
+  # PHP-FPM (Laravel)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: iticparis_app
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      APP_KEY: ${APP_KEY}
+      APP_DEBUG: false
+      APP_URL: http://localhost
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-iticparis}
+      DB_USERNAME: ${DB_USERNAME:-iticparis}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      CACHE_DRIVER: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+      REDIS_HOST: redis
+      JUDGE0_URL: ${JUDGE0_URL:-https://judge0-ce.p.rapidapi.com}
+      JUDGE0_API_KEY: ${JUDGE0_API_KEY:-}
+      WEBHOOK_URL: ${WEBHOOK_URL:-}
+    volumes:
+      - app_public:/var/www/public
+      - app_storage:/var/www/storage/app
+      - app_laravel_logs:/var/www/storage/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - iticparis
+
+  # Nginx
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: iticparis_nginx
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8000}:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - app_public:/var/www/public:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - app
+    networks:
+      - iticparis
+
+  # MySQL
+  mysql:
+    image: mysql:8.4
+    container_name: iticparis_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-iticparis}
+      MYSQL_USER: ${DB_USERNAME:-iticparis}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootsecret}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-rootsecret}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - iticparis
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: iticparis_redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - iticparis
+
+volumes:
+  mysql_data:
+  redis_data:
+  app_public:
+  app_storage:
+  app_laravel_logs:
+  nginx_logs:
+
+networks:
+  iticparis:
+    driver: bridge
