@@ -77,13 +77,16 @@ jobs:
             echo "--- [DOCKER] Pulling New Image"
             docker compose -p itic-technical-test pull app
 
-            echo "--- [DOCKER] Stopping Old Services (to clear ports)"
+            echo "--- [DOCKER] Stopping Old Project Services"
+            export APP_PORT=8099
+            export DB_EXTERNAL_PORT=3366
+            
             docker compose -p itic-technical-test down --remove-orphans
             
-            # Force kill anything remaining on port 8000
-            sudo fuser -k 8000/tcp || true
+            # Note: We do NOT use fuser or global docker stop here 
+            # to avoid impacting other production apps on the server.
 
-            echo "--- [DOCKER] Restarting Services"
+            echo "--- [DOCKER] Restarting Project Services"
             docker compose -p itic-technical-test up -d
 
             echo "--- [DOCKER] Cleaning up old images"
