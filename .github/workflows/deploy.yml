@@ -48,30 +48,37 @@ jobs:
           sudo apt-get update -y && sudo apt-get install -y sshpass
 
           # Remote commands
-          sshpass -p "${SSH_PASSWORD}" ssh -o StrictHostKeyChecking=no -p ${SSH_PORT} ${REMOTE} bash -lc "
+          sshpass -p "${SSH_PASSWORD}" ssh -o StrictHostKeyChecking=no -p ${SSH_PORT} ${REMOTE} bash -ls << 'EOF'
             set -e
-            cd '${REMOTE_REPO_DIR}' || (echo 'Remote directory not found: ${REMOTE_REPO_DIR}' >&2; exit 2)
+            if [ ! -d "${REMOTE_REPO_DIR}" ]; then
+              echo "Dossier ${REMOTE_REPO_DIR} absent. Création et clone en cours..."
+              mkdir -p "${REMOTE_REPO_DIR}"
+              cd "${REMOTE_REPO_DIR}"
+              git clone https://github.com/${{ github.repository }}.git .
+            else
+              cd "${REMOTE_REPO_DIR}"
+            fi
 
-            echo '--- [GIT] Pull'
+            echo "--- [GIT] Pull"
             git pull origin main
 
-            echo '--- [PHP] Composer Install'
+            echo "--- [PHP] Composer Install"
             composer install --no-dev --optimize-autoloader --no-interaction
 
-            echo '--- [JS] NPM Install & Build'
+            echo "--- [JS] NPM Install & Build"
             npm install
             npm run build
 
-            echo '--- [LARAVEL] Database Migration'
+            echo "--- [LARAVEL] Database Migration"
             php artisan migrate --force
 
-            echo '--- [LARAVEL] Optimizing Cache'
+            echo "--- [LARAVEL] Optimizing Cache"
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
 
-            echo '--- [LARAVEL] Restarting Queue (Optional)'
+            echo "--- [LARAVEL] Restarting Queue (Optional)"
             php artisan queue:restart || true
 
-            echo 'Deployment finished successfully.'
-          "
+            echo "Deployment finished successfully."
+          EOF
