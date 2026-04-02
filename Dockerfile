@@ -24,7 +24,8 @@ RUN docker-php-ext-install \
     pcntl \
     bcmath \
     gd \
-    opcache
+    opcache \
+    && rm -rf /var/cache/apk/*
 
 # Install Redis PHP extension
 RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \

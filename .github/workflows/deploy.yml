@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   build-and-deploy:
@@ -16,15 +17,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: 'package-lock.json'
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install Dependencies
-        run: npm install
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}:latest
+          target: production
 
       - name: Remote Deployment
         env:
@@ -33,10 +39,13 @@ jobs:
           SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
           REMOTE_REPO_DIR: ${{ secrets.REMOTE_REPO_DIR }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
           SSH_PORT=${SSH_PORT:-22}
           REMOTE="${SSH_USER}@${SSH_HOST}"
+          IMAGE_TAG="ghcr.io/${{ github.repository }}:latest"
+          
           echo "Connecting to ${REMOTE}:${SSH_PORT} ; directory: ${REMOTE_REPO_DIR}"
 
           if [ -z "${REMOTE_REPO_DIR}" ]; then
@@ -50,6 +59,8 @@ jobs:
           # Remote commands
           sshpass -p "${SSH_PASSWORD}" ssh -o StrictHostKeyChecking=no -p ${SSH_PORT} ${REMOTE} bash -ls << EOF
             set -e
+            export IMAGE_TAG="${IMAGE_TAG}"
+            
             if [ ! -d "${REMOTE_REPO_DIR}" ]; then
               echo "Dossier ${REMOTE_REPO_DIR} absent. Création et clone en cours..."
               mkdir -p "${REMOTE_REPO_DIR}"
@@ -57,21 +68,20 @@ jobs:
               git clone https://github.com/${{ github.repository }}.git .
             else
               cd "${REMOTE_REPO_DIR}"
+              git pull origin main
             fi
 
-            echo "--- [GIT] Pull"
-            git pull origin main
+            echo "--- [DOCKER] Login to GHCR"
+            echo "${GITHUB_TOKEN}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            echo "--- [DOCKER] Build & Restart"
-            docker compose up -d --build
+            echo "--- [DOCKER] Pulling New Image"
+            docker compose pull app
 
-            echo "--- [LARAVEL] Database Migration"
-            docker compose exec -T app php artisan migrate --force
+            echo "--- [DOCKER] Stopping Old Services (to clear ports)"
+            docker compose down --remove-orphans
 
-            echo "--- [LARAVEL] Optimizing Cache"
-            docker compose exec -T app php artisan config:cache
-            docker compose exec -T app php artisan route:cache
-            docker compose exec -T app php artisan view:cache
+            echo "--- [DOCKER] Restarting Services"
+            docker compose up -d
 
             echo "--- [DOCKER] Cleaning up old images"
             docker image prune -f
