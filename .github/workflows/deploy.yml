@@ -68,7 +68,8 @@ jobs:
               git clone https://github.com/${{ github.repository }}.git .
             else
               cd "${REMOTE_REPO_DIR}"
-              git pull origin main
+              git fetch origin main
+              git reset --hard origin/main
             fi
 
             echo "--- [DOCKER] Login to GHCR"
