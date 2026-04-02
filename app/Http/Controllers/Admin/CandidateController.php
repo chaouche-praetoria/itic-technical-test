@@ -18,7 +18,8 @@ class CandidateController extends Controller
 {
     public function __construct(
         private TestGeneratorService $generator,
-        private WebhookService $webhook
+        private WebhookService $webhook,
+        private \App\Services\TestScoringService $scoring
     ) {}
 
     public function index(Request $request)
@@ -124,5 +125,36 @@ class CandidateController extends Controller
         Mail::to($session->candidate->email)->send(new TestInvitationMail($session));
 
         return back()->with('success', "Lien de test envoyé par mail à " . $session->candidate->first_name);
+    }
+
+    public function gradeAnswer(Request $request, TestSession $session)
+    {
+        $request->validate([
+            'question_id' => 'required|exists:questions,id',
+            'score' => 'required|numeric|min:0|max:100',
+        ]);
+
+        $answer = $session->answers()->where('question_id', $request->question_id)->first();
+        
+        if (!$answer) {
+            // Create a dummy answer if not exists (should not happen if they submitted)
+            $answer = $session->answers()->create([
+                'question_id' => $request->question_id,
+                'answer' => '',
+            ]);
+        }
+
+        $answer->update(['score' => $request->score]);
+
+        // Recalculate everything
+        $this->scoring->calculateSessionScores($session);
+
+        return back()->with('success', 'Note mise à jour.');
+    }
+
+    public function finalizeSession(TestSession $session)
+    {
+        $session->update(['status' => 'completed']);
+        return back()->with('success', 'Session marquée comme complétée.');
     }
 }

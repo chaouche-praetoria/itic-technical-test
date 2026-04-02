@@ -13,8 +13,9 @@ use Inertia\Inertia;
 class TestController extends Controller
 {
     public function __construct(
-        private Judge0Service $judge0,
-        private WebhookService $webhook
+        private \App\Services\Judge0Service $judge0,
+        private \App\Services\WebhookService $webhook,
+        private \App\Services\TestScoringService $scoring
     ) {}
 
     public function start(string $token)
@@ -148,64 +149,47 @@ class TestController extends Controller
     {
         $session = TestSession::where('token', $token)
             ->where('status', 'in_progress')
-            ->with(['sessionQuestions.question.choices', 'answers'])
+            ->with(['sessionQuestions.question', 'answers'])
             ->firstOrFail();
 
-        $totalScore = 0;
-        $correctCount = 0;
-        $totalQuestions = $session->sessionQuestions->count();
-        $totalPointsEarned = 0;
-        $totalPointsPossible = 0;
-
+        // 1. Initial MCQ Scoring Update
         foreach ($session->sessionQuestions as $sq) {
             $question = $sq->question;
-            $maxPts = $this->maxPoints($question);
-            $totalPointsPossible += $maxPts;
-
-            $answerRecord = $session->answers->firstWhere('question_id', $question->id);
-
-            if (!$answerRecord) {
-                continue;
+            if ($question->type === 'mcq') {
+                $answerRecord = $session->answers->firstWhere('question_id', $question->id);
+                if ($answerRecord) {
+                    $score = $this->scoring->scoreMcq($question, $answerRecord->answer);
+                    $answerRecord->update(['score' => $score]);
+                }
             }
-
-            $score = match ($question->type) {
-                'mcq' => $this->scoreMcq($question, $answerRecord->answer),
-                'code' => $answerRecord->score ?? 0,
-                'text' => 0, // Manual scoring
-                default => 0,
-            };
-
-            $answerRecord->update(['score' => $score]);
-
-            if ($score >= 100) {
-                $correctCount++;
-            }
-            $totalScore += $score;
-            $totalPointsEarned += (int) round(($score / 100) * $maxPts);
         }
 
-        $finalScore = $totalQuestions > 0 ? round($totalScore / $totalQuestions, 2) : 0;
+        // 2. Determine Initial Status (Pending Review if text questions exist)
+        $hasTextQuestions = $session->sessionQuestions->some(fn($sq) => $sq->question->type === 'text');
+        $status = $hasTextQuestions ? 'pending_review' : 'completed';
+
+        // 3. Centralized Recalculation
+        $this->scoring->calculateSessionScores($session);
 
         $session->update([
-            'status' => 'completed',
+            'status' => $status,
             'completed_at' => now(),
             'duration_seconds' => now()->diffInSeconds($session->started_at),
-            'score' => $finalScore,
-            'total_questions' => $totalQuestions,
-            'correct_answers' => $correctCount,
-            'points_earned' => $totalPointsEarned,
-            'points_total' => $totalPointsPossible,
         ]);
 
         $this->webhook->dispatch($session, 'test.completed');
 
-        return response()->json(['score' => $finalScore, 'redirect' => route('test.result', $token)]);
+        return response()->json([
+            'score' => $session->score,
+            'status' => $status,
+            'redirect' => route('test.result', $token)
+        ]);
     }
 
     public function result(string $token)
     {
         $session = TestSession::where('token', $token)
-            ->where('status', 'completed')
+            ->whereIn('status', ['completed', 'pending_review'])
             ->with('candidate')
             ->firstOrFail();
 
@@ -238,29 +222,11 @@ class TestController extends Controller
 
     private function maxPoints(\App\Models\Question $question): int
     {
-        return match(true) {
-            $question->type === 'mcq'  && $question->difficulty === 'easy'   => 10,
-            $question->type === 'mcq'  && $question->difficulty === 'medium' => 20,
-            $question->type === 'mcq'  && $question->difficulty === 'hard'   => 30,
-            $question->type === 'text' && $question->difficulty === 'easy'   => 20,
-            $question->type === 'text' && $question->difficulty === 'medium' => 30,
-            $question->type === 'text' && $question->difficulty === 'hard'   => 40,
-            $question->type === 'code' && $question->difficulty === 'easy'   => 20,
-            $question->type === 'code' && $question->difficulty === 'medium' => 40,
-            $question->type === 'code' && $question->difficulty === 'hard'   => 60,
-            default => 10,
-        };
+        return $this->scoring->maxPoints($question);
     }
 
     private function scoreMcq($question, $answer): float
     {
-        if (!$answer) {
-            return 0;
-        }
-
-        $correctIds = $question->choices->where('is_correct', true)->pluck('id')->sort()->values();
-        $givenIds = collect(is_array($answer) ? $answer : [$answer])->sort()->values();
-
-        return $correctIds->toArray() === $givenIds->toArray() ? 100.0 : 0.0;
+        return $this->scoring->scoreMcq($question, $answer);
     }
 }

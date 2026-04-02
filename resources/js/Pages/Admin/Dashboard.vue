@@ -12,6 +12,7 @@ const props = defineProps({
 
 const statusClass = (status) => ({
     pending: 'bg-yellow-100 text-yellow-800',
+    pending_review: 'bg-amber-100 text-amber-800 border border-amber-200',
     in_progress: 'bg-blue-100 text-blue-800',
     completed: 'bg-green-100 text-green-800',
     expired: 'bg-red-100 text-red-800',
@@ -205,9 +206,10 @@ onUnmounted(() => clearInterval(interval));
                                             'bg-green-500': s.status === 'completed',
                                             'bg-blue-500': s.status === 'in_progress',
                                             'bg-yellow-500': s.status === 'pending',
+                                            'bg-amber-500': s.status === 'pending_review',
                                             'bg-red-500': s.status === 'expired'
                                         }"></span>
-                                        {{ s.status.replace('_', ' ') }}
+                                        {{ s.status === 'pending_review' ? 'À corriger' : s.status.replace('_', ' ') }}
                                     </span>
                                 </td>
                                 <td class="px-8 py-5 text-center">

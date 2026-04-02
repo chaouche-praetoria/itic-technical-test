@@ -51,6 +51,8 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::post('/candidates/{candidate}/generate-link', [CandidateController::class, 'generateLink'])->name('candidates.generate-link');
     Route::post('/sessions/{session}/send-email', [CandidateController::class, 'sendSessionEmail'])->name('sessions.send-email');
     Route::get('/sessions/{session}', [CandidateController::class, 'sessionDetail'])->name('sessions.show');
+    Route::post('/sessions/{session}/grade', [CandidateController::class, 'gradeAnswer'])->name('sessions.grade');
+    Route::post('/sessions/{session}/finalize', [CandidateController::class, 'finalizeSession'])->name('sessions.finalize');
 });
 
 require __DIR__.'/auth.php';
