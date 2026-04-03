@@ -11,6 +11,7 @@ use App\Services\WebhookService;
 use App\Mail\TestInvitationMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 
@@ -156,7 +157,94 @@ class CandidateController extends Controller
     public function finalizeSession(TestSession $session)
     {
         $session->update(['status' => 'completed']);
-        return back()->with('success', 'Session marquée comme complétée.');
+
+        // Sync to HubSpot
+        $session->load('candidate');
+        if ($session->candidate && $session->candidate->email) {
+            $scoreStr = number_format($session->score, 2);
+            $resultLabel = $session->score >= 70 ? 'admis' : 'Echec - A requalifier';
+            
+            $this->hubspot->updateContact($session->candidate->email, [
+                'score_test_technique' => $scoreStr,
+                'resultat_test_technique' => $resultLabel,
+                'date_test_technique' => now()->format('Y-m-d'),
+            ]);
+        }
+
+        return back()->with('success', 'Session marquée comme complétée et synchronisée avec HubSpot.');
+    }
+
+    public function syncToHubSpot(Candidate $candidate)
+    {
+        Log::info("HubSpot: Starting PUSH to HubSpot for candidate: " . $candidate->id);
+        
+        // Get the latest completed session or the latest session with a score
+        $session = $candidate->testSessions()
+            ->whereNotNull('score')
+            ->latest()
+            ->first();
+
+        if (!$session) {
+            return back()->with('error', 'Aucune session avec un score trouvée pour ce candidat.');
+        }
+
+        if (!$candidate->email) {
+            return back()->with('error', 'L\'email du candidat est manquant.');
+        }
+
+        $scoreStr = number_format($session->score, 2);
+        $resultLabel = $session->score >= 70 ? 'admis' : 'Echec - A requalifier';
+        
+        Log::info("HubSpot: Starting manual sync for " . $candidate->email, [
+            'score' => $scoreStr,
+            'result' => $resultLabel
+        ]);
+
+        $success = $this->hubspot->updateContact($candidate->email, [
+            'score_test_technique' => $scoreStr,
+            'resultat_test_technique' => $resultLabel,
+            'date_test_technique' => $session->completed_at ? $session->completed_at->format('Y-m-d') : now()->format('Y-m-d'),
+        ]);
+
+        Log::info("HubSpot: Manual sync completed for " . $candidate->email . ". Result: " . ($success ? 'SUCCESS' : 'FAILURE'));
+
+        if ($success) {
+            return back()->with('success', 'Synchronisation HubSpot réussie pour ' . $candidate->full_name);
+        }
+
+        return back()->with('error', 'Erreur lors de la synchronisation avec HubSpot.');
+    }
+
+    public function syncSpecificFromHubSpot(Candidate $candidate)
+    {
+        Log::info("PULL: syncSpecificFromHubSpot called for candidate: " . $candidate->id);
+        
+        if (!$candidate->email) {
+            return back()->with('error', 'L\'email du candidat est manquant.');
+        }
+
+        $data = $this->hubspot->getContact($candidate->email);
+
+        if (!$data || !isset($data['properties'])) {
+            Log::error("PULL: No contact found on HubSpot for " . $candidate->email);
+            return back()->with('error', 'Impossible de récupérer les données depuis HubSpot pour ce candidat.');
+        }
+
+        $props = $data['properties'];
+
+        $candidate->update([
+            'hubspot_id' => $data['id'],
+            'first_name' => $props['firstname'] ?? $candidate->first_name,
+            'last_name' => $props['lastname'] ?? $candidate->last_name,
+            'phone' => $props['phone'] ?? $candidate->phone,
+            'formation_souhaitee' => $props['formation_souhaitee'] ?? $candidate->formation_souhaitee,
+            'formation_souhaitee_pour_ypareo' => $props['formation_souhaitee_pour_ypareo'] ?? $candidate->formation_souhaitee_pour_ypareo,
+            'score_test_technique' => $props['score_test_technique'] ?? $candidate->score_test_technique,
+            'resultat_test_technique' => $props['resultat_test_technique'] ?? $candidate->resultat_test_technique,
+            'date_test_technique' => $props['date_test_technique'] ?? $candidate->date_test_technique,
+        ]);
+
+        return back()->with('success', 'Données rafraîchies depuis HubSpot pour ' . $candidate->full_name);
     }
 
     public function syncFromHubSpot()
@@ -189,7 +277,9 @@ class CandidateController extends Controller
                 'phone' => $props['phone'] ?? null,
                 'formation_souhaitee' => $props['formation_souhaitee'] ?? null,
                 'formation_souhaitee_pour_ypareo' => $props['formation_souhaitee_pour_ypareo'] ?? null,
-                'score_test_entretien' => $props['score_test_entretien'] ?? null,
+                'score_test_technique' => $props['score_test_technique'] ?? null,
+                'resultat_test_technique' => $props['resultat_test_technique'] ?? null,
+                'date_test_technique' => $props['date_test_technique'] ?? null,
             ];
 
             /** @var \App\Models\Candidate $candidate */

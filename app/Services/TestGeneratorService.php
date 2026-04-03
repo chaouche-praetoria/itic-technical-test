@@ -7,6 +7,7 @@ use App\Models\Question;
 use App\Models\TestSession;
 use App\Models\TestTemplate;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class TestGeneratorService
 {
@@ -38,6 +39,14 @@ class TestGeneratorService
                     'order' => $order++,
                 ]);
             }
+        }
+
+        if ($order === 0) {
+            Log::warning("Test session generated with 0 questions.", [
+                'session_id' => $session->id,
+                'candidate_id' => $candidate->id,
+                'template_id' => $template->id,
+            ]);
         }
 
         return $session;

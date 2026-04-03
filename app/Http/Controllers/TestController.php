@@ -15,7 +15,8 @@ class TestController extends Controller
     public function __construct(
         private \App\Services\Judge0Service $judge0,
         private \App\Services\WebhookService $webhook,
-        private \App\Services\TestScoringService $scoring
+        private \App\Services\TestScoringService $scoring,
+        private \App\Services\HubSpotService $hubspot
     ) {}
 
     public function start(string $token)
@@ -53,6 +54,16 @@ class TestController extends Controller
                     'question_timer' => $session->template->question_timer,
                     'question_time_seconds' => $session->template->question_time_seconds,
                     'total_questions' => $session->sessionQuestions->count(),
+                ],
+                'candidate' => ['name' => $session->candidate->full_name],
+            ]);
+        }
+
+        if ($session->sessionQuestions->count() === 0) {
+            return Inertia::render('Test/NoQuestions', [
+                'session' => [
+                    'id' => $session->id,
+                    'token' => $session->token,
                 ],
                 'candidate' => ['name' => $session->candidate->full_name],
             ]);
@@ -176,6 +187,17 @@ class TestController extends Controller
             'completed_at' => now(),
             'duration_seconds' => now()->diffInSeconds($session->started_at),
         ]);
+
+        if ($status === 'completed' && $session->candidate && $session->candidate->email) {
+            $scoreStr = number_format($session->score, 2);
+            $resultLabel = $session->score >= 70 ? 'admis' : 'Echec - A requalifier';
+            
+            $this->hubspot->updateContact($session->candidate->email, [
+                'score_test_technique' => $scoreStr,
+                'resultat_test_technique' => $resultLabel,
+                'date_test_technique' => now()->format('Y-m-d'),
+            ]);
+        }
 
         $this->webhook->dispatch($session, 'test.completed');
 

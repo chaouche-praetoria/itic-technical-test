@@ -58,6 +58,38 @@ const formatDate = (dateString) => {
         minute: '2-digit'
     }).format(date);
 };
+
+const syncingHubSpot = ref(false);
+function syncCandidateToHubSpot() {
+    syncingHubSpot.value = true;
+    router.post(route('admin.candidates.push-data', props.candidate.id), {}, {
+        onFinish: () => syncingHubSpot.value = false,
+    });
+}
+
+const syncingFromHubSpot = ref(false);
+function syncCandidateFromHubSpot() {
+    console.log("DEBUG: syncCandidateFromHubSpot started (VERSION 2)");
+    syncingFromHubSpot.value = true;
+    
+    // URL unique et prioritaire
+    const url = `/admin/sync-pull-data/${props.candidate.id}`;
+    console.log("DEBUG: Requesting URL:", url);
+
+    router.post(url, {}, {
+        onSuccess: () => {
+            console.log("DEBUG: Success!");
+        },
+        onError: (errors) => {
+            console.error("DEBUG: Inertia Error:", errors);
+            alert("Erreur Inertia: " + JSON.stringify(errors));
+        },
+        onFinish: () => {
+            console.log("DEBUG: Finished");
+            syncingFromHubSpot.value = false;
+        },
+    });
+}
 </script>
 
 <template>
@@ -70,7 +102,7 @@ const formatDate = (dateString) => {
                         {{ candidate.first_name[0] }}{{ candidate.last_name[0] }}
                     </div>
                     <div>
-                        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">{{ candidate.first_name }} {{ candidate.last_name }} <span class="text-indigo-500 font-black ml-2 text-xs uppercase bg-indigo-50 px-2 py-1 rounded-md tracking-widest border border-indigo-100/50">V1.1</span></h2>
+                        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">{{ candidate.first_name }} {{ candidate.last_name }}</h2>
                         <div class="flex items-center gap-3 mt-1">
                             <span class="text-sm text-slate-500 font-medium flex items-center gap-1">
                                 <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
@@ -79,11 +111,31 @@ const formatDate = (dateString) => {
                         </div>
                     </div>
                 </div>
-                <button @click="showLinkModal = true" 
-                    class="bg-slate-900 text-white px-5 py-2.5 rounded-xl hover:bg-slate-800 font-bold text-sm shadow-xl shadow-slate-200 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 w-fit">
-                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-                    Nouveau test
-                </button>
+                <div class="flex items-center gap-3">
+                    <!-- synchronization individuelles (Pull) -->
+                    <button @click="syncCandidateFromHubSpot" 
+                        :disabled="syncingFromHubSpot"
+                        title="Récupérer les dernières infos de HubSpot"
+                        class="bg-white text-emerald-600 border border-emerald-100 p-2.5 rounded-xl hover:bg-emerald-50 font-bold text-sm shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center disabled:opacity-50">
+                        <svg :class="{ 'animate-spin': syncingFromHubSpot }" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path v-if="!syncingFromHubSpot" stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                            <path v-else stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2 A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </button>
+                    <!-- synchronisation individuelles (Push) -->
+                    <button @click="syncCandidateToHubSpot" 
+                        :disabled="syncingHubSpot"
+                        title="Envoyer les scores vers HubSpot"
+                        class="bg-white text-indigo-600 border border-indigo-100 px-5 py-2.5 rounded-xl hover:bg-indigo-50 font-bold text-sm shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 w-fit disabled:opacity-50">
+                        <svg :class="{ 'animate-spin': syncingHubSpot }" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Mise à jour HubSpot
+                    </button>
+                    <button @click="showLinkModal = true" 
+                        class="bg-slate-900 text-white px-5 py-2.5 rounded-xl hover:bg-slate-800 font-bold text-sm shadow-xl shadow-slate-200 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 w-fit">
+                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                        Nouveau test
+                    </button>
+                </div>
             </div>
         </template>
 
@@ -128,7 +180,7 @@ const formatDate = (dateString) => {
                             </div>
                             <h3 class="text-lg font-bold text-slate-800">Informations Académiques</h3>
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                             <div class="space-y-1">
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Formation souhaitée</span>
                                 <p class="text-sm font-bold text-slate-700 leading-relaxed">{{ candidate.formation_souhaitee || 'Non renseignée' }}</p>
@@ -138,11 +190,21 @@ const formatDate = (dateString) => {
                                 <p class="text-sm font-bold text-slate-700">{{ candidate.formation_souhaitee_pour_ypareo || 'Non renseigné' }}</p>
                             </div>
                             <div class="space-y-1">
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Score entretien</span>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Score test technique</span>
                                 <div class="flex items-center gap-2">
-                                    <span v-if="candidate.score_test_entretien" class="text-sm font-black text-indigo-600 px-2 py-0.5 bg-indigo-50 rounded-md">{{ candidate.score_test_entretien }}%</span>
+                                    <span v-if="candidate.score_test_technique" class="text-sm font-black text-indigo-600 px-2 py-0.5 bg-indigo-50 rounded-md">{{ candidate.score_test_technique }}%</span>
                                     <span v-else class="text-sm font-medium text-slate-400">En attente</span>
                                 </div>
+                            </div>
+                            <div class="space-y-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Résultat Test (HubSpot)</span>
+                                <p class="text-sm font-bold" :class="candidate.resultat_test_technique === 'admis' ? 'text-emerald-600' : 'text-slate-700'">
+                                    {{ candidate.resultat_test_technique || '—' }}
+                                </p>
+                            </div>
+                            <div class="space-y-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Date Test (HubSpot)</span>
+                                <p class="text-sm font-bold text-slate-700">{{ candidate.date_test_technique || '—' }}</p>
                             </div>
                             <div class="space-y-1">
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID HubSpot</span>

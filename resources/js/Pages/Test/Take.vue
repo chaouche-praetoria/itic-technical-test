@@ -19,8 +19,11 @@ const executionResult = ref(null);
 const tabWarnings = ref(0);
 const copyPasteWarnings = ref(0);
 
-const currentQuestion = computed(() => props.questions[currentIndex.value]);
-const progress = computed(() => Math.round(((currentIndex.value + 1) / props.questions.length) * 100));
+const currentQuestion = computed(() => props.questions[currentIndex.value] || null);
+const progress = computed(() => {
+    if (props.questions.length === 0) return 0;
+    return Math.round(((currentIndex.value + 1) / props.questions.length) * 100);
+});
 
 // Timer
 const startTime = new Date(props.session.started_at).getTime();
@@ -352,7 +355,7 @@ const answeredCount = computed(() => Object.keys(answers.value).length);
 
                     <div class="relative z-10 transition-all duration-300 animate-reveal" :key="currentIndex">
                         <!-- Question Header Meta -->
-                        <div class="flex items-center justify-between gap-4 mb-10 pb-10 border-b border-slate-50">
+                        <div v-if="currentQuestion" class="flex items-center justify-between gap-4 mb-10 pb-10 border-b border-slate-50">
                             <div class="flex items-center gap-3">
                                 <span class="bg-slate-900 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-lg">Q{{ currentIndex + 1 }}</span>
                                 <span :class="{
@@ -372,19 +375,19 @@ const answeredCount = computed(() => Object.keys(answers.value).length);
                             </div>
                             <div class="flex items-center gap-2">
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Valeur</span>
-                                <span class="text-sm font-black text-slate-900">{{ currentQuestion.max_points }} pts</span>
+                                <span class="text-sm font-black text-slate-900">{{ currentQuestion?.max_points || 0 }} pts</span>
                             </div>
                         </div>
 
                         <!-- Statement -->
-                        <div class="mb-14">
+                        <div v-if="currentQuestion" class="mb-14">
                             <h2 class="text-2xl lg:text-3xl font-bold text-slate-900 leading-tight mb-8">
                                 {{ currentQuestion.statement }}
                             </h2>
                         </div>
 
                         <!-- MCQ Area -->
-                        <div v-if="currentQuestion.type === 'mcq'" class="grid gap-4 max-w-3xl">
+                        <div v-if="currentQuestion?.type === 'mcq'" class="grid gap-4 max-w-3xl">
                             <div v-if="currentQuestion.multiple_answers" class="mb-2 flex items-center gap-2">
                                 <span class="size-1.5 rounded-full bg-indigo-500"></span>
                                 <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">Plusieurs choix possibles</span>
@@ -413,7 +416,7 @@ const answeredCount = computed(() => Object.keys(answers.value).length);
                         </div>
 
                         <!-- Text Area -->
-                        <div v-else-if="currentQuestion.type === 'text'" class="max-w-4xl">
+                        <div v-else-if="currentQuestion?.type === 'text'" class="max-w-4xl">
                             <textarea
                                 :value="answers[currentQuestion.id] || ''"
                                 @input="setAnswer(currentQuestion.id, $event.target.value)"
@@ -423,7 +426,7 @@ const answeredCount = computed(() => Object.keys(answers.value).length);
                         </div>
 
                         <!-- Programming Area -->
-                        <div v-else-if="currentQuestion.type === 'code'" class="space-y-6">
+                        <div v-else-if="currentQuestion?.type === 'code'" class="space-y-6">
                             <div class="flex items-center gap-6 bg-slate-100 p-2 rounded-2xl w-fit">
                                 <button v-for="lang in ['javascript', 'python', 'php', 'java']" :key="lang"
                                     @click="selectedLanguage = lang"
@@ -479,8 +482,17 @@ const answeredCount = computed(() => Object.keys(answers.value).length);
                             </div>
                         </div>
 
+                        <!-- Empty State fallback inside component -->
+                        <div v-else class="py-20 text-center animate-reveal">
+                            <div class="size-20 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                                <svg class="size-10 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-900 mb-2">Aucune question n'est disponible pour ce test.</h3>
+                            <p class="text-slate-500 text-sm">Veuillez contacter votre recruteur pour obtenir un nouveau lien.</p>
+                        </div>
+
                         <!-- Interaction Navigation -->
-                        <div class="mt-20 pt-10 border-t border-slate-50 flex justify-end items-center gap-6">
+                        <div v-if="currentQuestion" class="mt-20 pt-10 border-t border-slate-50 flex justify-end items-center gap-6">
                             <div class="grow text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] hidden sm:block">
                                 Test de Compétences Automatisé
                             </div>

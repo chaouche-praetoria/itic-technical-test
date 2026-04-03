@@ -25,6 +25,7 @@ Route::prefix('test')->name('test.')->group(function () {
 
 // Admin routes (authenticated)
 Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+    Route::post('/sync-pull-data/{candidate}', [CandidateController::class, 'syncSpecificFromHubSpot'])->name('candidates.pull-data');
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Profile
@@ -46,9 +47,10 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
     // Candidates
     Route::get('/candidates', [CandidateController::class, 'index'])->name('candidates.index');
-    Route::post('/candidates/sync-hubspot', [CandidateController::class, 'syncFromHubSpot'])->name('candidates.sync-hubspot');
+    Route::post('/candidates/refresh-all', [CandidateController::class, 'syncFromHubSpot'])->name('candidates.sync-hubspot');
     Route::post('/candidates', [CandidateController::class, 'store'])->name('candidates.store');
     Route::get('/candidates/{candidate}', [CandidateController::class, 'show'])->name('candidates.show');
+    Route::post('/candidates/{candidate}/push-data', [CandidateController::class, 'syncToHubSpot'])->name('candidates.push-data');
     Route::post('/candidates/{candidate}/generate-link', [CandidateController::class, 'generateLink'])->name('candidates.generate-link');
     Route::post('/sessions/{session}/send-email', [CandidateController::class, 'sendSessionEmail'])->name('sessions.send-email');
     Route::get('/sessions/{session}', [CandidateController::class, 'sessionDetail'])->name('sessions.show');

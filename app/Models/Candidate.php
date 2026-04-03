@@ -15,7 +15,9 @@ class Candidate extends Model
         'hubspot_id',
         'formation_souhaitee',
         'formation_souhaitee_pour_ypareo',
-        'score_test_entretien'
+        'score_test_technique',
+        'resultat_test_technique',
+        'date_test_technique'
     ];
 
     public function getFullNameAttribute(): string
