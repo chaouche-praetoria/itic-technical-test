@@ -28,6 +28,10 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::post('/sync-pull-data/{candidate}', [CandidateController::class, 'syncSpecificFromHubSpot'])->name('candidates.pull-data');
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Administrators
+    Route::resource('administrators', \App\Http\Controllers\Admin\AdministratorController::class)->except(['show', 'create', 'edit']);
+    Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class)->except(['show', 'create', 'edit']);
+
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
