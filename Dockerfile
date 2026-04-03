@@ -7,6 +7,7 @@ RUN apk add --no-cache \
     libpng-dev \
     libjpeg-turbo-dev \
     libwebp-dev \
+    freetype-dev \
     oniguruma-dev \
     libxml2-dev \
     zip \
@@ -16,7 +17,8 @@ RUN apk add --no-cache \
     shadow
 
 # Install PHP extensions
-RUN docker-php-ext-install \
+RUN docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype \
+    && docker-php-ext-install \
     pdo \
     pdo_mysql \
     mbstring \
