@@ -99,7 +99,7 @@ const page = usePage();
                 <div class="bg-indigo-600/10 rounded-3xl p-6 mb-4 border border-indigo-500/10">
                     <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2">Besoin d'aide ?</p>
                     <p class="text-[11px] text-slate-400 leading-relaxed mb-4">Consultez la documentation ou contactez le support ITIC.</p>
-                    <button class="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-900/20">Support</button>
+                    <Link :href="route('admin.documentation')" class="block w-full py-2.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-900/20 text-center">Documentation</Link>
                 </div>
 
                 <div class="flex items-center gap-3 px-4 py-3 bg-slate-800/30 rounded-2xl border border-white/5">

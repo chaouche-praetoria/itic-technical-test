@@ -32,6 +32,9 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::resource('administrators', \App\Http\Controllers\Admin\AdministratorController::class)->except(['show', 'create', 'edit']);
     Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class)->except(['show', 'create', 'edit']);
 
+    // Documentation
+    Route::get('/documentation', fn() => inertia('Admin/Documentation'))->name('documentation');
+
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
