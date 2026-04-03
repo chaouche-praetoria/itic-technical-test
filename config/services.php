@@ -44,4 +44,8 @@ return [
         'url' => env('WEBHOOK_URL'),
     ],
 
+    'hubspot' => [
+        'api_key' => env('HUBSPOT_ACCESS_TOKEN'),
+    ],
+
 ];

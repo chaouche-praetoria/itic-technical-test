@@ -46,6 +46,18 @@ function sendEmail(sessionId) {
         onSuccess: () => alert('Email envoyé avec succès !'),
     });
 }
+
+const formatDate = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('fr-FR', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    }).format(date);
+};
 </script>
 
 <template>
@@ -107,6 +119,68 @@ function sendEmail(sessionId) {
                     </div>
                 </div>
 
+                <!-- Candidate Details Section -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="md:col-span-2 premium-card p-8 group hover:border-indigo-100 transition-all">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="size-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-800">Informations Académiques</h3>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                            <div class="space-y-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Formation souhaitée</span>
+                                <p class="text-sm font-bold text-slate-700 leading-relaxed">{{ candidate.formation_souhaitee || 'Non renseignée' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Code YPareo</span>
+                                <p class="text-sm font-bold text-slate-700">{{ candidate.formation_souhaitee_pour_ypareo || 'Non renseigné' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Score entretien</span>
+                                <div class="flex items-center gap-2">
+                                    <span v-if="candidate.score_test_entretien" class="text-sm font-black text-indigo-600 px-2 py-0.5 bg-indigo-50 rounded-md">{{ candidate.score_test_entretien }}%</span>
+                                    <span v-else class="text-sm font-medium text-slate-400">En attente</span>
+                                </div>
+                            </div>
+                            <div class="space-y-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID HubSpot</span>
+                                <p class="text-xs text-slate-400 font-mono">{{ candidate.hubspot_id || '—' }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="premium-card p-8 bg-slate-900 text-white shadow-xl shadow-slate-200">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="size-8 rounded-lg bg-white/10 text-white flex items-center justify-center">
+                                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                            </div>
+                            <h3 class="text-lg font-bold">Contact</h3>
+                        </div>
+                        <div class="space-y-6">
+                            <div class="flex items-center gap-4">
+                                <div class="size-10 rounded-xl bg-white/5 flex items-center justify-center text-white/50">
+                                    <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-[9px] font-bold text-white/40 uppercase tracking-widest mb-0.5">Email</span>
+                                    <span class="text-xs font-bold text-white/90 break-all">{{ candidate.email }}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="size-10 rounded-xl bg-white/5 flex items-center justify-center text-white/50">
+                                    <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-[9px] font-bold text-white/40 uppercase tracking-widest mb-0.5">Téléphone</span>
+                                    <span class="text-xs font-bold text-white/90">{{ candidate.phone || 'Non renseigné' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Sessions List -->
                 <div class="premium-card overflow-hidden">
                     <div class="px-8 py-6 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
@@ -150,7 +224,7 @@ function sendEmail(sessionId) {
                                         <div class="flex flex-col">
                                             <span class="text-xs text-slate-600 font-bold flex items-center gap-1.5">
                                                 <svg class="size-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                                {{ s.started_at || 'Non démarré' }}
+                                                {{ formatDate(s.started_at) || 'Non démarré' }}
                                             </span>
                                             <span v-if="s.duration_seconds" class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
                                                 Temps passé: {{ Math.round(s.duration_seconds / 60) }}min

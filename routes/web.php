@@ -46,6 +46,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
     // Candidates
     Route::get('/candidates', [CandidateController::class, 'index'])->name('candidates.index');
+    Route::post('/candidates/sync-hubspot', [CandidateController::class, 'syncFromHubSpot'])->name('candidates.sync-hubspot');
     Route::post('/candidates', [CandidateController::class, 'store'])->name('candidates.store');
     Route::get('/candidates/{candidate}', [CandidateController::class, 'show'])->name('candidates.show');
     Route::post('/candidates/{candidate}/generate-link', [CandidateController::class, 'generateLink'])->name('candidates.generate-link');

@@ -7,7 +7,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Candidate extends Model
 {
-    protected $fillable = ['first_name', 'last_name', 'email', 'phone'];
+    protected $fillable = [
+        'first_name',
+        'last_name',
+        'email',
+        'phone',
+        'hubspot_id',
+        'formation_souhaitee',
+        'formation_souhaitee_pour_ypareo',
+        'score_test_entretien'
+    ];
 
     public function getFullNameAttribute(): string
     {

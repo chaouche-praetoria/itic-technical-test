@@ -19,7 +19,8 @@ class CandidateController extends Controller
     public function __construct(
         private TestGeneratorService $generator,
         private WebhookService $webhook,
-        private \App\Services\TestScoringService $scoring
+        private \App\Services\TestScoringService $scoring,
+        private \App\Services\HubSpotService $hubspot
     ) {}
 
     public function index(Request $request)
@@ -156,5 +157,51 @@ class CandidateController extends Controller
     {
         $session->update(['status' => 'completed']);
         return back()->with('success', 'Session marquée comme complétée.');
+    }
+
+    public function syncFromHubSpot()
+    {
+        $data = $this->hubspot->searchCandidates();
+
+        if (!$data || !isset($data['results'])) {
+            return back()->with('error', 'Impossible de récupérer les candidats depuis HubSpot.');
+        }
+
+        $createdCount = 0;
+        $updatedCount = 0;
+
+        foreach ($data['results'] as $result) {
+            $props = $result['properties'];
+            $hubspotId = $result['id'];
+            $email = $props['email'] ?? null;
+
+            if (!$email) continue;
+
+            $candidate = Candidate::where('hubspot_id', $hubspotId)
+                ->orWhere('email', $email)
+                ->first();
+
+            $candidateData = [
+                'hubspot_id' => $hubspotId,
+                'first_name' => $props['firstname'] ?? 'Inconnu',
+                'last_name' => $props['lastname'] ?? 'Inconnu',
+                'email' => $email,
+                'phone' => $props['phone'] ?? null,
+                'formation_souhaitee' => $props['formation_souhaitee'] ?? null,
+                'formation_souhaitee_pour_ypareo' => $props['formation_souhaitee_pour_ypareo'] ?? null,
+                'score_test_entretien' => $props['score_test_entretien'] ?? null,
+            ];
+
+            /** @var \App\Models\Candidate $candidate */
+            if ($candidate) {
+                $candidate->update($candidateData);
+                $updatedCount++;
+            } else {
+                Candidate::create($candidateData);
+                $createdCount++;
+            }
+        }
+
+        return back()->with('success', "Sync terminée : {$createdCount} importés, {$updatedCount} mis à jour.");
     }
 }

@@ -8,7 +8,15 @@ const props = defineProps({ candidates: Object, filters: Object });
 const search = ref(props.filters.search || '');
 const showModal = ref(false);
 const searching = ref(false);
+const syncing = ref(false);
 const form = useForm({ first_name: '', last_name: '', email: '', phone: '' });
+
+function syncHubSpot() {
+    syncing.value = true;
+    router.post(route('admin.candidates.sync-hubspot'), {}, {
+        onFinish: () => { syncing.value = false; },
+    });
+}
 
 let searchTimer;
 watch(search, (val) => {
@@ -31,6 +39,18 @@ function submit() {
         },
     });
 }
+
+const formatDate = (dateString) => {
+    if (!dateString) return '—';
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('fr-FR', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    }).format(date);
+};
 </script>
 
 <template>
@@ -42,11 +62,19 @@ function submit() {
                     <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Candidats</h2>
                     <p class="text-sm text-slate-500 font-medium">Gérez les profils et suivez les invitations de tests.</p>
                 </div>
-                <button @click="showModal = true" 
-                    class="bg-slate-900 text-white px-5 py-2.5 rounded-xl hover:bg-slate-800 font-bold text-sm shadow-xl shadow-slate-200 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 w-fit">
-                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
-                    Nouveau candidat
-                </button>
+                <div class="flex items-center gap-3">
+                    <button @click="syncHubSpot" :disabled="syncing"
+                        class="bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-xl hover:bg-slate-50 font-bold text-sm transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-sm">
+                        <svg v-if="syncing" class="size-4 animate-spin text-indigo-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+                        <svg v-else class="size-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Importer de HubSpot
+                    </button>
+                    <button @click="showModal = true" 
+                        class="bg-slate-900 text-white px-5 py-2.5 rounded-xl hover:bg-slate-800 font-bold text-sm shadow-xl shadow-slate-200 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 w-fit">
+                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                        Nouveau candidat
+                    </button>
+                </div>
             </div>
         </template>
 
@@ -107,7 +135,7 @@ function submit() {
                                         </div>
                                     </td>
                                     <td class="px-8 py-6 text-slate-400 font-medium text-xs">
-                                        {{ c.created_at }}
+                                        {{ formatDate(c.created_at) }}
                                     </td>
                                     <td class="px-8 py-6 text-right">
                                         <Link :href="route('admin.candidates.show', c.id)" 
