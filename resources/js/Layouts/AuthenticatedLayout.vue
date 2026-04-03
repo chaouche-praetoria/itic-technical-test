@@ -71,6 +71,13 @@ const page = usePage();
                         </template>
                         Domaines
                     </SidebarLink>
+
+                    <SidebarLink :href="route('admin.levels.index')" :active="route().current('admin.levels.*')">
+                        <template #icon>
+                            <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 012-2H7a2 2 0 01-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m-1 4h1m-5 10l-2-3m2 3l2-3" /></svg>
+                        </template>
+                        Niveaux
+                    </SidebarLink>
                 </nav>
             </div>
 

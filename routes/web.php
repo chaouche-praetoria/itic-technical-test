@@ -39,6 +39,9 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::put('/domains/{domain}', [DomainController::class, 'update'])->name('domains.update');
     Route::post('/domains/{domain}/themes', [DomainController::class, 'storeTheme'])->name('domains.themes.store');
 
+    // Academic Levels
+    Route::resource('levels', \App\Http\Controllers\Admin\AcademicLevelController::class)->except(['show']);
+
     // Questions
     Route::resource('questions', QuestionController::class)->except(['show']);
 

@@ -38,6 +38,7 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
                 'last_session_id' => fn () => $request->session()->get('last_session_id'),
+                'generated_link' => fn () => $request->session()->get('generated_link'),
             ],
         ];
     }
