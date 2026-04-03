@@ -78,20 +78,19 @@ jobs:
             echo "--- [DOCKER] Pulling New Image"
             docker compose -p itic-technical-test pull app
 
-            echo "--- [DOCKER] Stopping Old Project Services"
+            echo "--- [DOCKER] Stopping and Wiping Project Services (Volume Reset Requested)"
             export APP_PORT=8099
             export DB_EXTERNAL_PORT=3366
             
-            docker compose -p itic-technical-test down --remove-orphans
+            # Note: We use -v to wipe volumes as requested for "start from 0"
+            docker compose -p itic-technical-test down -v --remove-orphans
             
-            # Note: We do NOT use fuser or global docker stop here 
-            # to avoid impacting other production apps on the server.
-
             echo "--- [DOCKER] Restarting Project Services"
             docker compose -p itic-technical-test up -d
 
-            echo "--- [DOCKER] Cleaning up old images"
+            echo "--- [DOCKER] Post-deployment cleanup"
             docker image prune -f
+            docker compose -p itic-technical-test exec -T app php artisan optimize:clear
 
             echo "Deployment finished successfully."
           EOF
