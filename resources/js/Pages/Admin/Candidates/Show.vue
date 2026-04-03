@@ -15,8 +15,8 @@ const linkForm = useForm({
 function generateLink() {
     linkForm.post(route('admin.candidates.generate-link', props.candidate.id), {
         onSuccess: (page) => {
-            const flash = page.props.flash?.success || '';
-            generatedLink.value = flash.replace('Lien généré: ', '');
+            const flash = page.props.flash || {};
+            generatedLink.value = flash.generated_link || '';
             showLinkModal.value = false;
             linkForm.reset();
         },

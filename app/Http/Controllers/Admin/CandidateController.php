@@ -103,7 +103,8 @@ class CandidateController extends Controller
 
         return back()->with([
             'success' => $successMessage,
-            'last_session_id' => $session->id
+            'last_session_id' => $session->id,
+            'generated_link' => route('test.start', $session->token)
         ]);
     }
 
