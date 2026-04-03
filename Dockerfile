@@ -17,16 +17,10 @@ RUN apk add --no-cache \
     shadow
 
 # Install PHP extensions
+RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath
 RUN docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype \
-    && docker-php-ext-install \
-    pdo \
-    pdo_mysql \
-    mbstring \
-    exif \
-    pcntl \
-    bcmath \
-    gd \
-    opcache \
+    && docker-php-ext-install gd
+RUN docker-php-ext-enable opcache \
     && rm -rf /var/cache/apk/*
 
 # Install Redis PHP extension
