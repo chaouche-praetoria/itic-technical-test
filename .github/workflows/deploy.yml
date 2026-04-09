@@ -82,7 +82,8 @@ jobs:
             docker compose -p itic-technical-test pull app
 
             echo "--- [DOCKER] Stopping and Wiping Project Services (Volume Reset Requested)"
-            export APP_PORT=8099
+            export APP_PORT=80
+            export APP_URL=https://exam.iticparis.com
             export DB_EXTERNAL_PORT=3366
             
             # Note: We use -v to wipe volumes as requested for "start from 0"
