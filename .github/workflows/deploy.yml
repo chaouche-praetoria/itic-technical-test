@@ -91,6 +91,9 @@ jobs:
             echo "--- [DOCKER] Restarting Project Services"
             docker compose -p itic-technical-test up -d
 
+            echo "--- [DOCKER] Waiting for services to be ready..."
+            sleep 15
+
             echo "--- [DOCKER] Post-deployment cleanup"
             docker image prune -f
             docker compose -p itic-technical-test exec -T app php artisan optimize:clear
