@@ -17,11 +17,13 @@ return new class extends Migration
             $table->foreignId('test_template_id')->constrained()->cascadeOnDelete();
             $table->string('token', 64)->unique();
             $table->timestamp('expires_at');
-            $table->enum('status', ['pending', 'in_progress', 'completed', 'expired'])->default('pending');
+            $table->enum('status', ['pending', 'in_progress', 'completed', 'expired', 'pending_review'])->default('pending');
             $table->timestamp('started_at')->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->integer('duration_seconds')->nullable();
             $table->decimal('score', 5, 2)->nullable();
+            $table->integer('points_earned')->nullable();
+            $table->integer('points_total')->nullable();
             $table->integer('total_questions')->nullable();
             $table->integer('correct_answers')->nullable();
             $table->string('ip_address', 45)->nullable();
