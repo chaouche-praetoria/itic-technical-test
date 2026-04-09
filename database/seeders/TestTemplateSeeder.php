@@ -95,7 +95,7 @@ class TestTemplateSeeder extends Seeder
                     $template->rules()->create([
                         'theme_id' => $theme->id,
                         'count' => $ruleData['count'],
-                        'question_type' => 'mcq', // Par défaut
+                        'question_type' => $ruleData['theme'] === 'programmation-php-js-python' ? null : 'mcq',
                     ]);
                 }
             }

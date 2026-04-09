@@ -49,6 +49,23 @@ class QuestionSeeder extends Seeder
         ]);
     }
 
+    private function code(array $data, Domain $domain, Theme $theme, AcademicLevel $level): void
+    {
+        if (Question::where('statement', $data['statement'])->exists()) {
+            return;
+        }
+        Question::create([
+            'type'              => 'code',
+            'domain_id'         => $domain->id,
+            'theme_id'          => $theme->id,
+            'academic_level_id' => $level->id,
+            'difficulty'        => $data['difficulty'],
+            'statement'         => $data['statement'],
+            'unit_tests'        => json_encode($data['unit_tests']),
+            'default_language'  => $data['default_language'] ?? 'javascript',
+        ]);
+    }
+
     public function run(): void
     {
         $info = Domain::where('slug', 'informatique-numerique')->first();
@@ -87,6 +104,30 @@ class QuestionSeeder extends Seeder
                     ['`map` ne peut pas modifier les éléments originaux', false],
                     ['`forEach` ne peut être utilisé que sur des objets', false],
                 ],
+            ], $info, $prog, $bts);
+
+            // Real Code Questions
+            $this->code([
+                'statement'  => 'Écrivez une fonction `fizzbuzz(n)` qui retourne "Fizz" si n est divisible par 3, "Buzz" si n est divisible par 5, et "FizzBuzz" si n est divisible par les deux.',
+                'difficulty' => 'medium',
+                'default_language' => 'javascript',
+                'unit_tests' => [
+                    'javascript' => "console.log(fizzbuzz(3) === 'Fizz' ? 'PASS' : 'FAIL');\nconsole.log(fizzbuzz(5) === 'Buzz' ? 'PASS' : 'FAIL');\nconsole.log(fizzbuzz(15) === 'FizzBuzz' ? 'PASS' : 'FAIL');\nconsole.log(fizzbuzz(2) === 2 || fizzbuzz(2) === undefined ? 'PASS' : 'FAIL');",
+                    'python' => "print('PASS' if fizzbuzz(3) == 'Fizz' else 'FAIL')\nprint('PASS' if fizzbuzz(5) == 'Buzz' else 'FAIL')\nprint('PASS' if fizzbuzz(15) == 'FizzBuzz' else 'FAIL')",
+                    'php' => "echo fizzbuzz(3) === 'Fizz' ? 'PASS' : 'FAIL';\necho fizzbuzz(5) === 'Buzz' ? 'PASS' : 'FAIL';\necho fizzbuzz(15) === 'FizzBuzz' ? 'PASS' : 'FAIL';",
+                    'java' => "public class Main { public static void main(String[] args) {\n Solution s = new Solution();\n System.out.println(s.fizzbuzz(3).equals(\"Fizz\") ? \"PASS\" : \"FAIL\");\n System.out.println(s.fizzbuzz(5).equals(\"Buzz\") ? \"PASS\" : \"FAIL\");\n System.out.println(s.fizzbuzz(15).equals(\"FizzBuzz\") ? \"PASS\" : \"FAIL\");\n}}"
+                ]
+            ], $info, $prog, $bachelor);
+
+            $this->code([
+                'statement'  => 'Créez une fonction `sumArray(arr)` qui calcule la somme de tous les nombres d\'un tableau.',
+                'difficulty' => 'easy',
+                'default_language' => 'javascript',
+                'unit_tests' => [
+                    'javascript' => "console.log(sumArray([1, 2, 3]) === 6 ? 'PASS' : 'FAIL');\nconsole.log(sumArray([]) === 0 ? 'PASS' : 'FAIL');\nconsole.log(sumArray([-1, 1]) === 0 ? 'PASS' : 'FAIL');",
+                    'python' => "print('PASS' if sumArray([1, 2, 3]) == 6 else 'FAIL')\nprint('PASS' if sumArray([]) == 0 else 'FAIL')",
+                    'php' => "echo sumArray([1, 2, 3]) === 6 ? 'PASS' : 'FAIL';\necho sumArray([]) === 0 ? 'PASS' : 'FAIL';",
+                ]
             ], $info, $prog, $bts);
         }
 

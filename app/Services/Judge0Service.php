@@ -79,6 +79,14 @@ class Judge0Service
 
     private function wrapWithTests(string $code, string $tests, string $language): string
     {
+        // Try to decode JSON for multi-language support
+        $testsArray = json_decode($tests, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($testsArray)) {
+            $specificTests = $testsArray[$language] ?? ($testsArray['default'] ?? '');
+            return $code . "\n" . $specificTests;
+        }
+
+        // Fallback for simple string tests
         return $code . "\n" . $tests;
     }
 
