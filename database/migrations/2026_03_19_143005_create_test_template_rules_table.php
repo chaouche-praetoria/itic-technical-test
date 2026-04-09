@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('test_template_id')->constrained()->cascadeOnDelete();
             $table->foreignId('theme_id')->constrained()->cascadeOnDelete();
-            $table->enum('question_type', ['mcq', 'text', 'code']);
+            $table->enum('question_type', ['mcq', 'text', 'code'])->nullable();
             $table->enum('difficulty', ['easy', 'medium', 'hard'])->nullable();
             $table->integer('count');
             $table->timestamps();

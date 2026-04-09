@@ -24,8 +24,11 @@ class TestGeneratorService
         $order = 0;
         foreach ($template->rules as $rule) {
             $query = Question::where('theme_id', $rule->theme_id)
-                ->where('type', $rule->question_type)
                 ->where('is_active', true);
+
+            if ($rule->question_type) {
+                $query->where('type', $rule->question_type);
+            }
 
             if ($rule->difficulty) {
                 $query->where('difficulty', $rule->difficulty);
