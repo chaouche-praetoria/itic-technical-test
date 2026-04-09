@@ -10,7 +10,7 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
-        User::firstOrCreate(
+        $user = User::firstOrCreate(
             ['email' => 'admin@iticparis.fr'],
             [
                 'name' => 'Administrateur',
@@ -19,5 +19,7 @@ class AdminUserSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+
+        $user->assignRole('super-admin');
     }
 }

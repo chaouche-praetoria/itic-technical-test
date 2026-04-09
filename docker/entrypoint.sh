@@ -16,6 +16,7 @@ php artisan migrate --force --no-interaction || {
 
 echo "==> Seeding database (first run only)..."
 php artisan db:seed --force --class=AdminUserSeeder --no-interaction 2>/dev/null || true
+php artisan db:seed --force --class=RoleSeeder --no-interaction 2>/dev/null || true
 php artisan db:seed --force --class=DomainSeeder --no-interaction 2>/dev/null || true
 php artisan db:seed --force --class=QuestionSeeder --no-interaction 2>/dev/null || true
 
