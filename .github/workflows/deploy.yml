@@ -62,11 +62,13 @@ jobs:
             export IMAGE_TAG="${IMAGE_TAG}"
             
             if [ ! -d "${REMOTE_REPO_DIR}/.git" ]; then
-              echo "Dossier .git absent dans ${REMOTE_REPO_DIR}. Initialisation et clone (auth via token)..."
+              echo "Dossier .git absent dans ${REMOTE_REPO_DIR}. Initialisation (dossier non vide)..."
               mkdir -p "${REMOTE_REPO_DIR}"
               cd "${REMOTE_REPO_DIR}"
-              # In case files exist but not .git, we might need a clean clone
-              git clone https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git .
+              git init
+              git remote add origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+              git fetch --depth 1 origin main
+              git reset --hard origin/main
             else
               cd "${REMOTE_REPO_DIR}"
               git fetch origin main
