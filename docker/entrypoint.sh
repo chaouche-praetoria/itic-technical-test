@@ -61,7 +61,7 @@ if [ "$ROLE" = "app" ]; then
     fi
 
     echo "==> Starting PHP-FPM..."
-    exec su-exec laravel php-fpm -F
+    exec php-fpm -F
 
 elif [ "$ROLE" = "worker" ]; then
     echo "==> Role: Queue Worker"
