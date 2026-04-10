@@ -36,6 +36,7 @@
                     <tr>
                         <td align="center" style="background-color: #0f172a; padding: 48px 40px;">
                             <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
                                     <td align="center">
                                         <div style="margin-bottom: 24px;">
                                             <svg width="239" height="62" viewBox="0 0 239 62" xmlns="http://www.w3.org/2000/svg">
@@ -49,6 +50,7 @@
                                         <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.025em;">TechAssess Framework</h1>
                                         <p style="color: #94a3b8; margin: 8px 0 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;">ITIC Paris Access Service</p>
                                     </td>
+                                </tr>
                             </table>
                         </td>
                     </tr>

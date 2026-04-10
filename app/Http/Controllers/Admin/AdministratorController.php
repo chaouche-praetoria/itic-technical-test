@@ -56,22 +56,22 @@ class AdministratorController extends Controller
     /**
      * Update the specified administrator.
      */
-    public function update(Request $request, User $user)
+    public function update(Request $request, User $administrator)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => ['required', 'string', 'email', 'lowercase', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'email' => ['required', 'string', 'email', 'lowercase', 'max:255', Rule::unique('users')->ignore($administrator->id)],
             'roles' => 'required|array',
             'roles.*' => 'exists:roles,id',
         ]);
 
-        $user->update($request->only('name', 'email'));
+        $administrator->update($request->only('name', 'email'));
 
         if ($request->has('password') && $request->password) {
-            $user->update(['password' => Hash::make($request->password)]);
+            $administrator->update(['password' => Hash::make($request->password)]);
         }
 
-        $user->roles()->sync($request->roles);
+        $administrator->roles()->sync($request->roles);
 
         return redirect()->back()->with('success', 'Administrateur mis à jour.');
     }
@@ -79,14 +79,14 @@ class AdministratorController extends Controller
     /**
      * Remove the specified administrator.
      */
-    public function destroy(User $user)
+    public function destroy(User $administrator)
     {
         // Prevent deleting yourself
-        if (auth()->id() === $user->id) {
+        if (auth()->id() === $administrator->id) {
             return redirect()->back()->with('error', 'Vous ne pouvez pas supprimer votre propre compte.');
         }
 
-        $user->delete();
+        $administrator->delete();
 
         return redirect()->back()->with('success', 'Administrateur supprimé.');
     }
