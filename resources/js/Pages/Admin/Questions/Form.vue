@@ -115,7 +115,7 @@ function submit() {
                                         </label>
                                     </template>
                                     <div v-else class="text-xs text-slate-400 italic py-2">
-                                        {{ form.domain_ids.length ? 'Aucun thème disponible' : 'Sélectionnez d'abord un domaine' }}
+                                        {{ form.domain_ids.length ? 'Aucun thème disponible' : "Sélectionnez d'abord un domaine" }}
                                     </div>
                                 </div>
                                 <p v-if="form.errors.theme_ids" class="text-red-500 text-xs mt-1">{{ form.errors.theme_ids }}</p>
