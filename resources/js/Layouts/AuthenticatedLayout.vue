@@ -20,15 +20,7 @@ const page = usePage();
         <aside class="fixed inset-y-0 left-0 z-50 hidden w-72 bg-slate-900 shadow-2xl lg:block border-r border-white/5">
             <div class="flex h-20 items-center px-8 mb-4">
                 <Link :href="route('admin.dashboard')" class="flex items-center gap-3 group">
-                    <div class="size-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition-all duration-300">
-                        <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="text-lg font-black text-white leading-none tracking-tight">TestPlatform</span>
-                        <span class="text-[9px] font-black text-indigo-500 uppercase tracking-[0.3em] mt-1">Admin Panel</span>
-                    </div>
+                    <ApplicationLogo class="h-8 w-auto fill-white group-hover:scale-105 transition-all duration-300" />
                 </Link>
             </div>
             
@@ -127,7 +119,7 @@ const page = usePage();
                          <button @click="showingNavigationDropdown = !showingNavigationDropdown" class="p-2.5 -ml-2 text-slate-500 rounded-xl hover:bg-slate-100 transition-colors">
                              <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                          </button>
-                         <span class="text-xl font-black text-indigo-600 tracking-tight">TestPlatform</span>
+                         <ApplicationLogo class="h-6 w-auto fill-indigo-600" />
                     </div>
 
                     <div v-if="$slots.header" class="hidden lg:block flex-1">
@@ -148,8 +140,7 @@ const page = usePage();
                     <div class="fixed inset-y-0 left-0 w-80 bg-slate-900 shadow-2xl border-r border-white/5" @click.stop>
                         <div class="flex h-20 items-center px-8 justify-between border-b border-white/5">
                             <div class="flex items-center gap-3">
-                                <div class="size-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-black">TP</div>
-                                <span class="text-white font-black tracking-tight">Admin Menu</span>
+                                <ApplicationLogo class="h-6 w-auto fill-white" />
                             </div>
                             <button @click="showingNavigationDropdown = false" class="p-2 text-slate-400 hover:text-white transition-colors">
                                 <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
