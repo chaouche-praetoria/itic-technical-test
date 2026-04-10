@@ -13,7 +13,7 @@ import ApplicationLogo from '@/Components/ApplicationLogo.vue';
             <!-- Brand -->
             <div class="flex flex-col items-center mb-10">
                 <Link href="/" class="group flex flex-col items-center gap-4">
-                    <ApplicationLogo class="h-12 w-auto fill-slate-900 group-hover:scale-105 transition-transform" />
+                    <ApplicationLogo class="h-12 w-auto text-slate-900 group-hover:scale-105 transition-transform" />
                 </Link>
             </div>
 

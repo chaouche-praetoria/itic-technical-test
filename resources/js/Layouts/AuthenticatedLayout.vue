@@ -20,7 +20,7 @@ const page = usePage();
         <aside class="fixed inset-y-0 left-0 z-50 hidden w-72 bg-slate-900 shadow-2xl lg:block border-r border-white/5">
             <div class="flex h-20 items-center px-8 mb-4">
                 <Link :href="route('admin.dashboard')" class="flex items-center gap-3 group">
-                    <ApplicationLogo class="h-8 w-auto fill-white group-hover:scale-105 transition-all duration-300" />
+                    <ApplicationLogo class="h-8 w-auto text-white group-hover:scale-105 transition-all duration-300" />
                 </Link>
             </div>
             
@@ -126,7 +126,7 @@ const page = usePage();
                          <button @click="showingNavigationDropdown = !showingNavigationDropdown" class="p-2.5 -ml-2 text-slate-500 rounded-xl hover:bg-slate-100 transition-colors">
                              <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                          </button>
-                         <ApplicationLogo class="h-6 w-auto fill-indigo-600" />
+                         <ApplicationLogo class="h-6 w-auto text-indigo-600" />
                     </div>
 
                     <div v-if="$slots.header" class="hidden lg:block flex-1">
@@ -147,7 +147,7 @@ const page = usePage();
                     <div class="fixed inset-y-0 left-0 w-80 bg-slate-900 shadow-2xl border-r border-white/5" @click.stop>
                         <div class="flex h-20 items-center px-8 justify-between border-b border-white/5">
                             <div class="flex items-center gap-3">
-                                <ApplicationLogo class="h-6 w-auto fill-white" />
+                                <ApplicationLogo class="h-6 w-auto text-white" />
                             </div>
                             <button @click="showingNavigationDropdown = false" class="p-2 text-slate-400 hover:text-white transition-colors">
                                 <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
