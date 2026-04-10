@@ -15,7 +15,8 @@ RUN apk add --no-cache \
     nodejs \
     npm \
     shadow \
-    rsync
+    rsync \
+    su-exec
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath
@@ -62,7 +63,6 @@ RUN chown -R laravel:www-data storage bootstrap/cache \
 # Entrypoint
 COPY --chmod=755 docker/entrypoint.sh /entrypoint.sh
 
-USER laravel
 
 EXPOSE 9000
 

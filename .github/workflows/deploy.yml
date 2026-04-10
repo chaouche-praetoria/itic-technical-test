@@ -78,8 +78,8 @@ jobs:
             echo "--- [DOCKER] Login to GHCR"
             echo "${GITHUB_TOKEN}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            echo "--- [DOCKER] Pulling New Image"
-            docker compose -p itic-technical-test pull app
+            echo "--- [DOCKER] Pulling New Images"
+            docker compose -p itic-technical-test pull
 
             echo "--- [DOCKER] Stopping and Wiping Project Services (Volume Reset Requested)"
             export APP_PORT=80

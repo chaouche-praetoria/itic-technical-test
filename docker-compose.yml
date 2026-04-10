@@ -55,6 +55,37 @@ services:
     networks:
       - iticparis
 
+  # Queue Worker
+  worker:
+    image: ${IMAGE_TAG:-ghcr.io/chaouche-praetoria/itic-technical-test:latest}
+    container_name: iticparis_worker
+    restart: unless-stopped
+    command: ["worker"]
+    environment:
+      APP_ENV: production
+      APP_KEY: ${APP_KEY:-}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      DB_CONNECTION: ${DB_CONNECTION:-mysql}
+      DB_HOST: ${DB_HOST:-mysql}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_DATABASE: ${DB_DATABASE:-iticparis}
+      DB_USERNAME: ${DB_USERNAME:-iticparis}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      CACHE_DRIVER: ${CACHE_DRIVER:-redis}
+      SESSION_DRIVER: ${SESSION_DRIVER:-redis}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-redis}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+    volumes:
+      - app_storage:/var/www/storage/app
+      - ./storage/logs:/var/www/storage/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - iticparis
+
   # Nginx Proxy Manager (External Gateway & SSL)
   npm:
     image: 'jc21/nginx-proxy-manager:latest'
