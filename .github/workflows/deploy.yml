@@ -86,8 +86,8 @@ jobs:
             export APP_URL=https://exam.iticparis.com
             export DB_EXTERNAL_PORT=3366
             
-            # Note: We use -v to wipe volumes as requested for "start from 0"
-            docker compose -p itic-technical-test down -v --remove-orphans
+            # Note: Removal of -v to persist the DB volume
+            docker compose -p itic-technical-test down --remove-orphans
             
             echo "--- [DOCKER] Restarting Project Services"
             docker compose -p itic-technical-test up -d

@@ -11,9 +11,9 @@ const props = defineProps({
 
 const form = useForm({
     type: props.question?.type || 'mcq',
-    domain_id: props.question?.domain_id || '',
+    domain_ids: props.question?.domains?.map(d => d.id) || [],
     academic_level_id: props.question?.academic_level_id || '',
-    theme_id: props.question?.theme_id || '',
+    theme_ids: props.question?.themes?.map(t => t.id) || [],
     difficulty: props.question?.difficulty || 'easy',
     statement: props.question?.statement || '',
     multiple_answers: props.question?.multiple_answers || false,
@@ -25,11 +25,16 @@ const form = useForm({
 });
 
 const themes = computed(() => {
-    const domain = props.domains.find(d => d.id == form.domain_id);
-    return domain?.themes || [];
+    return props.domains
+        .filter(d => form.domain_ids.includes(d.id))
+        .flatMap(d => d.themes)
+        .filter((theme, index, self) => self.findIndex(t => t.id === theme.id) === index);
 });
 
-watch(() => form.domain_id, () => { form.theme_id = ''; });
+watch(() => form.domain_ids, (newIds) => {
+    const validThemeIds = themes.value.map(t => t.id);
+    form.theme_ids = form.theme_ids.filter(id => validThemeIds.includes(id));
+}, { deep: true });
 
 function addChoice() {
     form.choices.push({ text: '', is_correct: false });
@@ -79,28 +84,42 @@ function submit() {
                     </div>
 
                     <!-- Domain, Level, Theme -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Domaine</label>
-                            <select v-model="form.domain_id" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                <option value="">Sélectionner...</option>
-                                <option v-for="d in domains" :key="d.id" :value="d.id">{{ d.name }}</option>
-                            </select>
-                            <p v-if="form.errors.domain_id" class="text-red-500 text-xs mt-1">{{ form.errors.domain_id }}</p>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Domaines</label>
+                            <div class="grid grid-cols-1 gap-2 border border-gray-300 rounded-lg p-3 max-h-48 overflow-y-auto bg-slate-50">
+                                <label v-for="d in domains" :key="d.id" class="flex items-center gap-2 cursor-pointer text-sm hover:bg-white p-1 rounded transition-colors">
+                                    <input type="checkbox" v-model="form.domain_ids" :value="d.id" class="text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+                                    <span class="text-slate-700 font-medium">{{ d.name }}</span>
+                                </label>
+                            </div>
+                            <p v-if="form.errors.domain_ids" class="text-red-500 text-xs mt-1">{{ form.errors.domain_ids }}</p>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Niveau</label>
-                            <select v-model="form.academic_level_id" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                <option value="">Sélectionner...</option>
-                                <option v-for="l in levels" :key="l.id" :value="l.id">{{ l.name }}</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Thème</label>
-                            <select v-model="form.theme_id" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                <option value="">Sélectionner...</option>
-                                <option v-for="t in themes" :key="t.id" :value="t.id">{{ t.name }}</option>
-                            </select>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Niveau académique</label>
+                                <select v-model="form.academic_level_id" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="">Sélectionner...</option>
+                                    <option v-for="l in levels" :key="l.id" :value="l.id">{{ l.name }}</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Thèmes</label>
+                                <div class="grid grid-cols-1 gap-2 border border-gray-300 rounded-lg p-3 max-h-48 overflow-y-auto bg-slate-50" :class="{'opacity-50': !form.domain_ids.length}">
+                                    <template v-if="themes.length">
+                                        <label v-for="t in themes" :key="t.id" class="flex items-center gap-2 cursor-pointer text-sm hover:bg-white p-1 rounded transition-colors">
+                                            <input type="checkbox" v-model="form.theme_ids" :value="t.id" class="text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
+                                            <span class="text-slate-600">{{ t.name }}</span>
+                                        </label>
+                                    </template>
+                                    <div v-else class="text-xs text-slate-400 italic py-2">
+                                        {{ form.domain_ids.length ? 'Aucun thème disponible' : 'Sélectionnez d'abord un domaine' }}
+                                    </div>
+                                </div>
+                                <p v-if="form.errors.theme_ids" class="text-red-500 text-xs mt-1">{{ form.errors.theme_ids }}</p>
+                            </div>
                         </div>
                     </div>
 

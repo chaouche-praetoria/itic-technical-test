@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Question extends Model
 {
     protected $fillable = [
-        'type', 'domain_id', 'academic_level_id', 'theme_id',
+        'type', 'academic_level_id',
         'difficulty', 'statement', 'multiple_answers',
         'unit_tests', 'default_language', 'is_active',
     ];
@@ -19,9 +19,9 @@ class Question extends Model
         'is_active' => 'boolean',
     ];
 
-    public function domain(): BelongsTo
+    public function domains(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsTo(Domain::class);
+        return $this->belongsToMany(Domain::class);
     }
 
     public function academicLevel(): BelongsTo
@@ -29,9 +29,9 @@ class Question extends Model
         return $this->belongsTo(AcademicLevel::class);
     }
 
-    public function theme(): BelongsTo
+    public function themes(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsTo(Theme::class);
+        return $this->belongsToMany(Theme::class);
     }
 
     public function choices(): HasMany

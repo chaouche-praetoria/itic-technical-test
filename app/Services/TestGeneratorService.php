@@ -23,7 +23,7 @@ class TestGeneratorService
 
         $order = 0;
         foreach ($template->rules as $rule) {
-            $query = Question::where('theme_id', $rule->theme_id)
+            $query = Question::whereHas('themes', fn($q) => $q->where('themes.id', $rule->theme_id))
                 ->where('is_active', true);
 
             if ($rule->question_type) {

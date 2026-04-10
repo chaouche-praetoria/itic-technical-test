@@ -14,10 +14,10 @@ class QuestionController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Question::with(['domain', 'academicLevel', 'theme', 'choices'])
+        $query = Question::with(['domains', 'academicLevel', 'themes', 'choices'])
             ->when($request->search, fn($q) => $q->where('statement', 'like', "%{$request->search}%"))
             ->when($request->type, fn($q) => $q->where('type', $request->type))
-            ->when($request->domain_id, fn($q) => $q->where('domain_id', $request->domain_id))
+            ->when($request->domain_id, fn($q) => $q->whereHas('domains', fn($dq) => $dq->where('domains.id', $request->domain_id)))
             ->when($request->difficulty, fn($q) => $q->where('difficulty', $request->difficulty))
             ->latest();
 
@@ -40,9 +40,11 @@ class QuestionController extends Controller
     {
         $validated = $request->validate([
             'type' => 'required|in:mcq,text,code',
-            'domain_id' => 'required|exists:domains,id',
+            'domain_ids' => 'required|array|min:1',
+            'domain_ids.*' => 'exists:domains,id',
             'academic_level_id' => 'required|exists:academic_levels,id',
-            'theme_id' => 'required|exists:themes,id',
+            'theme_ids' => 'required|array|min:1',
+            'theme_ids.*' => 'exists:themes,id',
             'difficulty' => 'required|in:easy,medium,hard',
             'statement' => 'required|string',
             'multiple_answers' => 'boolean',
@@ -54,6 +56,8 @@ class QuestionController extends Controller
         ]);
 
         $question = Question::create($validated);
+        $question->domains()->sync($request->domain_ids);
+        $question->themes()->sync($request->theme_ids);
 
         if ($request->type === 'mcq' && $request->choices) {
             foreach ($request->choices as $i => $choice) {
@@ -67,7 +71,7 @@ class QuestionController extends Controller
     public function edit(Question $question)
     {
         return Inertia::render('Admin/Questions/Form', [
-            'question' => $question->load('choices'),
+            'question' => $question->load(['choices', 'domains', 'themes']),
             'domains' => Domain::with('themes')->where('is_active', true)->get(),
             'levels' => AcademicLevel::orderBy('order')->get(),
         ]);
@@ -77,9 +81,11 @@ class QuestionController extends Controller
     {
         $validated = $request->validate([
             'type' => 'required|in:mcq,text,code',
-            'domain_id' => 'required|exists:domains,id',
+            'domain_ids' => 'required|array|min:1',
+            'domain_ids.*' => 'exists:domains,id',
             'academic_level_id' => 'required|exists:academic_levels,id',
-            'theme_id' => 'required|exists:themes,id',
+            'theme_ids' => 'required|array|min:1',
+            'theme_ids.*' => 'exists:themes,id',
             'difficulty' => 'required|in:easy,medium,hard',
             'statement' => 'required|string',
             'multiple_answers' => 'boolean',
@@ -91,6 +97,9 @@ class QuestionController extends Controller
         ]);
 
         $question->update($validated);
+        $question->domains()->sync($request->domain_ids);
+        $question->themes()->sync($request->theme_ids);
+        
 
         if ($question->type === 'mcq') {
             $question->choices()->delete();

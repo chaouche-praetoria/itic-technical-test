@@ -22,3 +22,7 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Docker data
+/docker/npm/data
+/docker/npm/letsencrypt

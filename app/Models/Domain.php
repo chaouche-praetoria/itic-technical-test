@@ -16,9 +16,9 @@ class Domain extends Model
         return $this->hasMany(Theme::class);
     }
 
-    public function questions(): HasMany
+    public function questions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->hasMany(Question::class);
+        return $this->belongsToMany(Question::class);
     }
 
     public function testTemplates(): HasMany

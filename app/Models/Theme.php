@@ -15,9 +15,9 @@ class Theme extends Model
         return $this->belongsTo(Domain::class);
     }
 
-    public function questions(): HasMany
+    public function questions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->hasMany(Question::class);
+        return $this->belongsToMany(Question::class);
     }
 
     public function templateRules(): HasMany

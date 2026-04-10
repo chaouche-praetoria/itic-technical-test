@@ -69,9 +69,9 @@ return [
     |
     */
 
-    'back_to_system_url' => config('app.url', null),
+    'back_to_system_url' => '/admin',
 
-    'back_to_system_label' => null, // Displayed by default: "Back to {{ app.name }}"
+    'back_to_system_label' => 'Retour au Dashboard',
 
     /*
     |--------------------------------------------------------------------------

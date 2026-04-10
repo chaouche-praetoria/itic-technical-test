@@ -148,7 +148,16 @@ function confirmDelete() {
                                                 }"></div>
                                                 <span class="text-slate-700 font-bold text-xs">{{ typeLabel[q.type] }}</span>
                                             </div>
-                                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate max-w-[120px]">{{ q.domain?.name }} • {{ q.theme?.name }}</span>
+                                            <div class="flex flex-wrap gap-1">
+                                                <span v-for="d in q.domains" :key="d.id" class="text-[9px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded uppercase tracking-tighter">
+                                                    {{ d.name }}
+                                                </span>
+                                            </div>
+                                            <div class="flex flex-wrap gap-1 mt-1">
+                                                <span v-for="t in q.themes" :key="t.id" class="text-[9px] font-medium text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded italic">
+                                                    {{ t.name }}
+                                                </span>
+                                            </div>
                                         </div>
                                     </td>
                                     <td class="px-8 py-6 text-center">
