@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
 use App\Models\User;
+use App\Mail\AdminCredentialsMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -46,7 +48,9 @@ class AdministratorController extends Controller
 
         $user->roles()->sync($request->roles);
 
-        return redirect()->back()->with('success', 'Administrateur ajouté avec succès.');
+        Mail::to($user->email)->send(new AdminCredentialsMail($user, $request->password));
+
+        return redirect()->back()->with('success', 'Administrateur ajouté avec succès et accès envoyés par mail.');
     }
 
     /**
