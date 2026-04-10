@@ -14,7 +14,8 @@ RUN apk add --no-cache \
     unzip \
     nodejs \
     npm \
-    shadow
+    shadow \
+    rsync
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath
@@ -52,6 +53,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Install Node dependencies and build assets
 RUN npm ci && npm run build && rm -rf node_modules
+RUN mkdir -p public_assets && cp -a public/build public_assets/
 
 # Set permissions
 RUN chown -R laravel:www-data storage bootstrap/cache \

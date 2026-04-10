@@ -26,6 +26,10 @@ mkdir -p storage/logs
 chmod -R 775 storage/framework bootstrap/cache 2>/dev/null || true
 
 if [ "$APP_ENV" != "local" ]; then
+  echo "==> Syncing build assets to public volume..."
+  mkdir -p public/build
+  rsync -a --delete public_assets/build/ public/build/
+  
   echo "==> Caching config & routes for production..."
   php artisan config:cache
   php artisan route:cache
