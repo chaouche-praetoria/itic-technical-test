@@ -93,11 +93,33 @@ jobs:
             docker compose -p itic-technical-test up -d
 
             echo "--- [DOCKER] Waiting for services to be ready..."
-            sleep 15
+            # Wait for up to 60 seconds for the app container to become healthy
+            TIMEOUT=60
+            COUNT=0
+            while [ $COUNT -lt $TIMEOUT ]; do
+              STATUS=$(docker inspect --format='{{.State.Health.Status}}' iticparis_app 2>/dev/null || echo "unknown")
+              if [ "$STATUS" = "healthy" ]; then
+                echo "    Container iticparis_app is healthy!"
+                break
+              fi
+              echo "    Waiting for container iticparis_app ($STATUS)... ($COUNT/$TIMEOUT)"
+              sleep 5
+              COUNT=$((COUNT + 5))
+            done
+
+            if [ "$STATUS" != "healthy" ]; then
+              echo "    Warning: iticparis_app is not healthy after ${TIMEOUT}s. Current status: $STATUS"
+              echo "    Checking logs for clues..."
+              docker logs iticparis_app --tail 50
+            fi
 
             echo "--- [DOCKER] Post-deployment cleanup"
             docker image prune -f
-            docker compose -p itic-technical-test exec -T app php artisan optimize:clear
+            
+            # Only attempt exec if container is running (even if not healthy, we try)
+            if [ "$(docker inspect -f '{{.State.Running}}' iticparis_app)" = "true" ]; then
+                docker compose -p itic-technical-test exec -T app php artisan optimize:clear
+            fi
 
-            echo "Deployment finished successfully."
+            echo "Deployment finished."
           EOF
