@@ -61,6 +61,7 @@ RUN chown -R laravel:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
 # Entrypoint
+COPY docker/php/www.conf /usr/local/etc/php-fpm.d/www.conf
 COPY --chmod=755 docker/entrypoint.sh /entrypoint.sh
 
 

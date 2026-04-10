@@ -117,7 +117,7 @@ jobs:
             docker image prune -f
             
             # Only attempt exec if container is running (even if not healthy, we try)
-            if [ "\$(docker inspect -f '{{.State.Running}}' iticparis_app)" = "true" ]; then
+            if [ "\$(docker inspect -f '{{.State.Status}}' iticparis_app)" = "running" ]; then
                 docker compose -p itic-technical-test exec -T app php artisan optimize:clear
             fi
 
