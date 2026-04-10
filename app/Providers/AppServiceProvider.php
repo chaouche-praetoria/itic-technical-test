@@ -31,5 +31,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(function ($user, $ability) {
             return $user->hasRole('super-admin') ? true : null;
         });
+
+        Gate::define('viewLogViewer', function ($user) {
+            return $user->isSuperAdmin();
+        });
     }
 }
