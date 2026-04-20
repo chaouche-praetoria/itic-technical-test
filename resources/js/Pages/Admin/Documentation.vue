@@ -12,9 +12,11 @@ const sections = [
     { id: 'dashboard',      label: 'Tableau de bord',          icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
     { id: 'candidates',     label: 'Candidats',                icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
     { id: 'questions',      label: 'Banque de questions',      icon: 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
-    { id: 'templates',      label: 'Templates de test',        icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+    { id: 'code-questions', label: 'Rédaction questions Code',  icon: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4' },
+    { id: 'templates',      label: 'Templates de test',        icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2-2z' },
     { id: 'sessions',       label: 'Sessions & Notation',      icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
     { id: 'scoring',        label: 'Système de notation',      icon: 'M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z' },
+    { id: 'levels',         label: 'Niveaux académiques',      icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
     { id: 'domains',        label: 'Domaines & Thèmes',        icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
     { id: 'hubspot',        label: 'Intégration HubSpot',      icon: 'M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z' },
     { id: 'antichat',       label: 'Anti-triche',              icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
@@ -256,6 +258,80 @@ onUnmounted(() => {
                     </div>
                 </section>
 
+                <!-- RÉDACTION QUESTIONS CODE -->
+                <section id="code-questions" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-8 py-5 border-b border-slate-100 flex items-center gap-3">
+                        <div class="size-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+                            <svg class="size-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                        </div>
+                        <h2 class="text-base font-black text-slate-800">Rédaction des questions de code</h2>
+                    </div>
+                    <div class="px-8 py-6 space-y-6 text-sm text-slate-600 leading-relaxed">
+                        <p>Les questions de code permettent d'évaluer les capacités de programmation réelle. Le candidat doit écrire une fonction qui répond à des critères précis, validée par des tests unitaires exécutés via Judge0.</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                                <p class="font-bold text-slate-700 mb-2">1. Starter Code (Code initial)</p>
+                                <p class="text-xs text-slate-500 mb-3">C'est le code que le candidat voit en ouvrant la question. Il contient généralement la signature de la fonction et des commentaires.</p>
+                                <div class="bg-slate-900 rounded-xl p-3 font-mono text-[10px] text-slate-300">
+                                    def addition(a, b):<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;# Écrivez votre code ici<br>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;pass
+                                </div>
+                            </div>
+                            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                                <p class="font-bold text-slate-700 mb-2">2. Unit Tests (Tests unitaires)</p>
+                                <p class="text-xs text-slate-500 mb-3">Code interne qui valide la solution. Chaque test doit lever une erreur (Exception ou Assert) si la réponse est fausse.</p>
+                                <div class="bg-slate-900 rounded-xl p-3 font-mono text-[10px] text-slate-300">
+                                    assert addition(1, 2) == 3<br>
+                                    assert addition(-1, 1) == 0<br>
+                                    assert addition(0, 0) == 0
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-6 bg-amber-50 border border-amber-100 rounded-2xl italic">
+                            <p class="font-bold text-amber-800 mb-2 text-xs uppercase tracking-widest">Fonctionnement du Scoring Code</p>
+                            <p class="text-xs text-amber-700 leading-relaxed">
+                                Le système sépare vos tests unitaires ligne par ligne. Chaque ligne est exécutée indépendamment. La note finale de la question est le pourcentage de lignes de test qui ont réussi sans erreur.
+                            </p>
+                        </div>
+
+                        <div>
+                            <p class="font-bold text-slate-700 mb-3">Exemple complet (Python)</p>
+                            <div class="space-y-4">
+                                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Énoncé</p>
+                                    <p class="text-xs">Créez une fonction <code>is_even(n)</code> qui retourne <code>True</code> si le nombre est pair, <code>False</code> sinon.</p>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 pl-2">Starter Code</p>
+                                        <div class="bg-slate-900 rounded-xl p-4 font-mono text-[10px] text-indigo-300">
+                                            def is_even(n):<br>
+                                            &nbsp;&nbsp;&nbsp;&nbsp;return
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 pl-2">Unit Tests (un par ligne)</p>
+                                        <div class="bg-emerald-950 rounded-xl p-4 font-mono text-[10px] text-emerald-300 border border-emerald-500/30">
+                                            assert is_even(2) == True<br>
+                                            assert is_even(3) == False<br>
+                                            assert is_even(0) == True<br>
+                                            assert is_even(-2) == True
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+                            <p class="font-bold text-xs text-indigo-700 mb-1">Conseil d'expert</p>
+                            <p class="text-xs text-indigo-600">Évitez d'utiliser des bibliothèques externes complexes dans vos tests. Restez sur des assertions simples (<code>assert</code> ou <code>throw new Error()</code>) pour garantir la compatibilité entre les langages.</p>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- TEMPLATES -->
                 <section id="templates" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                     <div class="px-8 py-5 border-b border-slate-100 flex items-center gap-3">
@@ -417,6 +493,52 @@ onUnmounted(() => {
                         <p>Accédez à <strong>Domaines</strong> dans le menu pour créer, modifier ou désactiver des domaines. Les thèmes s'ajoutent directement depuis la fiche du domaine concerné.</p>
                         <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-700">
                             <strong>Attention :</strong> la suppression d'un domaine est bloquée s'il contient des questions ou est utilisé dans des templates actifs.
+                        </div>
+                    </div>
+                </section>
+
+                <!-- NIVEAUX ACADÉMIQUES -->
+                <section id="levels" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-8 py-5 border-b border-slate-100 flex items-center gap-3">
+                        <div class="size-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+                            <svg class="size-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        </div>
+                        <h2 class="text-base font-black text-slate-800">Niveaux académiques</h2>
+                    </div>
+                    <div class="px-8 py-6 space-y-6 text-sm text-slate-600 leading-relaxed">
+                        <p>Les niveaux académiques (ex : BTS, Bachelor, Mastère) permettent de segmenter les questions par difficulté pédagogique et de gérer les parcours d'orientation.</p>
+
+                        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+                            <p class="font-bold text-slate-700 mb-3 text-xs uppercase tracking-widest">Configuration du Repli (Fallback)</p>
+                            <p class="text-xs mb-4">
+                                Pour chaque niveau, vous pouvez définir un <strong>niveau de repli</strong>. C'est ce niveau qui sera proposé au candidat s'il n'atteint pas le score minimal (70%) lors de son test.
+                            </p>
+                            
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-100">
+                                    <div class="size-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-[10px] font-bold">1</div>
+                                    <p class="text-xs">Allez dans <strong>Niveaux</strong> dans le menu latéral.</p>
+                                </div>
+                                <div class="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-100">
+                                    <div class="size-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-[10px] font-bold">2</div>
+                                    <p class="text-xs">Modifiez un niveau existant.</p>
+                                </div>
+                                <div class="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-100">
+                                    <div class="size-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-[10px] font-bold">3</div>
+                                    <p class="text-xs">Sélectionnez le <strong>Niveau de repli</strong> dans la liste déroulante.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+                                <p class="font-black text-xs text-indigo-600 uppercase tracking-widest mb-2">Usage : Questions</p>
+                                <p class="text-xs text-slate-500">Chaque question doit être rattachée à un niveau académique pour garantir la cohérence pédagogique du test généré.</p>
+                            </div>
+                            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50">
+                                <p class="font-black text-xs text-indigo-600 uppercase tracking-widest mb-2">Usage : Scoring</p>
+                                <p class="text-xs text-slate-500">Le système calcule la réussite par rapport au niveau testé et utilise le repli pour suggérer une orientation alternative dans HubSpot.</p>
+                            </div>
                         </div>
                     </div>
                 </section>
