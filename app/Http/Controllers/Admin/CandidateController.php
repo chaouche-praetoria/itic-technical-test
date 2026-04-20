@@ -94,9 +94,14 @@ class CandidateController extends Controller
         $successMessage = "Lien généré: " . route('test.start', $session->token);
 
         if ($request->send_email) {
-            $session->load(['candidate', 'template.domain']);
-            Mail::to($session->candidate->email)->send(new TestInvitationMail($session));
-            $successMessage .= " et envoyé par email à " . $candidate->first_name;
+            $this->hubspot->updateContact($candidate->email, [
+                'resultat_test_technique' => '',
+                'score_test_technique' => '',
+                'date_test_technique' => '',
+                'orientation_proposee' => '',
+                'lien_test_technique' => route('test.start', $session->token),
+            ]);
+            $successMessage .= " et synchronisé avec HubSpot pour " . $candidate->first_name;
         }
 
         $this->webhook->dispatch($session, 'test.link_generated');
@@ -123,11 +128,17 @@ class CandidateController extends Controller
 
     public function sendSessionEmail(TestSession $session)
     {
-        $session->load(['candidate', 'template.domain']);
+        $session->load(['candidate']);
         
-        Mail::to($session->candidate->email)->send(new TestInvitationMail($session));
+        $this->hubspot->updateContact($session->candidate->email, [
+            'resultat_test_technique' => '',
+            'score_test_technique' => '',
+            'date_test_technique' => '',
+            'orientation_proposee' => '',
+            'lien_test_technique' => route('test.start', $session->token),
+        ]);
 
-        return back()->with('success', "Lien de test envoyé par mail à " . $session->candidate->first_name);
+        return back()->with('success', "Lien de test synchronisé avec HubSpot pour " . $session->candidate->first_name);
     }
 
     public function gradeAnswer(Request $request, TestSession $session)
@@ -160,7 +171,7 @@ class CandidateController extends Controller
         $session->update(['status' => 'completed']);
 
         // Sync to HubSpot
-        $session->load('candidate');
+        $session->load(['candidate', 'template.academicLevel']);
         if ($session->candidate && $session->candidate->email) {
             $scoreStr = number_format($session->score, 2);
             $resultLabel = $session->score >= 70 ? 'admis' : 'Echec - A requalifier';
@@ -169,6 +180,8 @@ class CandidateController extends Controller
                 'score_test_technique' => $scoreStr,
                 'resultat_test_technique' => $resultLabel,
                 'date_test_technique' => now()->format('Y-m-d'),
+                'orientation_proposee' => $this->scoring->getProposedOrientation($session),
+                'lien_test_technique' => route('test.start', $session->token),
             ]);
         }
 
@@ -205,6 +218,8 @@ class CandidateController extends Controller
             'score_test_technique' => $scoreStr,
             'resultat_test_technique' => $resultLabel,
             'date_test_technique' => $session->completed_at ? $session->completed_at->format('Y-m-d') : now()->format('Y-m-d'),
+            'orientation_proposee' => $this->scoring->getProposedOrientation($session),
+            'lien_test_technique' => route('test.start', $session->token),
         ]);
 
         Log::info("HubSpot: Manual sync completed for " . $candidate->email . ". Result: " . ($success ? 'SUCCESS' : 'FAILURE'));
@@ -243,6 +258,8 @@ class CandidateController extends Controller
             'score_test_technique' => $props['score_test_technique'] ?? $candidate->score_test_technique,
             'resultat_test_technique' => $props['resultat_test_technique'] ?? $candidate->resultat_test_technique,
             'date_test_technique' => $props['date_test_technique'] ?? $candidate->date_test_technique,
+            'orientation_proposee' => $props['orientation_proposee'] ?? $candidate->orientation_proposee,
+            'lien_test_technique' => $props['lien_test_technique'] ?? $candidate->lien_test_technique,
         ]);
 
         return back()->with('success', 'Données rafraîchies depuis HubSpot pour ' . $candidate->full_name);
@@ -281,6 +298,8 @@ class CandidateController extends Controller
                 'score_test_technique' => $props['score_test_technique'] ?? null,
                 'resultat_test_technique' => $props['resultat_test_technique'] ?? null,
                 'date_test_technique' => $props['date_test_technique'] ?? null,
+                'orientation_proposee' => $props['orientation_proposee'] ?? null,
+                'lien_test_technique' => $props['lien_test_technique'] ?? null,
             ];
 
             /** @var \App\Models\Candidate $candidate */

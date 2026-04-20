@@ -196,6 +196,8 @@ class TestController extends Controller
                 'score_test_technique' => $scoreStr,
                 'resultat_test_technique' => $resultLabel,
                 'date_test_technique' => now()->format('Y-m-d'),
+                'orientation_proposee' => $this->scoring->getProposedOrientation($session),
+                'lien_test_technique' => route('test.start', $session->token),
             ]);
         }
 

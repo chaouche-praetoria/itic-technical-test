@@ -55,7 +55,9 @@ class HubSpotService
                 "formation_souhaitee_pour_ypareo",
                 "score_test_technique",
                 "resultat_test_technique",
-                "date_test_technique"
+                "date_test_technique",
+                "orientation_proposee",
+                "lien_test_technique"
             ],
             "limit" => 100
         ];
@@ -97,7 +99,9 @@ class HubSpotService
             "formation_souhaitee_pour_ypareo",
             "score_test_technique",
             "resultat_test_technique",
-            "date_test_technique"
+            "date_test_technique",
+            "orientation_proposee",
+            "lien_test_technique"
         ];
 
         try {

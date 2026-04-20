@@ -83,4 +83,26 @@ class TestScoringService
 
         return $correctIds->toArray() === $givenIds->toArray() ? 100.0 : 0.0;
     }
+
+    public function getProposedOrientation(TestSession $session): string
+    {
+        $session->loadMissing('template.academicLevel');
+        $currentLevel = $session->template->academicLevel;
+        
+        if (!$currentLevel) {
+            return '';
+        }
+
+        // Success (>= 70): No downgrade
+        if ($session->score >= 70) {
+            return $currentLevel->name;
+        }
+
+        // Failure (< 70): Downgrade logic
+        return match($currentLevel->slug) {
+            'bachelor' => 'BTS',
+            'mastere'  => 'Bachelor',
+            default    => $currentLevel->name, // Stays BTS if already BTS
+        };
+    }
 }
