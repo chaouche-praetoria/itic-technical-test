@@ -43,6 +43,7 @@ if [ "$ROLE" = "app" ]; then
     su-exec laravel php artisan db:seed --force --class=AdminUserSeeder --no-interaction 2>/dev/null || true
     su-exec laravel php artisan db:seed --force --class=DomainSeeder --no-interaction 2>/dev/null || true
     su-exec laravel php artisan db:seed --force --class=QuestionSeeder --no-interaction 2>/dev/null || true
+    su-exec laravel php artisan db:seed --force --class=FallbackOrientationSeeder --no-interaction 2>/dev/null || true
 
     if [ "$APP_ENV" != "local" ]; then
         echo "    Syncing build assets to public volume..."
@@ -55,7 +56,12 @@ if [ "$ROLE" = "app" ]; then
         su-exec laravel php artisan route:cache
         su-exec laravel php artisan view:cache 2>/dev/null || echo "    view:cache skipped"
     else
-        echo "    Dev mode: skipping cache..."
+        echo "    Dev mode: checking assets..."
+        if [ ! -d "public/build" ] || [ -z "$(ls -A public/build)" ]; then
+            echo "    Assets missing, running build..."
+            su-exec laravel npm run build
+        fi
+        echo "    Cleaning cache..."
         su-exec laravel php artisan config:clear
         su-exec laravel php artisan route:clear
     fi
