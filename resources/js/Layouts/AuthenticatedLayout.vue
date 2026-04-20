@@ -10,7 +10,13 @@ import Toast from '@/Components/Toast.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 
 const showingNavigationDropdown = ref(false);
+const showHelpCard = ref(localStorage.getItem('admin_show_help_card') !== 'false');
 const page = usePage();
+
+const dismissHelpCard = () => {
+    showHelpCard.value = false;
+    localStorage.setItem('admin_show_help_card', 'false');
+};
 </script>
 
 <template>
@@ -94,12 +100,19 @@ const page = usePage();
                 </nav>
             </div>
 
-            <div class="p-4 space-y-3 shrink-0 border-t border-white/5 bg-slate-900">
-                <div class="bg-indigo-600/10 rounded-3xl p-6 mb-4 border border-indigo-500/10">
+            <div v-if="showHelpCard" class="p-4 shrink-0 border-t border-white/5">
+                <div class="bg-indigo-600/10 rounded-3xl p-6 border border-indigo-500/10 relative group/help">
+                    <button @click="dismissHelpCard" 
+                        class="absolute top-4 right-4 text-slate-500 hover:text-white opacity-0 group-hover/help:opacity-100 transition-all p-1 hover:bg-white/10 rounded-lg">
+                        <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
                     <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2">Besoin d'aide ?</p>
                     <p class="text-[11px] text-slate-400 leading-relaxed mb-4">Consultez la documentation ou contactez le support ITIC.</p>
                     <Link :href="route('admin.documentation')" class="block w-full py-2.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-900/20 text-center">Documentation</Link>
                 </div>
+            </div>
+
+            <div class="p-4 space-y-3 shrink-0 border-t border-white/5 bg-slate-900">
 
                 <div class="flex items-center gap-3 px-4 py-3 bg-slate-800/30 rounded-2xl border border-white/5">
                     <div class="size-10 rounded-full bg-gradient-to-tr from-slate-700 to-slate-600 flex items-center justify-center text-white font-black text-sm border border-white/10 shadow-inner">
