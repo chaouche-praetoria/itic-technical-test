@@ -84,7 +84,8 @@ class CandidateController extends Controller
     {
         $request->validate([
             'test_template_id' => 'required|exists:test_templates,id',
-            'send_email' => 'boolean'
+            'send_email' => 'boolean',
+            'sync_hubspot' => 'boolean'
         ]);
 
         $template = TestTemplate::findOrFail($request->test_template_id);
@@ -93,7 +94,7 @@ class CandidateController extends Controller
 
         $successMessage = "Lien généré: " . route('test.start', $session->token);
 
-        if ($request->send_email) {
+        if ($request->sync_hubspot) {
             $this->hubspot->updateContact($candidate->email, [
                 'resultat_test_technique' => '',
                 'score_test_technique' => '',
@@ -101,7 +102,13 @@ class CandidateController extends Controller
                 'orientation_proposee' => '',
                 'lien_test_technique' => route('test.start', $session->token),
             ]);
-            $successMessage .= " et synchronisé avec HubSpot pour " . $candidate->first_name;
+            $successMessage .= " et synchronisé avec HubSpot";
+        }
+
+        if ($request->send_email) {
+            $session->load(['candidate', 'template.domain']);
+            \Illuminate\Support\Facades\Mail::to($session->candidate->email)->send(new \App\Mail\TestInvitationMail($session));
+            $successMessage .= " et envoyé par email à " . $candidate->first_name;
         }
 
         $this->webhook->dispatch($session, 'test.link_generated');
@@ -126,19 +133,35 @@ class CandidateController extends Controller
         return Inertia::render('Admin/Candidates/SessionDetail', ['session' => $session]);
     }
 
-    public function sendSessionEmail(TestSession $session)
+    public function sendSessionEmail(Request $request, TestSession $session)
     {
-        $session->load(['candidate']);
-        
-        $this->hubspot->updateContact($session->candidate->email, [
-            'resultat_test_technique' => '',
-            'score_test_technique' => '',
-            'date_test_technique' => '',
-            'orientation_proposee' => '',
-            'lien_test_technique' => route('test.start', $session->token),
+        $request->validate([
+            'send_email' => 'nullable|boolean',
+            'sync_hubspot' => 'nullable|boolean'
         ]);
 
-        return back()->with('success', "Lien de test synchronisé avec HubSpot pour " . $session->candidate->first_name);
+        $session->load(['candidate', 'template.domain']);
+        $successMessages = [];
+
+        if ($request->sync_hubspot) {
+            $this->hubspot->updateContact($session->candidate->email, [
+                'resultat_test_technique' => '',
+                'score_test_technique' => '',
+                'date_test_technique' => '',
+                'orientation_proposee' => '',
+                'lien_test_technique' => route('test.start', $session->token),
+            ]);
+            $successMessages[] = "synchronisé avec HubSpot";
+        }
+        
+        if ($request->input('send_email', true)) {
+            \Illuminate\Support\Facades\Mail::to($session->candidate->email)->send(new \App\Mail\TestInvitationMail($session));
+            $successMessages[] = "envoyé par mail";
+        }
+
+        $message = "Lien de test " . implode(' et ', $successMessages) . " pour " . $session->candidate->first_name;
+
+        return back()->with('success', $message);
     }
 
     public function gradeAnswer(Request $request, TestSession $session)

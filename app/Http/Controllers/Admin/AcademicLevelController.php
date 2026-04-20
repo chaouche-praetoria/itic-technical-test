@@ -13,7 +13,8 @@ class AcademicLevelController extends Controller
     public function index()
     {
         return Inertia::render('Admin/AcademicLevels/Index', [
-            'levels' => AcademicLevel::withCount(['questions', 'testTemplates'])
+            'levels' => AcademicLevel::with(['fallbackLevel'])
+                ->withCount(['questions', 'testTemplates'])
                 ->orderBy('order')
                 ->get(),
         ]);
@@ -24,6 +25,7 @@ class AcademicLevelController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:100',
             'order' => 'nullable|integer|min:0',
+            'fallback_level_id' => 'nullable|exists:academic_levels,id',
         ]);
 
         $validated['slug'] = Str::slug($validated['name']);
@@ -38,6 +40,7 @@ class AcademicLevelController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:100',
             'order' => 'nullable|integer|min:0',
+            'fallback_level_id' => 'nullable|exists:academic_levels,id',
         ]);
 
         $validated['slug'] = Str::slug($validated['name']);

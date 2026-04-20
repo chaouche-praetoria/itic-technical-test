@@ -10,7 +10,7 @@ class TestScoringService
     public function calculateSessionScores(TestSession $session): void
     {
         $session->load(['sessionQuestions.question.choices', 'answers']);
-        
+
         $totalScore = 0;
         $correctCount = 0;
         $totalQuestions = $session->sessionQuestions->count();
@@ -58,16 +58,16 @@ class TestScoringService
 
     public function maxPoints(Question $question): int
     {
-        return match(true) {
-            $question->type === 'mcq'  && $question->difficulty === 'easy'   => 10,
-            $question->type === 'mcq'  && $question->difficulty === 'medium' => 20,
-            $question->type === 'mcq'  && $question->difficulty === 'hard'   => 30,
-            $question->type === 'text' && $question->difficulty === 'easy'   => 20,
+        return match (true) {
+            $question->type === 'mcq' && $question->difficulty === 'easy' => 10,
+            $question->type === 'mcq' && $question->difficulty === 'medium' => 20,
+            $question->type === 'mcq' && $question->difficulty === 'hard' => 30,
+            $question->type === 'text' && $question->difficulty === 'easy' => 20,
             $question->type === 'text' && $question->difficulty === 'medium' => 30,
-            $question->type === 'text' && $question->difficulty === 'hard'   => 40,
-            $question->type === 'code' && $question->difficulty === 'easy'   => 20,
+            $question->type === 'text' && $question->difficulty === 'hard' => 40,
+            $question->type === 'code' && $question->difficulty === 'easy' => 20,
             $question->type === 'code' && $question->difficulty === 'medium' => 40,
-            $question->type === 'code' && $question->difficulty === 'hard'   => 60,
+            $question->type === 'code' && $question->difficulty === 'hard' => 60,
             default => 10,
         };
     }
@@ -86,7 +86,7 @@ class TestScoringService
 
     public function getProposedOrientation(TestSession $session): string
     {
-        $session->loadMissing('template.academicLevel');
+        $session->loadMissing('template.academicLevel.fallbackLevel');
         $currentLevel = $session->template->academicLevel;
         
         if (!$currentLevel) {
@@ -98,11 +98,12 @@ class TestScoringService
             return $currentLevel->name;
         }
 
-        // Failure (< 70): Downgrade logic
-        return match($currentLevel->slug) {
-            'bachelor' => 'BTS',
-            'mastere'  => 'Bachelor',
-            default    => $currentLevel->name, // Stays BTS if already BTS
-        };
+        // Failure (< 70): Dynamic downgrade logic
+        if ($currentLevel->fallbackLevel) {
+            return $currentLevel->fallbackLevel->name;
+        }
+
+        // Default to current level name if no fallback is defined
+        return $currentLevel->name;
     }
 }

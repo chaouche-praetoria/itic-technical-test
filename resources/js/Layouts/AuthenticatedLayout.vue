@@ -17,15 +17,15 @@ const page = usePage();
     <div>
     <div class="min-h-screen bg-slate-50 font-sans">
         <!-- Sidebar Navigation -->
-        <aside class="fixed inset-y-0 left-0 z-50 hidden w-72 bg-slate-900 shadow-2xl lg:block border-r border-white/5">
-            <div class="flex h-20 items-center px-8 mb-4">
+        <aside class="fixed inset-y-0 left-0 z-50 hidden w-72 bg-slate-900 shadow-2xl lg:flex lg:flex-col border-r border-white/5 overflow-hidden">
+            <div class="flex h-20 items-center px-8 shrink-0">
                 <Link :href="route('admin.dashboard')" class="flex items-center gap-3 group">
                     <ApplicationLogo class="h-8 w-auto text-white group-hover:scale-105 transition-all duration-300" />
                 </Link>
             </div>
             
-            <div class="px-4 py-2">
-                <div class="px-4 mb-4">
+            <div class="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar">
+                <div class="px-4 mb-4 mt-2">
                     <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Menu Principal</span>
                 </div>
                 <nav class="space-y-1.5">
@@ -94,7 +94,7 @@ const page = usePage();
                 </nav>
             </div>
 
-            <div class="absolute bottom-0 w-full p-4 space-y-3">
+            <div class="p-4 space-y-3 shrink-0 border-t border-white/5 bg-slate-900">
                 <div class="bg-indigo-600/10 rounded-3xl p-6 mb-4 border border-indigo-500/10">
                     <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-2">Besoin d'aide ?</p>
                     <p class="text-[11px] text-slate-400 leading-relaxed mb-4">Consultez la documentation ou contactez le support ITIC.</p>
@@ -144,16 +144,16 @@ const page = usePage();
             <!-- Responsive Navigation Drawer (Mobile) -->
             <Transition name="slide">
                 <div v-if="showingNavigationDropdown" class="lg:hidden fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-md" @click="showingNavigationDropdown = false">
-                    <div class="fixed inset-y-0 left-0 w-80 bg-slate-900 shadow-2xl border-r border-white/5" @click.stop>
-                        <div class="flex h-20 items-center px-8 justify-between border-b border-white/5">
+                    <div class="fixed inset-y-0 left-0 w-80 bg-slate-900 shadow-2xl border-r border-white/5 flex flex-col overflow-hidden" @click.stop>
+                        <div class="flex h-20 items-center px-8 justify-between border-b border-white/5 shrink-0">
                             <div class="flex items-center gap-3">
                                 <ApplicationLogo class="h-6 w-auto text-white" />
                             </div>
                             <button @click="showingNavigationDropdown = false" class="p-2 text-slate-400 hover:text-white transition-colors">
-                                <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                                <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                         </div>
-                        <nav class="p-6 space-y-2">
+                        <nav class="flex-1 overflow-y-auto p-6 space-y-2 custom-scrollbar">
                             <SidebarLink :href="route('admin.dashboard')" :active="route().current('admin.dashboard')">
                                 <template #icon>
                                     <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
@@ -178,6 +178,18 @@ const page = usePage();
                                 </template>
                                 Candidats
                             </SidebarLink>
+                            <SidebarLink :href="route('admin.domains.index')" :active="route().current('admin.domains.*')">
+                                <template #icon>
+                                    <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                                </template>
+                                Domaines
+                            </SidebarLink>
+                            <SidebarLink :href="route('admin.levels.index')" :active="route().current('admin.levels.*')">
+                                <template #icon>
+                                    <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 012-2H7a2 2 0 01-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m-1 4h1m-5 10l-2-3m2 3l2-3" /></svg>
+                                </template>
+                                Niveaux
+                            </SidebarLink>
                             <SidebarLink v-if="$page.props.auth.user.is_super_admin" href="/admin/log-viewer/" target="_blank">
                                 <template #icon>
                                     <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
@@ -186,7 +198,7 @@ const page = usePage();
                             </SidebarLink>
                         </nav>
                         
-                        <div class="absolute bottom-0 w-full p-6 border-t border-white/5 bg-slate-900/80 backdrop-blur-xl">
+                        <div class="p-6 border-t border-white/5 bg-slate-900 shrink-0">
                             <div class="flex items-center gap-4 mb-6">
                                 <div class="size-12 rounded-full bg-indigo-600 flex items-center justify-center text-white font-black text-lg">
                                     {{ $page.props.auth.user.name.charAt(0) }}
@@ -201,6 +213,7 @@ const page = usePage();
                                 Déconnexion
                             </Link>
                         </div>
+                    </div>
                     </div>
                 </div>
             </Transition>

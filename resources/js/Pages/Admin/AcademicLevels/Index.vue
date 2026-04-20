@@ -10,7 +10,8 @@ const editingLevel = ref(null);
 
 const form = useForm({ 
     name: '', 
-    order: 0 
+    order: 0,
+    fallback_level_id: null
 });
 
 function openCreate() {
@@ -23,6 +24,7 @@ function openCreate() {
 function openEdit(level) {
     form.name = level.name;
     form.order = level.order;
+    form.fallback_level_id = level.fallback_level_id;
     editingLevel.value = level;
     showModal.value = true;
 }
@@ -84,6 +86,14 @@ function deleteLevel(level) {
                             </div>
                         </div>
 
+                        <div v-if="level.fallback_level" class="mb-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1 px-1">Repli en cas d'échec</span>
+                            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold ring-1 ring-slate-200">
+                                <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" /></svg>
+                                {{ level.fallback_level.name }}
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
                             <div>
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Questions</span>
@@ -127,6 +137,19 @@ function deleteLevel(level) {
                             class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"
                             placeholder="ex: 10" />
                         <p class="text-[10px] text-slate-400 font-medium mt-2 px-1 italic text-center">Permet de trier les niveaux dans les listes déroulantes.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Prochain niveau (Repli)</label>
+                        <select v-model="form.fallback_level_id" 
+                            class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium appearance-none">
+                            <option :value="null">Aucun repli (Défaut)</option>
+                            <option v-for="l in levels.filter(lvl => !editingLevel || lvl.id !== editingLevel.id)" 
+                                :key="l.id" :value="l.id">
+                                Vers : {{ l.name }}
+                            </option>
+                        </select>
+                        <p class="text-[10px] text-slate-400 font-medium mt-2 px-1 italic text-center">Niveau proposé au candidat en cas d'échec (< 70%).</p>
                     </div>
                     
                     <div class="flex gap-4 pt-4">

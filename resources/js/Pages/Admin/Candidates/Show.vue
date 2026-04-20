@@ -9,7 +9,8 @@ const showLinkModal = ref(false);
 const generatedLink = ref('');
 const linkForm = useForm({ 
     test_template_id: '',
-    send_email: true
+    send_email: true,
+    sync_hubspot: true
 });
 
 function generateLink() {
@@ -300,10 +301,18 @@ function syncCandidateFromHubSpot() {
                                                 Détails de l'examen
                                             </Link>
                                             <template v-if="s.status === 'pending'">
-                                                <button @click="sendEmail(s.id)" class="px-5 py-2.5 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-xl text-xs font-black shadow-sm hover:bg-indigo-600 hover:text-white transition-all flex items-center gap-2 group/btn">
-                                                    <svg class="size-3.5 group-hover/btn:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                                                    Envoyer par mail
-                                                </button>
+                                                <div class="flex gap-1">
+                                                    <button @click="router.post(route('admin.sessions.send-email', s.id), { sync_hubspot: true })" 
+                                                        title="Sync HubSpot"
+                                                        class="size-9 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all">
+                                                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                                    </button>
+                                                    <button @click="sendEmail(s.id)" 
+                                                        title="Envoyer par mail"
+                                                        class="size-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all">
+                                                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                                    </button>
+                                                </div>
                                                 <a :href="'/test/' + s.token" target="_blank" 
                                                     class="size-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all">
                                                     <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
@@ -341,16 +350,30 @@ function syncCandidateFromHubSpot() {
                             <option v-for="t in templates" :key="t.id" :value="t.id">{{ t.name }}</option>
                         </select>
                     </div>
-                    <div class="flex items-center gap-3 bg-slate-50 p-4 rounded-2xl cursor-pointer hover:bg-slate-100 transition-all border border-transparent" @click="linkForm.send_email = !linkForm.send_email">
-                        <div class="size-6 rounded-lg flex items-center justify-center transition-all"
-                            :class="linkForm.send_email ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-white border border-slate-200 text-transparent'">
-                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex items-center gap-3 bg-slate-50 p-4 rounded-2xl cursor-pointer hover:bg-slate-100 transition-all border border-transparent" @click="linkForm.sync_hubspot = !linkForm.sync_hubspot">
+                            <div class="size-6 rounded-lg flex items-center justify-center transition-all shrink-0"
+                                :class="linkForm.sync_hubspot ? 'bg-orange-500 text-white shadow-lg shadow-orange-100' : 'bg-white border border-slate-200 text-transparent'">
+                                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-slate-700">HubSpot</span>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Connecté</span>
+                            </div>
+                            <input type="checkbox" v-model="linkForm.sync_hubspot" class="hidden">
                         </div>
-                        <div class="flex flex-col">
-                            <span class="text-sm font-bold text-slate-700">Envoyer par email</span>
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Le lien sera envoyé automatiquement</span>
+
+                        <div class="flex items-center gap-3 bg-slate-50 p-4 rounded-2xl cursor-pointer hover:bg-slate-100 transition-all border border-transparent" @click="linkForm.send_email = !linkForm.send_email">
+                            <div class="size-6 rounded-lg flex items-center justify-center transition-all shrink-0"
+                                :class="linkForm.send_email ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-white border border-slate-200 text-transparent'">
+                                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-slate-700">Email</span>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Direct</span>
+                            </div>
+                            <input type="checkbox" v-model="linkForm.send_email" class="hidden">
                         </div>
-                        <input type="checkbox" v-model="linkForm.send_email" class="hidden">
                     </div>
                     <div class="flex gap-4 pt-4">
                         <button type="button" @click="showLinkModal = false"
