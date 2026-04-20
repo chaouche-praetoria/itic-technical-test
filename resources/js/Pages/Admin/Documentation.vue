@@ -1,9 +1,11 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
 
 const activeSection = ref('introduction');
+let observer = null;
+let isScrollingManually = false;
 
 const sections = [
     { id: 'introduction',   label: 'Introduction',             icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
@@ -22,10 +24,45 @@ const sections = [
 ];
 
 function scrollTo(id) {
+    isScrollingManually = true;
     activeSection.value = id;
     const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (el) {
+        window.scrollTo({
+            top: el.offsetTop - 120,
+            behavior: 'smooth'
+        });
+    }
+    
+    // Resume scroll spy after animation
+    setTimeout(() => {
+        isScrollingManually = false;
+    }, 800);
 }
+
+onMounted(() => {
+    observer = new IntersectionObserver((entries) => {
+        if (isScrollingManually) return;
+        
+        entries.forEach((entry) => {
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+                activeSection.value = entry.target.id;
+            }
+        });
+    }, {
+        threshold: [0, 0.5, 1],
+        rootMargin: '-10% 0px -80% 0px' // Focus on the top part of the viewport
+    });
+
+    sections.forEach((s) => {
+        const el = document.getElementById(s.id);
+        if (el) observer.observe(el);
+    });
+});
+
+onUnmounted(() => {
+    if (observer) observer.disconnect();
+});
 </script>
 
 <template>
@@ -156,10 +193,16 @@ function scrollTo(id) {
                         <div>
                             <p class="font-semibold text-slate-700 mb-2">Générer un lien de test</p>
                             <ol class="space-y-1.5 pl-4 list-decimal">
-                                <li>Depuis la fiche candidat, cliquez sur <strong>Générer un lien</strong>.</li>
+                                <li>Depuis la fiche candidat, cliquez sur <strong>Nouveau test</strong>.</li>
                                 <li>Sélectionnez un template de test.</li>
-                                <li>Le lien est généré avec une date d'expiration et envoyé par e-mail au candidat.</li>
-                                <li>Vous pouvez renvoyer l'e-mail à tout moment depuis la session.</li>
+                                <li>Choisissez la méthode d'invitation :
+                                    <ul class="pl-4 mt-1 space-y-1 text-xs list-disc">
+                                        <li><strong>HubSpot</strong> : Le lien est envoyé directement sur la fiche contact HubSpot.</li>
+                                        <li><strong>Email</strong> : Une invitation est envoyée par mail via TestPlatform.</li>
+                                    </ul>
+                                </li>
+                                <li>Validez. L'action choisie est exécutée immédiatement.</li>
+                                <li>Vous pouvez renvoyer le lien ou resynchroniser HubSpot à tout moment depuis l'historique des sessions.</li>
                             </ol>
                         </div>
                     </div>
@@ -331,13 +374,26 @@ function scrollTo(id) {
                             <div class="flex-1 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
                                 <p class="text-xs font-black text-emerald-700 uppercase tracking-widest mb-1">Admis</p>
                                 <p class="text-2xl font-black text-emerald-600">≥ 70 %</p>
-                                <p class="text-xs text-emerald-600 mt-1">Score suffisant pour valider l'évaluation</p>
+                                <p class="text-xs text-emerald-600 mt-1">Candidat maintenu au niveau testé</p>
                             </div>
                             <div class="flex-1 rounded-xl border border-rose-200 bg-rose-50 p-4">
-                                <p class="text-xs font-black text-rose-700 uppercase tracking-widest mb-1">Échec — À requalifier</p>
+                                <p class="text-xs font-black text-rose-700 uppercase tracking-widest mb-1">Échec — Repli</p>
                                 <p class="text-2xl font-black text-rose-600">&lt; 70 %</p>
-                                <p class="text-xs text-rose-600 mt-1">Candidat à recontacter ou réorienter</p>
+                                <p class="text-xs text-rose-600 mt-1">Orientation vers le niveau inférieur configuré</p>
                             </div>
+                        </div>
+
+                        <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 mt-4">
+                            <p class="font-bold text-slate-800 mb-2">Orientation dynamique (Logic de repli)</p>
+                            <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                                Pour chaque niveau académique, un "niveau de repli" peut être configuré. En cas d'échec (score < 70%), le système propose automatiquement le niveau inférieur défini.
+                            </p>
+                            <div class="bg-white rounded-xl p-4 border border-indigo-100 text-xs text-slate-500 font-mono italic">
+                                Exemple : Bachelor (70%) -> Repli sur BTS (Orientation proposée).
+                            </div>
+                            <p class="text-[10px] text-slate-400 mt-4 leading-tight italic">
+                                * Si aucun repli n'est configuré, l'échec est simplement noté sans proposition de réorientation.
+                            </p>
                         </div>
                     </div>
                 </section>
@@ -391,7 +447,9 @@ function scrollTo(id) {
                             <p class="font-semibold text-slate-700 mb-2">Propriétés HubSpot synchronisées</p>
                             <div class="bg-slate-900 rounded-xl p-4 text-xs font-mono text-slate-300 space-y-1">
                                 <p><span class="text-indigo-400">score_test_technique</span>      <span class="text-slate-500">→ Score en % (ex: 85)</span></p>
-                                <p><span class="text-indigo-400">resultat_test_technique</span>   <span class="text-slate-500">→ "Admis" ou "Echec - A requalifier"</span></p>
+                                <p><span class="text-indigo-400">resultat_test_technique</span>   <span class="text-slate-500">→ "Admis" ou "Echec - Repli"</span></p>
+                                <p><span class="text-indigo-400">orientation_proposee</span>      <span class="text-slate-500">→ Nom du niveau de repli si échec</span></p>
+                                <p><span class="text-indigo-400">lien_test_technique</span>       <span class="text-slate-500">→ URL unique pour passer le test</span></p>
                                 <p><span class="text-indigo-400">date_test_technique</span>       <span class="text-slate-500">→ Date de soumission (ISO 8601)</span></p>
                             </div>
                         </div>
