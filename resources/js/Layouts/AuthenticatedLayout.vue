@@ -214,7 +214,6 @@ const page = usePage();
                             </Link>
                         </div>
                     </div>
-                    </div>
                 </div>
             </Transition>
 
