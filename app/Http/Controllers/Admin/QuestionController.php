@@ -51,8 +51,8 @@ class QuestionController extends Controller
             'unit_tests' => 'nullable|string',
             'default_language' => 'nullable|string',
             'choices' => 'required_if:type,mcq|array',
-            'choices.*.text' => 'required|string',
-            'choices.*.is_correct' => 'required|boolean',
+            'choices.*.text' => 'required_if:type,mcq|string',
+            'choices.*.is_correct' => 'required_if:type,mcq|boolean',
         ]);
 
         $question = Question::create($validated);
@@ -92,8 +92,8 @@ class QuestionController extends Controller
             'unit_tests' => 'nullable|string',
             'default_language' => 'nullable|string',
             'choices' => 'required_if:type,mcq|array',
-            'choices.*.text' => 'required|string',
-            'choices.*.is_correct' => 'required|boolean',
+            'choices.*.text' => 'required_if:type,mcq|string',
+            'choices.*.is_correct' => 'required_if:type,mcq|boolean',
         ]);
 
         $question->update($validated);
@@ -106,6 +106,8 @@ class QuestionController extends Controller
             foreach ($request->choices ?? [] as $i => $choice) {
                 $question->choices()->create([...$choice, 'order' => $i]);
             }
+        } else {
+            $question->choices()->delete();
         }
 
         return redirect()->route('admin.questions.index')->with('success', 'Question mise à jour.');

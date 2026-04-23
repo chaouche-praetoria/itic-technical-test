@@ -99,10 +99,12 @@ function submit() {
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Niveau académique</label>
-                                <select v-model="form.academic_level_id" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                <select v-model="form.academic_level_id" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                    :class="{'border-red-500': form.errors.academic_level_id}">
                                     <option value="">Sélectionner...</option>
                                     <option v-for="l in levels" :key="l.id" :value="l.id">{{ l.name }}</option>
                                 </select>
+                                <p v-if="form.errors.academic_level_id" class="text-red-500 text-xs mt-1">{{ form.errors.academic_level_id }}</p>
                             </div>
 
                             <div>
@@ -133,6 +135,7 @@ function submit() {
                                 <span class="text-sm">{{ d.label }}</span>
                             </label>
                         </div>
+                        <p v-if="form.errors.difficulty" class="text-red-500 text-xs mt-1">{{ form.errors.difficulty }}</p>
                     </div>
 
                     <!-- Statement -->
@@ -152,15 +155,19 @@ function submit() {
                                 Réponses multiples
                             </label>
                         </div>
-                        <div v-for="(choice, i) in form.choices" :key="i" class="flex items-center gap-3">
-                            <input type="text" v-model="choice.text" placeholder="Texte de la réponse" required
-                                class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm" />
-                            <label class="flex items-center gap-1 text-sm text-gray-600 whitespace-nowrap">
-                                <input type="checkbox" v-model="choice.is_correct" class="text-green-600" />
-                                Correcte
-                            </label>
-                            <button v-if="form.choices.length > 2" type="button" @click="removeChoice(i)"
-                                class="text-red-500 hover:text-red-700 text-lg leading-none">×</button>
+                        <div v-for="(choice, i) in form.choices" :key="i" class="space-y-1">
+                            <div class="flex items-center gap-3">
+                                <input type="text" v-model="choice.text" placeholder="Texte de la réponse" required
+                                    class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                                    :class="{'border-red-500': form.errors[`choices.${i}.text`]}" />
+                                <label class="flex items-center gap-1 text-sm text-gray-600 whitespace-nowrap">
+                                    <input type="checkbox" v-model="choice.is_correct" class="text-green-600" />
+                                    Correcte
+                                </label>
+                                <button v-if="form.choices.length > 2" type="button" @click="removeChoice(i)"
+                                    class="text-red-500 hover:text-red-700 text-lg leading-none">×</button>
+                            </div>
+                            <p v-if="form.errors[`choices.${i}.text`]" class="text-red-500 text-xs mt-1">{{ form.errors[`choices.${i}.text`] }}</p>
                         </div>
                         <button type="button" @click="addChoice" class="text-indigo-600 text-sm hover:underline">+ Ajouter un choix</button>
                     </div>
@@ -170,17 +177,18 @@ function submit() {
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Langage par défaut</label>
                             <select v-model="form.default_language" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                <option value="javascript">JavaScript</option>
-                                <option value="python">Python</option>
-                                <option value="php">PHP</option>
-                                <option value="java">Java</option>
-                                <option value="cpp">C++</option>
+                                <option v-for="lang in ['javascript', 'python', 'php', 'java', 'cpp']" :key="lang" :value="lang">
+                                    {{ lang.charAt(0).toUpperCase() + lang.slice(1) }}
+                                </option>
                             </select>
+                            <p v-if="form.errors.default_language" class="text-red-500 text-xs mt-1">{{ form.errors.default_language }}</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Tests unitaires</label>
                             <textarea v-model="form.unit_tests" rows="6" placeholder="// Code de tests..."
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:ring-indigo-500 focus:border-indigo-500"
+                                :class="{'border-red-500': form.errors.unit_tests}"></textarea>
+                            <p v-if="form.errors.unit_tests" class="text-red-500 text-xs mt-1">{{ form.errors.unit_tests }}</p>
                         </div>
                     </div>
 
