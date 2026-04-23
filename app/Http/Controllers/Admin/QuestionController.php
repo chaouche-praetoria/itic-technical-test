@@ -50,9 +50,9 @@ class QuestionController extends Controller
             'multiple_answers' => 'boolean',
             'unit_tests' => 'nullable|string',
             'default_language' => 'nullable|string',
-            'choices' => 'required_if:type,mcq|array',
-            'choices.*.text' => 'required_if:type,mcq|string',
-            'choices.*.is_correct' => 'required_if:type,mcq|boolean',
+            'choices' => 'exclude_unless:type,mcq|required|array',
+            'choices.*.text' => 'required|string',
+            'choices.*.is_correct' => 'required|boolean',
         ]);
 
         $question = Question::create($validated);
@@ -91,9 +91,9 @@ class QuestionController extends Controller
             'multiple_answers' => 'boolean',
             'unit_tests' => 'nullable|string',
             'default_language' => 'nullable|string',
-            'choices' => 'required_if:type,mcq|array',
-            'choices.*.text' => 'required_if:type,mcq|string',
-            'choices.*.is_correct' => 'required_if:type,mcq|boolean',
+            'choices' => 'exclude_unless:type,mcq|required|array',
+            'choices.*.text' => 'required|string',
+            'choices.*.is_correct' => 'required|boolean',
         ]);
 
         $question->update($validated);
