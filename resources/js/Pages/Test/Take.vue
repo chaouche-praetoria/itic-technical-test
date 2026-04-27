@@ -2,6 +2,7 @@
 import { Head } from '@inertiajs/vue3';
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import axios from 'axios';
+import CodeEditor from '@/Components/CodeEditor.vue';
 
 const props = defineProps({
     session: Object,
@@ -189,7 +190,7 @@ watch(currentIndex, () => {
     const q = currentQuestion.value;
     if (q?.type === 'code') {
         const existing = answers.value[q.id];
-        codeAnswer.value = existing?.code || '';
+        codeAnswer.value = existing?.code || q.initial_code || '';
         selectedLanguage.value = existing?.language || q.default_language || 'javascript';
     }
 });
@@ -447,12 +448,14 @@ const answeredCount = computed(() => Object.keys(answers.value).length);
                                     </div>
                                     <span class="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-widest">{{ selectedLanguage }} editor</span>
                                 </div>
-                                <textarea
+                                <CodeEditor
                                     v-model="codeAnswer"
-                                    @input="setAnswer(currentQuestion.id, { code: codeAnswer, language: selectedLanguage })"
-                                    rows="15"
-                                    class="w-full bg-transparent border-none p-10 text-base font-mono text-slate-300 focus:ring-0 resize-none custom-scrollbar"
-                                    placeholder="// Your logic goes here..."></textarea>
+                                    @update:modelValue="setAnswer(currentQuestion.id, { code: $event, language: selectedLanguage })"
+                                    :language="selectedLanguage"
+                                    dark
+                                    height="500px"
+                                    placeholder="// Votre code ici..."
+                                />
                                 
                                 <div class="p-4 flex justify-between items-center bg-slate-800/30 rounded-b-[1.9rem]">
                                     <button @click="executeCode" :disabled="codeExecuting || !codeAnswer.trim()"

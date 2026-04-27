@@ -50,6 +50,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::resource('levels', \App\Http\Controllers\Admin\AcademicLevelController::class)->except(['show']);
 
     // Questions
+    Route::post('questions/test', [QuestionController::class, 'test'])->name('questions.test');
     Route::resource('questions', QuestionController::class)->except(['show']);
 
     // Templates

@@ -77,6 +77,7 @@ class TestController extends Controller
             'statement' => $sq->question->statement,
             'multiple_answers' => $sq->question->multiple_answers,
             'default_language' => $sq->question->default_language,
+            'initial_code' => $sq->question->initial_code,
             'choices' => $sq->question->choices->map(fn($c) => ['id' => $c->id, 'text' => $c->text]),
             'order' => $sq->order,
         ]);

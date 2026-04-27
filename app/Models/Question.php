@@ -11,7 +11,7 @@ class Question extends Model
     protected $fillable = [
         'type', 'academic_level_id',
         'difficulty', 'statement', 'multiple_answers',
-        'unit_tests', 'default_language', 'is_active',
+        'unit_tests', 'default_language', 'initial_code', 'is_active',
     ];
 
     protected $casts = [

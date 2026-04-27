@@ -1,7 +1,9 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
-import { computed, watch } from 'vue';
+import { Head, useForm, Link } from '@inertiajs/vue3';
+import { computed, watch, ref } from 'vue';
+import CodeEditor from '@/Components/CodeEditor.vue';
+import axios from 'axios';
 
 const props = defineProps({
     question: Object,
@@ -18,6 +20,7 @@ const form = useForm({
     statement: props.question?.statement || '',
     multiple_answers: props.question?.multiple_answers || false,
     unit_tests: props.question?.unit_tests || '',
+    initial_code: props.question?.initial_code || '',
     default_language: props.question?.default_language || 'javascript',
     choices: props.question?.choices?.length
         ? props.question.choices.map(c => ({ text: c.text, is_correct: c.is_correct }))
@@ -36,6 +39,20 @@ watch(() => form.domain_ids, (newIds) => {
     form.theme_ids = form.theme_ids.filter(id => validThemeIds.includes(id));
 }, { deep: true });
 
+const languageTemplates = {
+    javascript: "function solution() {\n    // Votre code ici\n}",
+    python: "def solution():\n    # Votre code ici\n    pass",
+    php: "<?php\n\nfunction solution() {\n    // Votre code ici\n}",
+    java: "public class Solution {\n    public static void main(String[] args) {\n        // Votre code ici\n    }\n}",
+    cpp: "#include <iostream>\n\nint main() {\n    // Votre code ici\n    return 0;\n}"
+};
+
+watch(() => form.default_language, (newLang) => {
+    if (form.type === 'code' && !form.initial_code) {
+        form.initial_code = languageTemplates[newLang] || "";
+    }
+});
+
 function addChoice() {
     form.choices.push({ text: '', is_correct: false });
 }
@@ -48,6 +65,26 @@ function submit() {
         form.put(route('admin.questions.update', props.question.id));
     } else {
         form.post(route('admin.questions.store'));
+    }
+}
+
+const testLoading = ref(false);
+const testResult = ref(null);
+
+async function testCode() {
+    testLoading.value = true;
+    testResult.value = null;
+    try {
+        const res = await axios.post(route('admin.questions.test'), {
+            code: form.initial_code,
+            language: form.default_language,
+            unit_tests: form.unit_tests,
+        });
+        testResult.value = res.data;
+    } catch (e) {
+        testResult.value = { success: false, error: "Erreur lors de l'appel au service de test." };
+    } finally {
+        testLoading.value = false;
     }
 }
 </script>
@@ -173,22 +210,54 @@ function submit() {
                     </div>
 
                     <!-- Code -->
-                    <div v-if="form.type === 'code'" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Langage par défaut</label>
-                            <select v-model="form.default_language" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                <option v-for="lang in ['javascript', 'python', 'php', 'java', 'cpp']" :key="lang" :value="lang">
-                                    {{ lang.charAt(0).toUpperCase() + lang.slice(1) }}
-                                </option>
-                            </select>
-                            <p v-if="form.errors.default_language" class="text-red-500 text-xs mt-1">{{ form.errors.default_language }}</p>
+                    <div v-if="form.type === 'code'" class="space-y-4 bg-slate-50 p-6 rounded-xl border border-slate-200">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Configuration Programmation</h3>
+                            <div class="flex items-center gap-2">
+                                <label class="text-xs font-medium text-gray-500">Langage :</label>
+                                <select v-model="form.default_language" class="border border-gray-300 rounded-lg px-3 py-1 text-xs focus:ring-slate-500 focus:border-slate-500">
+                                    <option v-for="lang in ['javascript', 'python', 'php', 'java', 'cpp']" :key="lang" :value="lang">
+                                        {{ lang.charAt(0).toUpperCase() + lang.slice(1) }}
+                                    </option>
+                                </select>
+                            </div>
                         </div>
+
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tests unitaires</label>
-                            <textarea v-model="form.unit_tests" rows="6" placeholder="// Code de tests..."
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:ring-indigo-500 focus:border-indigo-500"
-                                :class="{'border-red-500': form.errors.unit_tests}"></textarea>
-                            <p v-if="form.errors.unit_tests" class="text-red-500 text-xs mt-1">{{ form.errors.unit_tests }}</p>
+                            <label class="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-tight">Code de départ (Boilerplate)</label>
+                            <CodeEditor 
+                                v-model="form.initial_code" 
+                                :language="form.default_language"
+                                height="200px"
+                                placeholder="// Squelette de code pour le candidat..."
+                            />
+                            <p class="text-[10px] text-slate-400 mt-1 italic">Ce code sera affiché par défaut dans l'éditeur du candidat.</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-tight">Tests unitaires</label>
+                            <CodeEditor 
+                                v-model="form.unit_tests" 
+                                :language="form.default_language"
+                                height="250px"
+                                placeholder="// Vos tests unitaires ici..."
+                            />
+                            <p class="text-[10px] text-slate-400 mt-1 italic">Utilisez 'PASS' ou 'FAIL' dans la console pour valider les tests.</p>
+                        </div>
+
+                        <div class="pt-4">
+                            <button type="button" @click="testCode" :disabled="testLoading"
+                                class="w-full py-3 bg-white border-2 border-slate-200 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
+                                <span v-if="testLoading" class="size-3 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin"></span>
+                                {{ testLoading ? 'Validation en cours...' : 'Tester la configuration' }}
+                            </button>
+
+                            <div v-if="testResult" class="mt-4 p-4 rounded-xl text-xs font-mono" :class="testResult.success ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'">
+                                <div class="font-bold mb-1">{{ testResult.success ? '✅ Succès' : '❌ Échec' }}</div>
+                                <div v-if="testResult.passed !== undefined">{{ testResult.passed }} / {{ testResult.total }} tests passés</div>
+                                <div v-if="testResult.error" class="mt-2 whitespace-pre-wrap opacity-80">{{ testResult.error }}</div>
+                                <div v-if="testResult.output" class="mt-2 p-2 bg-black/5 rounded whitespace-pre-wrap truncate max-h-32">{{ testResult.output }}</div>
+                            </div>
                         </div>
                     </div>
 

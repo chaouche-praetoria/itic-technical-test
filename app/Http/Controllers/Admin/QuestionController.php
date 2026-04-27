@@ -7,11 +7,14 @@ use App\Models\AcademicLevel;
 use App\Models\Domain;
 use App\Models\Question;
 use App\Models\Theme;
+use App\Services\Judge0Service;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class QuestionController extends Controller
 {
+    public function __construct(private Judge0Service $judge0) {}
+
     public function index(Request $request)
     {
         $query = Question::with(['domains', 'academicLevel', 'themes', 'choices'])
@@ -49,6 +52,7 @@ class QuestionController extends Controller
             'statement' => 'required|string',
             'multiple_answers' => 'boolean',
             'unit_tests' => 'nullable|string',
+            'initial_code' => 'nullable|string',
             'default_language' => 'nullable|string',
             'choices' => 'exclude_unless:type,mcq|required|array',
             'choices.*.text' => 'required|string',
@@ -90,6 +94,7 @@ class QuestionController extends Controller
             'statement' => 'required|string',
             'multiple_answers' => 'boolean',
             'unit_tests' => 'nullable|string',
+            'initial_code' => 'nullable|string',
             'default_language' => 'nullable|string',
             'choices' => 'exclude_unless:type,mcq|required|array',
             'choices.*.text' => 'required|string',
@@ -117,5 +122,18 @@ class QuestionController extends Controller
     {
         $question->delete();
         return redirect()->route('admin.questions.index')->with('success', 'Question supprimée.');
+    }
+
+    public function test(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string',
+            'language' => 'required|string',
+            'unit_tests' => 'required|string',
+        ]);
+
+        $result = $this->judge0->execute($request->code, $request->language, $request->unit_tests);
+
+        return response()->json($result);
     }
 }
