@@ -19,6 +19,13 @@
         "tailwindcss": "^3.2.1",
         "vite": "^8.0.0",
         "vue": "^3.4.0",
+        "vue-codemirror": "^6.1.1",
+        "@codemirror/lang-javascript": "^6.2.2",
+        "@codemirror/lang-python": "^6.1.6",
+        "@codemirror/lang-php": "^6.0.1",
+        "@codemirror/lang-cpp": "^6.0.2",
+        "@codemirror/lang-java": "^6.0.1",
+        "@codemirror/theme-one-dark": "^6.1.2",
         "ziggy-js": "^2.0"
     }
 }
