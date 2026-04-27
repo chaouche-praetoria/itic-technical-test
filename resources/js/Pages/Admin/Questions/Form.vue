@@ -47,9 +47,14 @@ const languageTemplates = {
     cpp: "#include <iostream>\n\nint main() {\n    // Votre code ici\n    return 0;\n}"
 };
 
-watch(() => form.default_language, (newLang) => {
-    if (form.type === 'code' && !form.initial_code) {
-        form.initial_code = languageTemplates[newLang] || "";
+watch([() => form.default_language, () => form.type], ([newLang, newType]) => {
+    if (newType === 'code') {
+        const currentCode = (form.initial_code || '').trim();
+        const isTemplate = Object.values(languageTemplates).some(t => t.trim() === currentCode);
+        
+        if (!currentCode || isTemplate) {
+            form.initial_code = languageTemplates[newLang] || "";
+        }
     }
 });
 
