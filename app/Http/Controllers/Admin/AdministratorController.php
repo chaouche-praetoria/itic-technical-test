@@ -90,4 +90,17 @@ class AdministratorController extends Controller
 
         return redirect()->back()->with('success', 'Administrateur supprimé.');
     }
+
+    /**
+     * Validate a new registration (assign default role).
+     */
+    public function validateUser(Request $request, User $user)
+    {
+        $defaultRole = Role::where('name', 'admin')->first();
+        if ($defaultRole) {
+            $user->roles()->sync([$defaultRole->id]);
+        }
+
+        return redirect()->back()->with('success', 'Utilisateur validé avec succès.');
+    }
 }

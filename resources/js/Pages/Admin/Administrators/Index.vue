@@ -59,6 +59,12 @@ function toggleRole(roleId) {
         form.roles.push(roleId);
     }
 }
+
+function validateAdmin(admin) {
+    if (confirm(`Valider l'inscription de ${admin.name} ?`)) {
+        router.post(route('admin.administrators.validate', admin.id));
+    }
+}
 </script>
 
 <template>
@@ -102,16 +108,25 @@ function toggleRole(roleId) {
                                 </td>
                                 <td class="px-6 py-4 text-sm text-slate-500 font-medium">{{ admin.email }}</td>
                                 <td class="px-6 py-4">
-                                    <div class="flex flex-wrap gap-1.5">
+                                    <div class="flex flex-wrap gap-1.5" v-if="admin.roles.length > 0">
                                         <span v-for="role in admin.roles" :key="role.id" 
                                             class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider"
                                             :class="role.name === 'super-admin' ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-indigo-50 text-indigo-600 border border-indigo-100'">
                                             {{ role.label || role.name }}
                                         </span>
                                     </div>
+                                    <div v-else>
+                                        <span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-600 border border-amber-100 animate-pulse">
+                                            En attente
+                                        </span>
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button v-if="admin.roles.length === 0" @click="validateAdmin(admin)" 
+                                            class="p-2 text-amber-500 hover:text-amber-600 transition-colors" title="Valider l'inscription">
+                                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                        </button>
                                         <button @click="openEdit(admin)" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
                                             <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                         </button>

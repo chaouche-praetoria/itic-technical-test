@@ -24,6 +24,12 @@ class CandidateController extends Controller
         private \App\Services\HubSpotService $hubspot
     ) {}
 
+    public function destroy(Candidate $candidate)
+    {
+        $candidate->delete();
+        return redirect()->route('admin.candidates.index')->with('success', 'Dossier candidat supprimé.');
+    }
+
     public function index(Request $request)
     {
         $candidates = Candidate::withCount('testSessions')

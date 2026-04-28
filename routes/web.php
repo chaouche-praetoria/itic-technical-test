@@ -26,9 +26,11 @@ Route::prefix('test')->name('test.')->group(function () {
 // Admin routes (authenticated)
 Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
     Route::post('/sync-pull-data/{candidate}', [CandidateController::class, 'syncSpecificFromHubSpot'])->name('candidates.pull-data');
+    Route::get('/pending', fn() => inertia('Admin/Pending'))->name('pending');
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Administrators
+    Route::post('/administrators/{user}/validate', [\App\Http\Controllers\Admin\AdministratorController::class, 'validateUser'])->name('administrators.validate');
     Route::resource('administrators', \App\Http\Controllers\Admin\AdministratorController::class)->except(['show', 'create', 'edit']);
     Route::resource('roles', \App\Http\Controllers\Admin\RoleController::class)->except(['show', 'create', 'edit']);
 

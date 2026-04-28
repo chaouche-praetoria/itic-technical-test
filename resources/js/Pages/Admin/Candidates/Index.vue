@@ -57,6 +57,12 @@ const formatPhone = (phone) => {
     if (!p.startsWith('+')) p = '+' + p;
     return p;
 };
+
+function deleteCandidate(candidate) {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer le dossier de ${candidate.first_name} ${candidate.last_name} ?`)) {
+        router.delete(route('admin.candidates.destroy', candidate.id));
+    }
+}
 </script>
 
 <template>
@@ -155,11 +161,17 @@ const formatPhone = (phone) => {
                                         {{ formatDate(c.created_at) }}
                                     </td>
                                     <td class="px-8 py-6 text-right">
-                                        <Link :href="route('admin.candidates.show', c.id)" 
-                                            class="inline-flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
-                                            Détails
-                                            <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                                        </Link>
+                                        <div class="flex items-center justify-end gap-2">
+                                            <Link :href="route('admin.candidates.show', c.id)" 
+                                                class="inline-flex items-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+                                                Détails
+                                            </Link>
+                                            <button @click="deleteCandidate(c)" 
+                                                class="p-2 text-slate-400 hover:text-rose-600 transition-all hover:bg-rose-50 rounded-lg"
+                                                title="Supprimer">
+                                                <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             </tbody>
