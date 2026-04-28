@@ -46,6 +46,7 @@ return [
 
     'hubspot' => [
         'api_key' => env('HUBSPOT_ACCESS_TOKEN'),
+        'portal_id' => env('HUBSPOT_PORTAL_ID', '5752638'),
     ],
 
 ];

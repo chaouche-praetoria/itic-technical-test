@@ -3,7 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
-const props = defineProps({ candidate: Object, sessions: Array, templates: Array });
+const props = defineProps({ candidate: Object, sessions: Array, templates: Array, hubspot_portal_id: String });
 
 const showLinkModal = ref(false);
 const generatedLink = ref('');
@@ -131,6 +131,16 @@ function syncCandidateFromHubSpot() {
                         <svg :class="{ 'animate-spin': syncingHubSpot }" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         Mise à jour HubSpot
                     </button>
+                    <a v-if="candidate.hubspot_id" 
+                        :href="`https://app.hubspot.com/contacts/${hubspot_portal_id}/record/0-1/${candidate.hubspot_id}`" 
+                        target="_blank"
+                        title="Ouvrir le profil HubSpot"
+                        class="bg-white text-orange-600 border border-orange-100 px-5 py-2.5 rounded-xl hover:bg-orange-50 font-bold text-sm shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 w-fit">
+                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                        </svg>
+                        Profil HubSpot
+                    </a>
                     <button @click="showLinkModal = true" 
                         class="bg-slate-900 text-white px-5 py-2.5 rounded-xl hover:bg-slate-800 font-bold text-sm shadow-xl shadow-slate-200 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 w-fit">
                         <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
@@ -209,7 +219,15 @@ function syncCandidateFromHubSpot() {
                             </div>
                             <div class="space-y-1">
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID HubSpot</span>
-                                <p class="text-xs text-slate-400 font-mono">{{ candidate.hubspot_id || '—' }}</p>
+                                <div class="flex items-center gap-2">
+                                    <p class="text-xs text-slate-400 font-mono">{{ candidate.hubspot_id || '—' }}</p>
+                                    <a v-if="candidate.hubspot_id" 
+                                       :href="`https://app.hubspot.com/contacts/${hubspot_portal_id}/record/0-1/${candidate.hubspot_id}`" 
+                                       target="_blank"
+                                       class="text-indigo-600 hover:text-indigo-800">
+                                        <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>

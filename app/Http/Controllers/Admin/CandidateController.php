@@ -64,6 +64,7 @@ class CandidateController extends Controller
             'candidate' => $candidate,
             'sessions' => $sessions,
             'templates' => TestTemplate::where('is_active', true)->get(['id', 'name']),
+            'hubspot_portal_id' => config('services.hubspot.portal_id'),
         ]);
     }
 
