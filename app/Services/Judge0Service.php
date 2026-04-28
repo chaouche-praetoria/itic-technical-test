@@ -44,12 +44,11 @@ class Judge0Service
 
             $response = Http::withHeaders($headers)
                 ->timeout(15)
-                ->post("{$this->baseUrl}/submissions?wait=true", [
+                ->post("{$this->baseUrl}/submissions?wait=true&base64_encoded=true", [
                     'source_code' => base64_encode($fullCode),
                     'language_id' => $languageId,
                     'cpu_time_limit' => 5,
                     'memory_limit' => 128000,
-                    'encode_fields' => 'stdout,stderr,compile_output',
                 ]);
 
             if (!$response->successful()) {
