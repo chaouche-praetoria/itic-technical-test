@@ -290,35 +290,128 @@ onUnmounted(() => {
                             </div>
                         </div>
 
-                        <div class="p-6 bg-amber-50 border border-amber-100 rounded-2xl italic">
-                            <p class="font-bold text-amber-800 mb-2 text-xs uppercase tracking-widest">Fonctionnement du Scoring Code</p>
-                            <p class="text-xs text-amber-700 leading-relaxed">
-                                Le système sépare vos tests unitaires ligne par ligne. Chaque ligne est exécutée indépendamment. La note finale de la question est le pourcentage de lignes de test qui ont réussi sans erreur.
-                            </p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-6 bg-amber-50 border border-amber-100 rounded-2xl italic">
+                                <p class="font-bold text-amber-800 mb-2 text-xs uppercase tracking-widest">Fonctionnement du Scoring Code</p>
+                                <p class="text-xs text-amber-700 leading-relaxed">
+                                    Le système sépare vos tests unitaires ligne par ligne. Chaque ligne est exécutée indépendamment. La note finale de la question est le pourcentage de lignes de test qui ont réussi sans erreur.
+                                </p>
+                            </div>
+                            <div class="p-6 bg-indigo-50 border border-indigo-100 rounded-2xl">
+                                <p class="font-bold text-indigo-800 mb-2 text-xs uppercase tracking-widest">Validation des tests</p>
+                                <p class="text-xs text-indigo-700 leading-relaxed">
+                                    Pour que les tests soient comptabilisés dans l'interface, utilisez <code>print("PASS")</code>. Le système compte le nombre de marqueurs <strong>PASS</strong> présents dans la console pour calculer le score final.
+                                </p>
+                            </div>
                         </div>
 
-                        <div>
-                            <p class="font-bold text-slate-700 mb-3">Exemple complet (Python)</p>
-                            <div class="space-y-4">
-                                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Énoncé</p>
-                                    <p class="text-xs">Créez une fonction <code>is_even(n)</code> qui retourne <code>True</code> si le nombre est pair, <code>False</code> sinon.</p>
-                                </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 pl-2">Starter Code</p>
-                                        <div class="bg-slate-900 rounded-xl p-4 font-mono text-[10px] text-indigo-300">
-                                            def is_even(n):<br>
-                                            &nbsp;&nbsp;&nbsp;&nbsp;return
+                        <div class="space-y-8">
+                            <!-- PYTHON -->
+                            <div>
+                                <p class="font-bold text-slate-700 mb-3 flex items-center gap-2">
+                                    <span class="size-2 rounded-full bg-blue-500"></span> Exemple complet (Python)
+                                </p>
+                                <div class="space-y-4">
+                                    <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Énoncé</p>
+                                        <p class="text-xs">Créez une fonction <code>is_even(n)</code> qui retourne <code>True</code> si le nombre est pair.</p>
+                                    </div>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 pl-2">Starter Code</p>
+                                            <div class="bg-slate-900 rounded-xl p-4 font-mono text-[10px] text-blue-300">
+                                                def is_even(n):<br>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;return
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 pl-2">Unit Tests</p>
+                                            <div class="bg-emerald-950 rounded-xl p-4 font-mono text-[10px] text-emerald-300 border border-emerald-500/30">
+                                                if is_even(2) == True: print("PASS")<br>
+                                                if is_even(3) == False: print("PASS")
+                                            </div>
                                         </div>
                                     </div>
-                                    <div>
-                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 pl-2">Unit Tests (un par ligne)</p>
-                                        <div class="bg-emerald-950 rounded-xl p-4 font-mono text-[10px] text-emerald-300 border border-emerald-500/30">
-                                            assert is_even(2) == True<br>
-                                            assert is_even(3) == False<br>
-                                            assert is_even(0) == True<br>
-                                            assert is_even(-2) == True
+                                </div>
+                            </div>
+
+                            <!-- JAVASCRIPT -->
+                            <div>
+                                <p class="font-bold text-slate-700 mb-3 flex items-center gap-2">
+                                    <span class="size-2 rounded-full bg-yellow-400"></span> Exemple complet (JavaScript)
+                                </p>
+                                <div class="space-y-4">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 pl-2">Starter Code</p>
+                                            <div class="bg-slate-900 rounded-xl p-4 font-mono text-[10px] text-yellow-200">
+                                                function isEven(n) {<br>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;// Votre code<br>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 pl-2">Unit Tests</p>
+                                            <div class="bg-emerald-950 rounded-xl p-4 font-mono text-[10px] text-emerald-300 border border-emerald-500/30">
+                                                if (isEven(2) === true) console.log("PASS");<br>
+                                                if (isEven(3) === false) console.log("PASS");
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PHP -->
+                            <div>
+                                <p class="font-bold text-slate-700 mb-3 flex items-center gap-2">
+                                    <span class="size-2 rounded-full bg-indigo-400"></span> Exemple complet (PHP)
+                                </p>
+                                <div class="space-y-4">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 pl-2">Starter Code</p>
+                                            <div class="bg-slate-900 rounded-xl p-4 font-mono text-[10px] text-indigo-300">
+                                                function isEven($n) {<br>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;// Votre code<br>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 pl-2">Unit Tests</p>
+                                            <div class="bg-emerald-950 rounded-xl p-4 font-mono text-[10px] text-emerald-300 border border-emerald-500/30">
+                                                if (isEven(2) === true) echo "PASS";<br>
+                                                if (isEven(3) === false) echo "PASS";
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <!-- JAVA -->
+                            <div>
+                                <p class="font-bold text-slate-700 mb-3 flex items-center gap-2">
+                                    <span class="size-2 rounded-full bg-red-500"></span> Exemple complet (Java)
+                                </p>
+                                <div class="space-y-4">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 pl-2">Starter Code</p>
+                                            <div class="bg-slate-900 rounded-xl p-4 font-mono text-[10px] text-red-300">
+                                                public class Solution {<br>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;public static boolean isEven(int n) {<br>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Votre code<br>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 pl-2">Unit Tests</p>
+                                            <div class="bg-emerald-950 rounded-xl p-4 font-mono text-[10px] text-emerald-300 border border-emerald-500/30">
+                                                public class Main {<br>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;public static void main(String[] args) {<br>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (Solution.isEven(2)) System.out.println("PASS");<br>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (!Solution.isEven(3)) System.out.println("PASS");<br>
+                                                &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+                                                }
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
