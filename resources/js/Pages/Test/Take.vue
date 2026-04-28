@@ -19,6 +19,7 @@ const codeExecuting = ref(false);
 const executionResult = ref(null);
 const tabWarnings = ref(0);
 const copyPasteWarnings = ref(0);
+const showFocusModal = ref(false);
 
 const currentQuestion = computed(() => props.questions[currentIndex.value] || null);
 const progress = computed(() => {
@@ -94,24 +95,58 @@ onMounted(() => {
 
     startQuestionTimer();
 
-    // Anti-cheat: detect tab changes
+    // Anti-cheat: detect tab changes and window focus
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleBlur);
+    window.addEventListener('focus', handleFocus);
     document.addEventListener('contextmenu', (e) => e.preventDefault());
     document.addEventListener('copy', handleCopyPaste);
     document.addEventListener('paste', handleCopyPaste);
     document.addEventListener('cut', handleCopyPaste);
     document.addEventListener('keydown', handleKeydown);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    heartbeatInterval = setInterval(() => {
+        logActivity('session_heartbeat', { 
+            currentIndex: currentIndex.value,
+            remaining: remaining.value,
+            answeredCount: answeredCount.value
+        });
+    }, 60000);
 });
 
+let heartbeatInterval;
 onUnmounted(() => {
     clearInterval(timerInterval);
     clearInterval(questionTimerInterval);
+    clearInterval(heartbeatInterval);
     document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.removeEventListener('blur', handleBlur);
+    window.removeEventListener('focus', handleFocus);
     document.removeEventListener('copy', handleCopyPaste);
     document.removeEventListener('paste', handleCopyPaste);
     document.removeEventListener('cut', handleCopyPaste);
     document.removeEventListener('keydown', handleKeydown);
+    window.removeEventListener('beforeunload', handleBeforeUnload);
 });
+
+function handleBlur() {
+    tabWarnings.value++;
+    showFocusModal.value = true;
+    logActivity('window_blur', { count: tabWarnings.value });
+}
+
+function handleFocus() {
+    showFocusModal.value = false;
+    logActivity('window_focus', { count: tabWarnings.value });
+}
+
+function handleBeforeUnload(e) {
+    if (!submitted.value) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+}
 
 function handleVisibilityChange() {
     if (document.hidden) {
@@ -130,10 +165,10 @@ function handleCopyPaste(e) {
 
 function handleKeydown(e) {
     if (e.ctrlKey || e.metaKey) {
-        if (['c', 'v', 'x'].includes(e.key.toLowerCase())) {
+        if (['c', 'v', 'x', 'p'].includes(e.key.toLowerCase())) {
             e.preventDefault();
             copyPasteWarnings.value++;
-            logActivity('copy_paste_attempt', { type: `keyboard_ctrl_${e.key.toLowerCase()}`, count: copyPasteWarnings.value });
+            logActivity('forbidden_key_combo', { combo: `${e.metaKey ? 'cmd' : 'ctrl'}+${e.key.toLowerCase()}`, count: copyPasteWarnings.value });
         }
     }
 }
@@ -168,16 +203,22 @@ function isChoiceSelected(questionId, choiceId) {
     return ans.includes(choiceId);
 }
 
+const saving = ref(false);
 let saveTimeout;
 function saveAnswer(questionId) {
     clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(() => {
-        axios.post(`/test/${props.session.token}/answer`, {
-            question_id: questionId,
-            answer: answers.value[questionId],
-            time_spent_seconds: null,
-        });
-    }, 500);
+    saving.value = true;
+    saveTimeout = setTimeout(async () => {
+        try {
+            await axios.post(`/test/${props.session.token}/answer`, {
+                question_id: questionId,
+                answer: answers.value[questionId],
+                time_spent_seconds: null,
+            });
+        } finally {
+            setTimeout(() => { saving.value = false; }, 1000);
+        }
+    }, 800);
 }
 
 // Code execution
@@ -252,14 +293,14 @@ const answeredCount = computed(() => Object.keys(answers.value).length);
         <!-- Header / Progress Area -->
         <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
             <!-- Security Alerts Overlay -->
-            <div v-if="tabWarnings > 0 || copyPasteWarnings > 0" class="bg-rose-600 text-white px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-4">
-                <span v-if="tabWarnings > 0" class="flex items-center gap-1.5 animate-pulse">
-                    <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                    Alerte Sécurité: Changement d'onglet détecté ({{ tabWarnings }})
+            <div v-if="tabWarnings > 0 || copyPasteWarnings > 0" class="bg-rose-600 text-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-6 shadow-lg shadow-rose-900/20 relative z-[60]">
+                <span v-if="tabWarnings > 0" class="flex items-center gap-2 animate-pulse">
+                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    Alerte Sécurité: Sortie d'écran détectée ({{ tabWarnings }})
                 </span>
-                <span v-if="copyPasteWarnings > 0" class="flex items-center gap-1.5 animate-pulse border-l border-white/20 pl-4">
-                    <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                    Copier/Coller interdit ({{ copyPasteWarnings }} tentatives)
+                <span v-if="copyPasteWarnings > 0" class="flex items-center gap-2 animate-pulse border-l border-white/20 pl-6">
+                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                    Action interdite: Copier/Coller bloqué ({{ copyPasteWarnings }})
                 </span>
             </div>
 
@@ -271,7 +312,13 @@ const answeredCount = computed(() => Object.keys(answers.value).length);
                     </div>
                     <div>
                         <h1 class="font-bold text-slate-900 text-sm leading-tight">{{ candidate.name }}</h1>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Session d'évaluation</p>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Session d'évaluation</p>
+                            <div v-if="saving" class="flex items-center gap-1.5 ml-2 transition-all animate-reveal">
+                                <div class="size-1 rounded-full bg-emerald-500 animate-ping"></div>
+                                <span class="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">Sauvegarde...</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -522,6 +569,24 @@ const answeredCount = computed(() => Object.keys(answers.value).length);
                 <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Support: support@iticparis.com</span>
             </div>
         </footer>
+
+        <!-- Focus Lost Modal -->
+        <div v-if="showFocusModal" class="fixed inset-0 z-[100] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-6 text-center animate-reveal">
+            <div class="bg-white rounded-[2.5rem] p-12 max-w-lg shadow-2xl">
+                <div class="size-20 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-8 animate-bounce">
+                    <svg class="size-10 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900 mb-4">Attention !</h2>
+                <p class="text-slate-600 font-medium leading-relaxed mb-8">
+                    Le focus a été perdu. Tout changement d'onglet ou sortie de l'application est enregistré et signalé à l'examinateur. 
+                    <br><br>
+                    <span class="text-rose-600 font-bold uppercase tracking-widest text-[10px]">Avertissement #{{ tabWarnings }}</span>
+                </p>
+                <button @click="showFocusModal = false" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-200">
+                    Revenir au test
+                </button>
+            </div>
+        </div>
     </div>
 </template>
 
