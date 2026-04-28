@@ -207,6 +207,13 @@ class CandidateController extends Controller
                 'orientation_proposee' => $this->scoring->getProposedOrientation($session),
                 'lien_test_technique' => route('test.start', $session->token),
             ]);
+
+            // Update candidate locally
+            $session->candidate->update([
+                'score_test_technique' => $scoreStr,
+                'resultat_test_technique' => $resultLabel,
+                'date_test_technique' => now()->format('Y-m-d'),
+            ]);
         }
 
         return back()->with('success', 'Session marquée comme complétée et synchronisée avec HubSpot.');
@@ -249,6 +256,12 @@ class CandidateController extends Controller
         Log::info("HubSpot: Manual sync completed for " . $candidate->email . ". Result: " . ($success ? 'SUCCESS' : 'FAILURE'));
 
         if ($success) {
+            // Update candidate locally
+            $candidate->update([
+                'score_test_technique' => $scoreStr,
+                'resultat_test_technique' => $resultLabel,
+                'date_test_technique' => $session->completed_at ? $session->completed_at->format('Y-m-d') : now()->format('Y-m-d'),
+            ]);
             return back()->with('success', 'Synchronisation HubSpot réussie pour ' . $candidate->full_name);
         }
 

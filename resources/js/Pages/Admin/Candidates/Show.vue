@@ -59,6 +59,12 @@ const formatDate = (dateString) => {
         minute: '2-digit'
     }).format(date);
 };
+const formatPhone = (phone) => {
+    if (!phone) return null;
+    let p = phone.trim().replace(/\s+/g, '');
+    if (!p.startsWith('+')) p = '+' + p;
+    return p;
+};
 
 const syncingHubSpot = ref(false);
 function syncCandidateToHubSpot() {
@@ -255,7 +261,10 @@ function syncCandidateFromHubSpot() {
                                 </div>
                                 <div class="flex flex-col">
                                     <span class="text-[9px] font-bold text-white/40 uppercase tracking-widest mb-0.5">Téléphone</span>
-                                    <span class="text-xs font-bold text-white/90">{{ candidate.phone || 'Non renseigné' }}</span>
+                                    <a v-if="candidate.phone" :href="`tel:${formatPhone(candidate.phone)}`" class="text-xs font-bold text-white/90 hover:text-white transition-colors">
+                                        {{ candidate.phone.startsWith('+') ? candidate.phone : '+' + candidate.phone }}
+                                    </a>
+                                    <span v-else class="text-xs font-bold text-white/50 italic">Non renseigné</span>
                                 </div>
                             </div>
                         </div>

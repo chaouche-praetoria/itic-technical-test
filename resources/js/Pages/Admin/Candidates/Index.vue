@@ -51,6 +51,12 @@ const formatDate = (dateString) => {
         minute: '2-digit'
     }).format(date);
 };
+const formatPhone = (phone) => {
+    if (!phone) return null;
+    let p = phone.trim().replace(/\s+/g, '');
+    if (!p.startsWith('+')) p = '+' + p;
+    return p;
+};
 </script>
 
 <template>
@@ -104,6 +110,7 @@ const formatDate = (dateString) => {
                                     <th class="px-8 py-5 text-left border-b border-slate-100 uppercase">Candidat</th>
                                     <th class="px-8 py-5 text-left border-b border-slate-100 uppercase">Contact</th>
                                     <th class="px-8 py-5 text-center border-b border-slate-100 uppercase">Sessions</th>
+                                    <th class="px-8 py-5 text-center border-b border-slate-100 uppercase">Note</th>
                                     <th class="px-8 py-5 text-left border-b border-slate-100 uppercase">Inscrit le</th>
                                     <th class="px-8 py-5 text-right border-b border-slate-100 uppercase">Actions</th>
                                 </tr>
@@ -126,13 +133,23 @@ const formatDate = (dateString) => {
                                     </td>
                                     <td class="px-8 py-6">
                                         <div class="flex flex-col text-slate-600 font-medium">
-                                            <span>{{ c.phone || '—' }}</span>
+                                            <a v-if="c.phone" :href="`tel:${formatPhone(c.phone)}`" class="hover:text-indigo-600 transition-colors flex items-center gap-2">
+                                                <svg class="size-3 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                                                {{ c.phone.startsWith('+') ? c.phone : '+' + c.phone }}
+                                            </a>
+                                            <span v-else class="text-slate-300">—</span>
                                         </div>
                                     </td>
                                     <td class="px-8 py-6 text-center">
                                         <div class="inline-flex size-10 rounded-xl bg-slate-50 text-slate-500 items-center justify-center font-bold border border-slate-100">
                                             {{ c.test_sessions_count }}
                                         </div>
+                                    </td>
+                                    <td class="px-8 py-6 text-center">
+                                        <div v-if="c.score_test_technique" class="inline-flex px-3 py-1 rounded-lg bg-indigo-50 text-indigo-600 font-black text-sm">
+                                            {{ c.score_test_technique }}%
+                                        </div>
+                                        <span v-else class="text-slate-300 font-bold text-lg">—</span>
                                     </td>
                                     <td class="px-8 py-6 text-slate-400 font-medium text-xs">
                                         {{ formatDate(c.created_at) }}
