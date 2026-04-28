@@ -57,9 +57,9 @@ class Judge0Service
             }
 
             $result = $response->json();
-            $stdout = base64_decode($result['stdout'] ?? '');
-            $stderr = base64_decode($result['stderr'] ?? '');
-            $compile = base64_decode($result['compile_output'] ?? '');
+            $stdout = $this->sanitizeUtf8(base64_decode($result['stdout'] ?? ''));
+            $stderr = $this->sanitizeUtf8(base64_decode($result['stderr'] ?? ''));
+            $compile = $this->sanitizeUtf8(base64_decode($result['compile_output'] ?? ''));
 
             $passed = $this->parseTestResults($stdout);
 
@@ -102,5 +102,10 @@ class Judge0Service
             'total' => $total,
             'all_passed' => $passed === $total && $total > 0,
         ];
+    }
+
+    private function sanitizeUtf8(string $string): string
+    {
+        return mb_convert_encoding($string, 'UTF-8', 'UTF-8');
     }
 }
