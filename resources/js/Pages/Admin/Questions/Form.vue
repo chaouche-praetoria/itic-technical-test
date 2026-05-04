@@ -4,7 +4,7 @@ import { Head, useForm, Link, router } from '@inertiajs/vue3';
 import { computed, watch, ref, onMounted, onUnmounted } from 'vue';
 import CodeEditor from '@/Components/CodeEditor.vue';
 import axios from 'axios';
-import { LANGUAGE_TEMPLATES } from '@/Constants/questionTemplates';
+import { LANGUAGE_TEMPLATES, TEST_TEMPLATES } from '@/Constants/questionTemplates';
 
 const props = defineProps({
     question: Object,
@@ -139,6 +139,13 @@ watch([() => form.default_language, () => form.type], ([newLang, newType]) => {
         
         if (!currentCode || isTemplate) {
             form.initial_code = LANGUAGE_TEMPLATES[newLang] || "";
+        }
+
+        const currentTests = (form.unit_tests || '').trim();
+        const isTestTemplate = Object.values(TEST_TEMPLATES).some(t => t.trim() === currentTests);
+
+        if (!currentTests || isTestTemplate) {
+            form.unit_tests = TEST_TEMPLATES[newLang] || "";
         }
     }
 });
