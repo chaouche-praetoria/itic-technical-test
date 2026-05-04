@@ -28,6 +28,8 @@ const previewCode = ref('');
 const previewLanguage = ref('');
 const previewLoading = ref(false);
 const previewResult = ref(null);
+const previewValidated = ref(false);
+const previewSuccess = ref(false);
 
 const typeLabel = { mcq: 'QCM', text: 'Réponse libre', code: 'Programmation' };
 const difficultyLabel = { easy: 'Facile', medium: 'Intermédiaire', hard: 'Avancé' };
@@ -77,6 +79,8 @@ function openPreview(q) {
     previewCode.value = q.initial_code || '';
     previewLanguage.value = q.default_language || 'javascript';
     previewResult.value = null;
+    previewValidated.value = false;
+    previewSuccess.value = false;
     showPreview.value = true;
 }
 
@@ -110,6 +114,29 @@ async function runPreviewCode() {
         previewLoading.value = false;
     }
 }
+
+function validatePreviewAnswer() {
+    previewValidated.value = true;
+    if (selectedQuestion.value.type === 'mcq') {
+        const correctIds = selectedQuestion.value.choices
+            .filter(c => c.is_correct)
+            .map(c => c.id)
+            .sort();
+        const selectedIds = (previewAnswers.value[selectedQuestion.value.id] || [])
+            .slice()
+            .sort();
+        
+        previewSuccess.value = JSON.stringify(correctIds) === JSON.stringify(selectedIds);
+    } else if (selectedQuestion.value.type === 'text') {
+        previewSuccess.value = true; // No automated validation for text
+    }
+}
+
+const cleanLabel = (label) => {
+    if (label.includes('Previous')) return '&laquo;';
+    if (label.includes('Next')) return '&raquo;';
+    return label;
+};
 </script>
 
 <template>
@@ -261,9 +288,9 @@ async function runPreviewCode() {
                         <div class="flex gap-1.5">
                             <Link v-for="link in questions.links" :key="link.label"
                                 :href="link.url || '#'"
-                                v-html="link.label"
+                                v-html="cleanLabel(link.label)"
                                 :class="[
-                                    'size-8 flex items-center justify-center text-xs font-bold rounded-lg transition-all',
+                                    'h-8 min-w-[2rem] px-2 flex items-center justify-center text-xs font-bold rounded-lg transition-all',
                                     link.active ? 'bg-slate-900 text-white shadow-lg shadow-slate-200' : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300',
                                     !link.url ? 'opacity-30 pointer-events-none' : ''
                                 ]" />
@@ -441,12 +468,40 @@ async function runPreviewCode() {
                                     </div>
                                     <span class="text-base font-bold">{{ choice.text }}</span>
                                 </button>
+                                
+                                <div class="mt-8 pt-8 border-t border-slate-50 flex items-center justify-between">
+                                    <button @click="validatePreviewAnswer"
+                                        class="bg-slate-900 text-white px-8 py-3 rounded-2xl font-bold text-sm hover:bg-slate-800 transition-all active:scale-[0.98]">
+                                        Valider ma réponse
+                                    </button>
+
+                                    <div v-if="previewValidated" class="flex items-center gap-4 animate-reveal">
+                                        <span :class="previewSuccess ? 'text-emerald-600' : 'text-rose-600'" class="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+                                            <div :class="previewSuccess ? 'bg-emerald-500' : 'bg-rose-500'" class="size-2 rounded-full"></div>
+                                            {{ previewSuccess ? 'Correct !' : 'Incorrect' }}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Text Preview -->
-                            <div v-if="selectedQuestion.type === 'text'">
+                            <div v-if="selectedQuestion.type === 'text'" class="space-y-8">
                                 <textarea rows="8" placeholder="Réponse du candidat..." 
                                     class="w-full bg-slate-50 border-2 border-slate-100 rounded-[2rem] p-8 text-lg font-medium text-slate-700 focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 focus:bg-white transition-all resize-none"></textarea>
+                                
+                                <div class="flex items-center justify-between">
+                                    <button @click="validatePreviewAnswer"
+                                        class="bg-slate-900 text-white px-8 py-3 rounded-2xl font-bold text-sm hover:bg-slate-800 transition-all active:scale-[0.98]">
+                                        Soumettre ma réponse
+                                    </button>
+
+                                    <div v-if="previewValidated" class="flex items-center gap-4 animate-reveal">
+                                        <span class="text-emerald-600 text-sm font-black uppercase tracking-widest flex items-center gap-2">
+                                            <div class="bg-emerald-500 size-2 rounded-full"></div>
+                                            Réponse enregistrée
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Code Preview -->
