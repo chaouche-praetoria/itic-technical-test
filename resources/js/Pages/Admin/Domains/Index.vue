@@ -3,7 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
-const props = defineProps({ domains: Array });
+const props = defineProps({ domains: Array, allThemes: Array });
 
 const search = ref('');
 const filteredDomains = ref(props.domains);
@@ -258,9 +258,12 @@ watch(() => props.domains, () => {
                 <form @submit.prevent="submitTheme" class="space-y-6">
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Intitulé du thème</label>
-                        <input v-model="themeForm.name" type="text" required
+                        <input v-model="themeForm.name" type="text" required list="themes-list"
                             class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"
                             placeholder="ex: React.js, Laravel, UX Design" />
+                        <datalist id="themes-list">
+                            <option v-for="theme in allThemes" :key="theme.id" :value="theme.name" />
+                        </datalist>
                     </div>
                     <div class="flex gap-4 pt-4">
                         <button type="button" @click="showThemeModal = false"

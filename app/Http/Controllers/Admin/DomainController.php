@@ -18,6 +18,7 @@ class DomainController extends Controller
         
         return Inertia::render('Admin/Domains/Index', [
             'domains' => Domain::with('themes')->withCount(['questions', 'themes'])->latest()->get(),
+            'allThemes' => Theme::orderBy('name')->get(),
         ]);
     }
 
