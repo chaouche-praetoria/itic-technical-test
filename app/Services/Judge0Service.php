@@ -60,7 +60,7 @@ class Judge0Service
             $stderr = $this->sanitizeUtf8(base64_decode($result['stderr'] ?? ''));
             $compile = $this->sanitizeUtf8(base64_decode($result['compile_output'] ?? ''));
 
-            $passed = $this->parseTestResults($stdout);
+            $passed = $this->parseTestResults($stdout, $result['status']['description'] ?? 'Unknown');
 
             return [
                 'success' => $passed['all_passed'],
@@ -89,12 +89,23 @@ class Judge0Service
         return $code . "\n" . $tests;
     }
 
-    private function parseTestResults(string $output): array
+    private function parseTestResults(string $output, string $status): array
     {
         preg_match_all('/PASS|FAIL/', $output, $matches);
         $results = $matches[0];
+        
+        // If no explicit PASS/FAIL markers, rely on Judge0 status
+        if (empty($results)) {
+            $isAccepted = ($status === 'Accepted');
+            return [
+                'passed' => $isAccepted ? 1 : 0,
+                'total' => 1,
+                'all_passed' => $isAccepted,
+            ];
+        }
+
         $passed = count(array_filter($results, fn($r) => $r === 'PASS'));
-        $total = count($results) ?: 1;
+        $total = count($results);
 
         return [
             'passed' => $passed,
