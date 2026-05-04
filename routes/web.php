@@ -65,6 +65,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::post('/candidates/refresh-all', [CandidateController::class, 'syncFromHubSpot'])->name('candidates.sync-hubspot');
     Route::post('/candidates', [CandidateController::class, 'store'])->name('candidates.store');
     Route::get('/candidates/{candidate}', [CandidateController::class, 'show'])->name('candidates.show');
+    Route::delete('/candidates/{candidate}', [CandidateController::class, 'destroy'])->name('candidates.destroy');
     Route::post('/candidates/{candidate}/push-data', [CandidateController::class, 'syncToHubSpot'])->name('candidates.push-data');
     Route::post('/candidates/{candidate}/generate-link', [CandidateController::class, 'generateLink'])->name('candidates.generate-link');
     Route::post('/sessions/{session}/send-email', [CandidateController::class, 'sendSessionEmail'])->name('sessions.send-email');
