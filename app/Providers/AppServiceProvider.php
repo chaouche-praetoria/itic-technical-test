@@ -32,6 +32,20 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasRole('super-admin') ? true : null;
         });
 
+        // Dynamically register all permissions as Gates
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('permissions')) {
+                $permissions = \App\Models\Permission::all();
+                foreach ($permissions as $permission) {
+                    Gate::define($permission->name, function ($user) use ($permission) {
+                        return $user->hasPermission($permission->name);
+                    });
+                }
+            }
+        } catch (\Exception $e) {
+            // Avoid errors during migrations or if DB is not ready
+        }
+
         Gate::define('viewLogViewer', function ($user) {
             return $user->isSuperAdmin();
         });
