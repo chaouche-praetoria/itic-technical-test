@@ -460,7 +460,10 @@ const answeredCount = computed(() => Object.keys(answers.value).length);
                                 ]">
                                     {{ String.fromCharCode(65 + idx) }}
                                 </div>
-                                <span class="text-base font-bold">{{ choice.text }}</span>
+                                <div class="flex flex-col gap-3">
+                                    <img v-if="choice.image_path" :src="`/storage/${choice.image_path}`" class="max-w-[200px] rounded-lg border border-white/20 shadow-sm" />
+                                    <span v-if="choice.text" class="text-base font-bold">{{ choice.text }}</span>
+                                </div>
                                 <div v-if="isChoiceSelected(currentQuestion.id, choice.id)" class="ml-auto">
                                      <svg class="size-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                                 </div>

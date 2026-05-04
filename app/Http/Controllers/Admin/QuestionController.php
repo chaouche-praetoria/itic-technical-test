@@ -55,9 +55,9 @@ class QuestionController extends Controller
             'initial_code' => 'nullable|string',
             'default_language' => 'nullable|string',
             'choices' => 'exclude_unless:type,mcq|required|array',
-            'choices.*.text' => 'required|string',
-            'choices.*.text' => 'required|string',
+            'choices.*.text' => 'nullable|string',
             'choices.*.is_correct' => 'required|boolean',
+            'choices.*.image' => 'nullable|image|max:2048',
             'explanation' => 'nullable|string',
             'points' => 'required|integer|min:0',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
@@ -73,7 +73,17 @@ class QuestionController extends Controller
 
         if ($request->type === 'mcq' && $request->choices) {
             foreach ($request->choices as $i => $choice) {
-                $question->choices()->create([...$choice, 'order' => $i]);
+                $choiceData = [
+                    'text' => $choice['text'] ?? null,
+                    'is_correct' => $choice['is_correct'],
+                    'order' => $i
+                ];
+
+                if ($request->hasFile("choices.$i.image")) {
+                    $choiceData['image_path'] = $request->file("choices")[$i]['image']->store('choices', 'public');
+                }
+
+                $question->choices()->create($choiceData);
             }
         }
 
@@ -105,9 +115,10 @@ class QuestionController extends Controller
             'initial_code' => 'nullable|string',
             'default_language' => 'nullable|string',
             'choices' => 'exclude_unless:type,mcq|required|array',
-            'choices.*.text' => 'required|string',
-            'choices.*.text' => 'required|string',
+            'choices.*.text' => 'nullable|string',
             'choices.*.is_correct' => 'required|boolean',
+            'choices.*.image' => 'nullable|image|max:2048',
+            'choices.*.image_path' => 'nullable|string',
             'explanation' => 'nullable|string',
             'points' => 'required|integer|min:0',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
@@ -126,12 +137,25 @@ class QuestionController extends Controller
         $question->themes()->sync($request->theme_ids);
         
 
-        if ($question->type === 'mcq') {
+        if ($validated['type'] === 'mcq') {
             $question->choices()->delete();
-            foreach ($request->choices ?? [] as $i => $choice) {
-                $question->choices()->create([...$choice, 'order' => $i]);
+            foreach ($validated['choices'] as $i => $choice) {
+                $choiceData = [
+                    'text' => $choice['text'] ?? null,
+                    'is_correct' => $choice['is_correct'],
+                    'order' => $i
+                ];
+
+                if ($request->hasFile("choices.$i.image")) {
+                    $choiceData['image_path'] = $request->file("choices")[$i]['image']->store('choices', 'public');
+                } elseif (!empty($choice['image_path'])) {
+                    $choiceData['image_path'] = $choice['image_path'];
+                }
+
+                $question->choices()->create($choiceData);
             }
-        } else {
+        }
+ else {
             $question->choices()->delete();
         }
 

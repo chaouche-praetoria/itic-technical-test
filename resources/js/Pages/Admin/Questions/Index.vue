@@ -394,7 +394,10 @@ const cleanLabel = (label) => {
                                         :class="choice.is_correct ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-200 text-slate-300'">
                                         <svg v-if="choice.is_correct" class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                                     </div>
-                                    <span class="font-bold">{{ choice.text }}</span>
+                                    <div class="flex flex-col gap-2">
+                                        <img v-if="choice.image_path" :src="`/storage/${choice.image_path}`" class="max-h-32 rounded-lg border border-slate-200/50 shadow-sm" />
+                                        <span class="font-bold">{{ choice.text }}</span>
+                                    </div>
                                     <span v-if="choice.is_correct" class="ml-auto text-[10px] font-black uppercase tracking-widest">Correcte</span>
                                 </div>
                             </div>
@@ -498,7 +501,10 @@ const cleanLabel = (label) => {
                                         <svg v-if="(previewAnswers[selectedQuestion.id] || []).includes(choice.id)" xmlns="http://www.w3.org/2000/svg" class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><path d="M5 13l4 4L19 7"/></svg>
                                         <span v-else class="text-[10px] font-bold">{{ String.fromCharCode(65 + idx) }}</span>
                                     </div>
-                                    <span class="text-base font-bold">{{ choice.text }}</span>
+                                    <div class="flex flex-col gap-3">
+                                        <img v-if="choice.image_path" :src="`/storage/${choice.image_path}`" class="max-w-[200px] rounded-lg border border-slate-200/50 shadow-sm" />
+                                        <span v-if="choice.text" class="text-base font-bold">{{ choice.text }}</span>
+                                    </div>
                                 </button>
                                 
                                 <div class="mt-8 pt-8 border-t border-slate-50 flex items-center justify-between">

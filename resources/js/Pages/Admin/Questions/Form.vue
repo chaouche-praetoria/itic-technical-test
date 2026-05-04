@@ -24,12 +24,34 @@ const form = useForm({
     initial_code: props.question?.initial_code || '',
     default_language: props.question?.default_language || 'javascript',
     choices: props.question?.choices?.length
-        ? props.question.choices.map(c => ({ text: c.text, is_correct: c.is_correct }))
-        : [{ text: '', is_correct: false }, { text: '', is_correct: false }],
+        ? props.question.choices.map(c => ({ id: c.id, text: c.text, is_correct: c.is_correct, image_path: c.image_path, image: null }))
+        : [{ text: '', is_correct: false, image: null }, { text: '', is_correct: false, image: null }],
     explanation: props.question?.explanation || '',
     points: props.question?.points || 1,
     image: null,
 });
+
+const imagePreview = ref(props.question?.image_path ? `/storage/${props.question.image_path}` : null);
+const choicePreviews = ref({});
+
+watch(() => form.image, (file) => {
+    if (file) imagePreview.value = URL.createObjectURL(file);
+    else imagePreview.value = props.question?.image_path ? `/storage/${props.question.image_path}` : null;
+});
+
+const onChoiceImageChange = (index, event) => {
+    const file = event.target.files[0];
+    if (file) {
+        form.choices[index].image = file;
+        choicePreviews.value[index] = URL.createObjectURL(file);
+    }
+};
+
+const getChoiceImage = (choice, index) => {
+    if (choicePreviews.value[index]) return choicePreviews.value[index];
+    if (choice.image_path) return `/storage/${choice.image_path}`;
+    return null;
+};
 
 const themes = computed(() => {
     return props.domains
@@ -136,10 +158,11 @@ watch([() => form.initial_code, () => form.unit_tests], () => {
 });
 
 function addChoice() {
-    form.choices.push({ text: '', is_correct: false });
+    form.choices.push({ text: '', is_correct: false, image: null });
 }
 function removeChoice(i) {
     form.choices.splice(i, 1);
+    delete choicePreviews.value[i];
 }
 
 function submit() {
@@ -340,8 +363,8 @@ watch(() => form.multiple_answers, () => {
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Image d'illustration (optionnelle)</label>
                             <div class="flex items-center gap-6">
-                                <div v-if="question?.image_path || form.image" class="relative group">
-                                    <img :src="form.image ? URL.createObjectURL(form.image) : `/storage/${question.image_path}`" 
+                                <div v-if="imagePreview" class="relative group">
+                                    <img :src="imagePreview" 
                                         class="size-32 object-cover rounded-xl border border-slate-200" />
                                     <button type="button" @click="form.image = null" 
                                         class="absolute -top-2 -right-2 bg-rose-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
@@ -383,9 +406,24 @@ watch(() => form.multiple_answers, () => {
 
                                 <div class="flex-1 space-y-1">
                                     <div class="flex items-center gap-3">
-                                        <input type="text" v-model="choice.text" placeholder="Entrez le texte de la réponse..." required
-                                            class="flex-1 border-none bg-transparent p-0 text-sm focus:ring-0 placeholder:text-slate-400 font-medium"
-                                            :class="{'text-emerald-900': choice.is_correct}" />
+                                        <div class="flex-1 flex flex-col gap-2">
+                                            <input type="text" v-model="choice.text" placeholder="Entrez le texte de la réponse..."
+                                                class="w-full border-none bg-transparent p-0 text-sm focus:ring-0 placeholder:text-slate-400 font-medium"
+                                                :class="{'text-emerald-900': choice.is_correct}" />
+                                            
+                                            <!-- Choice Image Upload -->
+                                            <div class="flex items-center gap-3">
+                                                <div v-if="getChoiceImage(choice, i)" class="relative group/choice">
+                                                    <img :src="getChoiceImage(choice, i)" class="size-16 object-cover rounded-lg border border-slate-100" />
+                                                    <button type="button" @click="choice.image = null; choice.image_path = null; delete choicePreviews[i]" 
+                                                        class="absolute -top-1 -right-1 bg-rose-500 text-white p-0.5 rounded-full opacity-0 group-hover/choice:opacity-100 transition-opacity">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                                    </button>
+                                                </div>
+                                                <input type="file" @change="onChoiceImageChange(i, $event)" accept="image/*"
+                                                    class="text-[10px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:bg-slate-50 file:text-slate-600 hover:file:bg-slate-100 cursor-pointer" />
+                                            </div>
+                                        </div>
                                         
                                         <div class="flex items-center gap-2">
                                             <label class="relative inline-flex items-center cursor-pointer">

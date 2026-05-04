@@ -153,11 +153,14 @@ const getScoreColor = (score) => {
                                             ]">
                                             <svg v-if="choice.is_correct" class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                                         </div>
-                                        <span :class="[
-                                            'font-medium',
-                                            choice.is_correct ? 'text-emerald-800' : 'text-slate-600',
-                                            getAnswer(sq.question)?.answer?.includes(choice.id) && !choice.is_correct ? 'text-rose-800' : ''
-                                        ]">{{ choice.text }}</span>
+                                        <div class="flex flex-col gap-2">
+                                            <img v-if="choice.image_path" :src="`/storage/${choice.image_path}`" class="max-h-24 rounded-lg border border-slate-200/50 shadow-sm" />
+                                            <span :class="[
+                                                'font-medium',
+                                                choice.is_correct ? 'text-emerald-800' : 'text-slate-600',
+                                                getAnswer(sq.question)?.answer?.includes(choice.id) && !choice.is_correct ? 'text-rose-800' : ''
+                                            ]">{{ choice.text }}</span>
+                                        </div>
                                     </div>
                                     <div class="flex items-center gap-2">
                                         <span v-if="getAnswer(sq.question)?.answer?.includes(choice.id)" 
