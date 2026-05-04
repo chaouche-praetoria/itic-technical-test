@@ -222,8 +222,9 @@ const getScoreColor = (score) => {
                                     </span>
                                 </div>
                         </div>
+                    </div>
 
-                        <!-- Pedagogical Explanation -->
+                    <!-- Pedagogical Explanation -->
                         <div v-if="sq.question.explanation" class="mt-6 bg-indigo-50/50 rounded-2xl p-6 border border-indigo-100/50">
                             <div class="flex items-center gap-2 mb-3">
                                 <svg class="size-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
