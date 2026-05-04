@@ -166,6 +166,40 @@ async function testCode() {
         testLoading.value = false;
     }
 }
+// MCQ Test Logic
+const testAnswers = ref([]);
+const testValidated = ref(false);
+const testSuccess = ref(false);
+
+function toggleTestChoice(choiceIndex) {
+    if (form.multiple_answers) {
+        const idx = testAnswers.value.indexOf(choiceIndex);
+        if (idx === -1) testAnswers.value.push(choiceIndex);
+        else testAnswers.value.splice(idx, 1);
+    } else {
+        testAnswers.value = [choiceIndex];
+    }
+}
+
+function validateMCQTest() {
+    testValidated.value = true;
+    const correctIndices = form.choices
+        .map((c, idx) => c.is_correct ? idx : null)
+        .filter(idx => idx !== null)
+        .sort();
+    const selectedIndices = [...testAnswers.value].sort();
+    testSuccess.value = JSON.stringify(correctIndices) === JSON.stringify(selectedIndices);
+}
+
+watch(() => form.choices, () => {
+    testAnswers.value = [];
+    testValidated.value = false;
+}, { deep: true });
+
+watch(() => form.multiple_answers, () => {
+    testAnswers.value = [];
+    testValidated.value = false;
+});
 </script>
 
 <template>
@@ -345,6 +379,52 @@ async function testCode() {
                             <svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
                             Ajouter un choix de réponse
                         </button>
+
+                        <!-- MCQ Test / Preview Section -->
+                        <div class="mt-8 bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-4">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-xs font-bold text-slate-800 uppercase tracking-widest">Aperçu & Test du QCM</h4>
+                                <span class="px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-tighter shadow-sm"
+                                    :class="form.multiple_answers ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-600'">
+                                    {{ form.multiple_answers ? 'Plusieurs réponses possibles' : 'Réponse unique' }}
+                                </span>
+                            </div>
+                            
+                            <div class="grid gap-2">
+                                <button v-for="(choice, i) in form.choices" :key="i" type="button"
+                                    @click="toggleTestChoice(i)"
+                                    class="flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left"
+                                    :class="[
+                                        testAnswers.includes(i) 
+                                            ? 'border-indigo-600 bg-indigo-50 text-indigo-900 shadow-sm' 
+                                            : 'border-white bg-white hover:border-slate-200 text-slate-600'
+                                    ]">
+                                    <div class="size-5 rounded flex items-center justify-center border-2 transition-colors shrink-0"
+                                        :class="[
+                                            testAnswers.includes(i)
+                                                ? 'bg-indigo-600 border-indigo-600 text-white'
+                                                : 'bg-white border-slate-200'
+                                        ]">
+                                        <svg v-if="testAnswers.includes(i)" xmlns="http://www.w3.org/2000/svg" class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><path d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                    <span class="text-sm font-medium">{{ choice.text || '(Champ vide)' }}</span>
+                                </button>
+                            </div>
+
+                            <div class="pt-4 flex items-center gap-4">
+                                <button type="button" @click="validateMCQTest" 
+                                    class="px-6 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all active:scale-[0.98]">
+                                    Valider le test
+                                </button>
+                                
+                                <div v-if="testValidated" class="flex items-center gap-2 animate-reveal">
+                                    <span :class="testSuccess ? 'text-emerald-600' : 'text-rose-600'" class="text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                                        <div :class="testSuccess ? 'bg-emerald-500' : 'bg-rose-500'" class="size-2 rounded-full"></div>
+                                        {{ testSuccess ? 'Correct !' : 'Incorrect' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Code -->

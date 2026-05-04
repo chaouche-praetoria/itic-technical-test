@@ -4,6 +4,7 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, watch, computed } from 'vue';
 import axios from 'axios';
 import CodeEditor from '@/Components/CodeEditor.vue';
+import { LANGUAGE_TEMPLATES } from '@/Constants/questionTemplates';
 
 const props = defineProps({
     questions: Object,
@@ -76,7 +77,7 @@ function openDetails(q) {
 function openPreview(q) {
     selectedQuestion.value = q;
     previewAnswers.value = {};
-    previewCode.value = q.initial_code || '';
+    previewCode.value = q.initial_code || LANGUAGE_TEMPLATES[q.default_language || 'javascript'] || '';
     previewLanguage.value = q.default_language || 'javascript';
     previewResult.value = null;
     previewValidated.value = false;
@@ -442,6 +443,9 @@ const cleanLabel = (label) => {
                                 <span class="px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 text-[10px] font-black uppercase tracking-wider">
                                     {{ typeLabel[selectedQuestion.type] }}
                                 </span>
+                                <span v-if="selectedQuestion.type === 'mcq'" class="px-4 py-1.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 text-[10px] font-black uppercase tracking-wider">
+                                    {{ selectedQuestion.multiple_answers ? 'Plusieurs réponses possibles' : 'Réponse unique' }}
+                                </span>
                             </div>
 
                             <h2 class="text-2xl font-bold text-slate-900 mb-10 leading-tight">
@@ -455,16 +459,17 @@ const cleanLabel = (label) => {
                                     :class="[
                                         'group flex items-center gap-5 p-6 rounded-2xl border-2 text-left transition-all',
                                         (previewAnswers[selectedQuestion.id] || []).includes(choice.id)
-                                            ? 'border-slate-900 bg-slate-900 text-white shadow-xl shadow-slate-200'
+                                            ? 'border-indigo-600 bg-indigo-50 text-indigo-900 shadow-md'
                                             : 'border-slate-100 bg-slate-50 hover:border-slate-300 hover:bg-white'
                                     ]">
                                     <div :class="[
-                                        'size-7 rounded-lg border-2 flex items-center justify-center shrink-0 font-black text-xs transition-colors',
+                                        'size-6 rounded flex items-center justify-center border-2 transition-colors shrink-0',
                                         (previewAnswers[selectedQuestion.id] || []).includes(choice.id)
-                                            ? 'bg-white border-white text-slate-900'
+                                            ? 'bg-indigo-600 border-indigo-600 text-white'
                                             : 'bg-white border-slate-200 text-slate-300'
                                     ]">
-                                        {{ String.fromCharCode(65 + idx) }}
+                                        <svg v-if="(previewAnswers[selectedQuestion.id] || []).includes(choice.id)" xmlns="http://www.w3.org/2000/svg" class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4"><path d="M5 13l4 4L19 7"/></svg>
+                                        <span v-else class="text-[10px] font-bold">{{ String.fromCharCode(65 + idx) }}</span>
                                     </div>
                                     <span class="text-base font-bold">{{ choice.text }}</span>
                                 </button>

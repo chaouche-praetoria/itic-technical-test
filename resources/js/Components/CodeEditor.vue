@@ -6,7 +6,7 @@ import { php } from '@codemirror/lang-php';
 import { java } from '@codemirror/lang-java';
 import { cpp } from '@codemirror/lang-cpp';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const props = defineProps({
     modelValue: String,
@@ -127,5 +127,9 @@ function toggleFullscreen() {
 }
 .cm-scroller {
     font-family: 'Fira Code', 'Fira Mono', monospace !important;
+}
+/* Assure que les lignes sont visibles même si le code est court */
+.cm-content {
+    min-height: 100px;
 }
 </style>
