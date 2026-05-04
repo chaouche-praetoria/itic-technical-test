@@ -75,6 +75,8 @@ class TestController extends Controller
             'difficulty' => $sq->question->difficulty,
             'max_points' => $this->maxPoints($sq->question),
             'statement' => $sq->question->statement,
+            'image_path' => $sq->question->image_path,
+            'points' => $this->maxPoints($sq->question),
             'multiple_answers' => $sq->question->multiple_answers,
             'default_language' => $sq->question->default_language,
             'initial_code' => $sq->question->initial_code,

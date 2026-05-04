@@ -423,12 +423,16 @@ const answeredCount = computed(() => Object.keys(answers.value).length);
                             </div>
                             <div class="flex items-center gap-2">
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Valeur</span>
-                                <span class="text-sm font-black text-slate-900">{{ currentQuestion?.max_points || 0 }} pts</span>
+                                <span class="text-sm font-black text-slate-900">{{ currentQuestion?.points || 0 }} pts</span>
                             </div>
                         </div>
 
                         <!-- Statement -->
                         <div v-if="currentQuestion" class="mb-14">
+                            <div v-if="currentQuestion.image_path" class="mb-8">
+                                <img :src="`/storage/${currentQuestion.image_path}`" 
+                                    class="max-w-full rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 max-h-[400px] object-contain bg-white p-2" />
+                            </div>
                             <h2 class="text-2xl lg:text-3xl font-bold text-slate-900 leading-tight mb-8">
                                 {{ currentQuestion.statement }}
                             </h2>

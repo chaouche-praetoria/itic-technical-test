@@ -129,7 +129,11 @@ const getScoreColor = (score) => {
                             </div>
                         </div>
 
-                        <p class="text-lg font-bold text-slate-800 mb-8 leading-relaxed">{{ sq.question.statement }}</p>
+                        <p class="text-lg font-bold text-slate-800 mb-6 leading-relaxed">{{ sq.question.statement }}</p>
+                        
+                        <div v-if="sq.question.image_path" class="mb-6">
+                            <img :src="`/storage/${sq.question.image_path}`" class="max-w-full rounded-2xl border border-slate-100 shadow-sm max-h-[300px] object-contain" />
+                        </div>
 
                         <!-- Answer Content -->
                         <div class="rounded-2xl overflow-hidden border border-slate-50">
@@ -214,7 +218,15 @@ const getScoreColor = (score) => {
                                         {{ getAnswer(sq.question).execution_result.passed }} / {{ getAnswer(sq.question).execution_result.total }} tests passés
                                     </span>
                                 </div>
+                        </div>
+
+                        <!-- Pedagogical Explanation -->
+                        <div v-if="sq.question.explanation" class="mt-6 bg-indigo-50/50 rounded-2xl p-6 border border-indigo-100/50">
+                            <div class="flex items-center gap-2 mb-3">
+                                <svg class="size-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">Explication pédagogique</span>
                             </div>
+                            <p class="text-sm text-slate-600 leading-relaxed italic">{{ sq.question.explanation }}</p>
                         </div>
                     </div>
                 </div>

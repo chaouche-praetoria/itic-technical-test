@@ -58,6 +58,10 @@ class TestScoringService
 
     public function maxPoints(Question $question): int
     {
+        if ($question->points > 0) {
+            return $question->points;
+        }
+
         return match (true) {
             $question->type === 'mcq' && $question->difficulty === 'easy' => 10,
             $question->type === 'mcq' && $question->difficulty === 'medium' => 20,
