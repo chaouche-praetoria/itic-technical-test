@@ -11,9 +11,9 @@ class Domain extends Model
 
     protected $casts = ['is_active' => 'boolean'];
 
-    public function themes(): HasMany
+    public function themes(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->hasMany(Theme::class);
+        return $this->belongsToMany(Theme::class);
     }
 
     public function questions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany

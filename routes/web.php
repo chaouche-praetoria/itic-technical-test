@@ -49,6 +49,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::post('/domains/{domain}/themes', [DomainController::class, 'storeTheme'])->name('domains.themes.store');
     Route::put('/themes/{theme}', [DomainController::class, 'updateTheme'])->name('themes.update');
     Route::delete('/themes/{theme}', [DomainController::class, 'destroyTheme'])->name('themes.destroy');
+    Route::delete('/domains/{domain}/themes/{theme}', [DomainController::class, 'detachTheme'])->name('domains.themes.detach');
 
     // Academic Levels
     Route::resource('levels', \App\Http\Controllers\Admin\AcademicLevelController::class)->except(['show']);

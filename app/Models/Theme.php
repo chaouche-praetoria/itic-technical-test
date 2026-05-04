@@ -8,11 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Theme extends Model
 {
-    protected $fillable = ['name', 'slug', 'domain_id'];
+    protected $fillable = ['name', 'slug'];
 
-    public function domain(): BelongsTo
+    public function domains(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsTo(Domain::class);
+        return $this->belongsToMany(Domain::class);
     }
 
     public function questions(): \Illuminate\Database\Eloquent\Relations\BelongsToMany

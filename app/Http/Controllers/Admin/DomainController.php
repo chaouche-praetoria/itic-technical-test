@@ -58,12 +58,15 @@ class DomainController extends Controller
 
         $request->validate(['name' => 'required|string|max:100']);
 
-        $domain->themes()->create([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-        ]);
+        $slug = Str::slug($request->name);
+        $theme = Theme::firstOrCreate(
+            ['slug' => $slug],
+            ['name' => $request->name]
+        );
 
-        return back()->with('success', 'Thème créé.');
+        $domain->themes()->syncWithoutDetaching([$theme->id]);
+
+        return back()->with('success', 'Thème ajouté au domaine.');
     }
 
     public function updateTheme(Request $request, Theme $theme)
@@ -85,6 +88,14 @@ class DomainController extends Controller
         Gate::authorize('manage-themes');
 
         $theme->delete();
-        return back()->with('success', 'Thème supprimé.');
+        return back()->with('success', 'Thème supprimé définitivement.');
+    }
+
+    public function detachTheme(Domain $domain, Theme $theme)
+    {
+        Gate::authorize('manage-themes');
+
+        $domain->themes()->detach($theme->id);
+        return back()->with('success', 'Thème retiré de ce domaine.');
     }
 }

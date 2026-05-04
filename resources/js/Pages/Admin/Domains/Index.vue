@@ -59,13 +59,19 @@ function openTheme(domain) {
 
 function openEditTheme(theme) {
     themeForm.name = theme.name;
-    themeForm.domain_id = theme.domain_id;
+    themeForm.domain_id = null;
     editingTheme.value = theme;
     showThemeModal.value = true;
 }
 
-function deleteTheme(theme) {
-    if (confirm('Voulez-vous vraiment supprimer ce thème ?')) {
+function detachTheme(domain, theme) {
+    if (confirm(`Retirer le thème "${theme.name}" de ce domaine ?`)) {
+        themeForm.delete(route('admin.domains.themes.detach', { domain: domain.id, theme: theme.id }));
+    }
+}
+
+function deleteThemeGlobally(theme) {
+    if (confirm(`ATTENTION : Supprimer définitivement le thème "${theme.name}" de TOUS les domaines ?`)) {
         themeForm.delete(route('admin.themes.destroy', theme.id));
     }
 }
@@ -167,9 +173,12 @@ watch(() => props.domains, () => {
                                             <button @click="openEditTheme(theme)" class="p-1 hover:bg-indigo-50 rounded-lg transition-colors">
                                                 <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
                                             </button>
-                                            <button @click="deleteTheme(theme)" class="p-1 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-colors">
-                                                <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                                            </button>
+                                             <button @click="detachTheme(domain, theme)" title="Retirer du domaine" class="p-1 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-colors">
+                                                 <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                             </button>
+                                             <button @click="deleteThemeGlobally(theme)" title="Supprimer définitivement" class="p-1 hover:bg-red-100 hover:text-red-700 rounded-lg transition-colors ml-1 border border-transparent hover:border-red-200">
+                                                 <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                             </button>
                                         </div>
                                     </div>
                                     <div v-if="domain.themes.length === 0" 
