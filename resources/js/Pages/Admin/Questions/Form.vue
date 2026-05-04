@@ -1,9 +1,10 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, useForm, Link } from '@inertiajs/vue3';
-import { computed, watch, ref } from 'vue';
+import { Head, useForm, Link, router } from '@inertiajs/vue3';
+import { computed, watch, ref, onMounted, onUnmounted } from 'vue';
 import CodeEditor from '@/Components/CodeEditor.vue';
 import axios from 'axios';
+import { LANGUAGE_TEMPLATES } from '@/Constants/questionTemplates';
 
 const props = defineProps({
     question: Object,
@@ -39,23 +40,96 @@ watch(() => form.domain_ids, (newIds) => {
     form.theme_ids = form.theme_ids.filter(id => validThemeIds.includes(id));
 }, { deep: true });
 
-const languageTemplates = {
-    javascript: "function solution() {\n    // Votre code ici\n}",
-    python: "def solution():\n    # Votre code ici\n    pass",
-    php: "<?php\n\nfunction solution() {\n    // Votre code ici\n}",
-    java: "public class Solution {\n    public static void main(String[] args) {\n        // Votre code ici\n    }\n}",
-    cpp: "#include <iostream>\n\nint main() {\n    // Votre code ici\n    return 0;\n}"
+// Real-time Validation
+const validationErrors = computed(() => {
+    const errors = [];
+    if (form.type === 'mcq') {
+        const hasCorrect = form.choices.some(c => c.is_correct);
+        if (!hasCorrect) errors.push("Au moins une réponse correcte est requise.");
+    }
+    if (form.type === 'code') {
+        if (!form.unit_tests.trim()) errors.push("Les tests unitaires sont recommandés pour valider le code.");
+    }
+    return errors;
+});
+
+const isDirty = computed(() => form.isDirty);
+
+// Warn before leaving if form is dirty
+const onBeforeUnload = (e) => {
+    if (isDirty.value) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
 };
+
+onMounted(() => {
+    window.addEventListener('beforeunload', onBeforeUnload);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('beforeunload', onBeforeUnload);
+});
+
+router.on('before', (event) => {
+    if (isDirty.value && !confirm('Vous avez des modifications non enregistrées. Voulez-vous vraiment quitter ?')) {
+        event.preventDefault();
+    }
+});
+
+const domainSearch = ref('');
+const themeSearch = ref('');
+
+const filteredDomains = computed(() => {
+    if (!domainSearch.value) return props.domains;
+    const search = domainSearch.value.toLowerCase();
+    return props.domains.filter(d => d.name.toLowerCase().includes(search));
+});
+
+const filteredThemes = computed(() => {
+    let baseThemes = themes.value;
+    if (!themeSearch.value) return baseThemes;
+    const search = themeSearch.value.toLowerCase();
+    return baseThemes.filter(t => t.name.toLowerCase().includes(search));
+});
+
+// Drag and Drop Logic
+const draggedItemIndex = ref(null);
+
+function onDragStart(index) {
+    draggedItemIndex.value = index;
+}
+
+function onDrop(index) {
+    if (draggedItemIndex.value === null) return;
+    const item = form.choices.splice(draggedItemIndex.value, 1)[0];
+    form.choices.splice(index, 0, item);
+    draggedItemIndex.value = null;
+}
 
 watch([() => form.default_language, () => form.type], ([newLang, newType]) => {
     if (newType === 'code') {
         const currentCode = (form.initial_code || '').trim();
-        const isTemplate = Object.values(languageTemplates).some(t => t.trim() === currentCode);
+        const isTemplate = Object.values(LANGUAGE_TEMPLATES).some(t => t.trim() === currentCode);
         
         if (!currentCode || isTemplate) {
-            form.initial_code = languageTemplates[newLang] || "";
+            form.initial_code = LANGUAGE_TEMPLATES[newLang] || "";
         }
     }
+});
+
+// Auto-test with debounce
+let testTimeout = null;
+watch([() => form.initial_code, () => form.unit_tests], () => {
+    if (form.type !== 'code') return;
+    
+    if (testTimeout) clearTimeout(testTimeout);
+    
+    testTimeout = setTimeout(() => {
+        if (form.initial_code && form.unit_tests) {
+            testCode();
+        }
+    }, 2000);
 });
 
 function addChoice() {
@@ -112,6 +186,14 @@ async function testCode() {
             <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
                 <form @submit.prevent="submit" class="bg-white rounded-xl shadow p-6 space-y-6">
 
+                    <!-- Validation Alerts -->
+                    <div v-if="validationErrors.length" class="space-y-2">
+                        <div v-for="err in validationErrors" :key="err" class="flex items-center gap-2 p-3 bg-amber-50 text-amber-700 rounded-xl border border-amber-100 text-xs font-medium">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                            {{ err }}
+                        </div>
+                    </div>
+
                     <!-- Type -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Type de question</label>
@@ -128,38 +210,56 @@ async function testCode() {
                     <!-- Domain, Level, Theme -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Domaines</label>
-                            <div class="grid grid-cols-1 gap-2 border border-gray-300 rounded-lg p-3 max-h-48 overflow-y-auto bg-slate-50">
-                                <label v-for="d in domains" :key="d.id" class="flex items-center gap-2 cursor-pointer text-sm hover:bg-white p-1 rounded transition-colors">
-                                    <input type="checkbox" v-model="form.domain_ids" :value="d.id" class="text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
-                                    <span class="text-slate-700 font-medium">{{ d.name }}</span>
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-sm font-semibold text-slate-700">Domaines</label>
+                                <div class="relative">
+                                    <input type="text" v-model="domainSearch" placeholder="Rechercher..." 
+                                        class="text-xs border-slate-200 rounded-lg px-2 py-1 w-32 focus:ring-indigo-500 focus:border-indigo-500" />
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 gap-1 border border-slate-200 rounded-xl p-2 max-h-56 overflow-y-auto bg-slate-50/50 shadow-inner">
+                                <label v-for="d in filteredDomains" :key="d.id" 
+                                    class="flex items-center gap-3 cursor-pointer text-sm p-2 rounded-lg transition-all"
+                                    :class="form.domain_ids.includes(d.id) ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200' : 'hover:bg-white text-slate-600'">
+                                    <input type="checkbox" v-model="form.domain_ids" :value="d.id" class="text-indigo-600 rounded-md border-slate-300 focus:ring-indigo-500" />
+                                    <span class="font-medium">{{ d.name }}</span>
                                 </label>
+                                <div v-if="filteredDomains.length === 0" class="text-xs text-slate-400 italic py-4 text-center">Aucun domaine trouvé</div>
                             </div>
                             <p v-if="form.errors.domain_ids" class="text-red-500 text-xs mt-1">{{ form.errors.domain_ids }}</p>
                         </div>
 
-                        <div class="space-y-4">
+                        <div class="space-y-6">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Niveau académique</label>
-                                <select v-model="form.academic_level_id" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">Niveau académique</label>
+                                <select v-model="form.academic_level_id" required class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-indigo-500 focus:border-indigo-500 shadow-sm transition-all"
                                     :class="{'border-red-500': form.errors.academic_level_id}">
-                                    <option value="">Sélectionner...</option>
+                                    <option value="">Sélectionner un niveau...</option>
                                     <option v-for="l in levels" :key="l.id" :value="l.id">{{ l.name }}</option>
                                 </select>
                                 <p v-if="form.errors.academic_level_id" class="text-red-500 text-xs mt-1">{{ form.errors.academic_level_id }}</p>
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Thèmes</label>
-                                <div class="grid grid-cols-1 gap-2 border border-gray-300 rounded-lg p-3 max-h-48 overflow-y-auto bg-slate-50" :class="{'opacity-50': !form.domain_ids.length}">
-                                    <template v-if="themes.length">
-                                        <label v-for="t in themes" :key="t.id" class="flex items-center gap-2 cursor-pointer text-sm hover:bg-white p-1 rounded transition-colors">
-                                            <input type="checkbox" v-model="form.theme_ids" :value="t.id" class="text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
-                                            <span class="text-slate-600">{{ t.name }}</span>
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="block text-sm font-semibold text-slate-700">Thèmes</label>
+                                    <div v-if="form.domain_ids.length" class="relative">
+                                        <input type="text" v-model="themeSearch" placeholder="Filtrer..." 
+                                            class="text-xs border-slate-200 rounded-lg px-2 py-1 w-24 focus:ring-indigo-500 focus:border-indigo-500" />
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 gap-1 border border-slate-200 rounded-xl p-2 max-h-56 overflow-y-auto bg-slate-50/50 shadow-inner" 
+                                    :class="{'opacity-50 grayscale': !form.domain_ids.length}">
+                                    <template v-if="filteredThemes.length">
+                                        <label v-for="t in filteredThemes" :key="t.id" 
+                                            class="flex items-center gap-3 cursor-pointer text-sm p-2 rounded-lg transition-all"
+                                            :class="form.theme_ids.includes(t.id) ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200' : 'hover:bg-white text-slate-600'">
+                                            <input type="checkbox" v-model="form.theme_ids" :value="t.id" class="text-indigo-600 rounded-md border-slate-300 focus:ring-indigo-500" />
+                                            <span class="font-medium">{{ t.name }}</span>
                                         </label>
                                     </template>
-                                    <div v-else class="text-xs text-slate-400 italic py-2">
-                                        {{ form.domain_ids.length ? 'Aucun thème disponible' : "Sélectionnez d'abord un domaine" }}
+                                    <div v-else class="text-xs text-slate-400 italic py-8 text-center px-4">
+                                        {{ form.domain_ids.length ? 'Aucun thème correspondant' : "Sélectionnez un domaine pour voir les thèmes" }}
                                     </div>
                                 </div>
                                 <p v-if="form.errors.theme_ids" class="text-red-500 text-xs mt-1">{{ form.errors.theme_ids }}</p>
@@ -189,29 +289,62 @@ async function testCode() {
                     </div>
 
                     <!-- MCQ Choices -->
-                    <div v-if="form.type === 'mcq'" class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <label class="block text-sm font-medium text-gray-700">Réponses possibles</label>
-                            <label class="flex items-center gap-2 text-sm text-gray-600">
-                                <input type="checkbox" v-model="form.multiple_answers" class="text-indigo-600" />
+                    <div v-if="form.type === 'mcq'" class="space-y-4">
+                        <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <div>
+                                <label class="block text-sm font-bold text-slate-800">Options de réponse</label>
+                                <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Cochez les réponses correctes</p>
+                            </div>
+                            <label class="flex items-center gap-2 text-xs font-semibold text-slate-600 cursor-pointer hover:text-indigo-600 transition-colors">
+                                <input type="checkbox" v-model="form.multiple_answers" class="text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />
                                 Réponses multiples
                             </label>
                         </div>
-                        <div v-for="(choice, i) in form.choices" :key="i" class="space-y-1">
-                            <div class="flex items-center gap-3">
-                                <input type="text" v-model="choice.text" placeholder="Texte de la réponse" required
-                                    class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                                    :class="{'border-red-500': form.errors[`choices.${i}.text`]}" />
-                                <label class="flex items-center gap-1 text-sm text-gray-600 whitespace-nowrap">
-                                    <input type="checkbox" v-model="choice.is_correct" class="text-green-600" />
-                                    Correcte
-                                </label>
-                                <button v-if="form.choices.length > 2" type="button" @click="removeChoice(i)"
-                                    class="text-red-500 hover:text-red-700 text-lg leading-none">×</button>
+
+                        <div class="space-y-3">
+                            <div v-for="(choice, i) in form.choices" :key="i" 
+                                class="group flex items-start gap-3 p-3 bg-white border border-slate-200 rounded-xl transition-all hover:border-indigo-200 hover:shadow-sm"
+                                :class="{'ring-2 ring-emerald-500/20 border-emerald-500 bg-emerald-50/30': choice.is_correct, 'opacity-50 border-dashed border-indigo-400': draggedItemIndex === i}"
+                                draggable="true"
+                                @dragstart="onDragStart(i)"
+                                @dragover.prevent
+                                @drop="onDrop(i)">
+                                
+                                <div class="mt-2.5 text-slate-300 group-hover:text-slate-400 cursor-grab active:cursor-grabbing">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg>
+                                </div>
+
+                                <div class="flex-1 space-y-1">
+                                    <div class="flex items-center gap-3">
+                                        <input type="text" v-model="choice.text" placeholder="Entrez le texte de la réponse..." required
+                                            class="flex-1 border-none bg-transparent p-0 text-sm focus:ring-0 placeholder:text-slate-400 font-medium"
+                                            :class="{'text-emerald-900': choice.is_correct}" />
+                                        
+                                        <div class="flex items-center gap-2">
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" v-model="choice.is_correct" class="sr-only peer" />
+                                                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                                                <span class="ms-2 text-[10px] font-bold uppercase tracking-wider text-slate-500 peer-checked:text-emerald-600">
+                                                    {{ choice.is_correct ? 'Correct' : 'Incorrect' }}
+                                                </span>
+                                            </label>
+
+                                            <button v-if="form.choices.length > 2" type="button" @click="removeChoice(i)"
+                                                class="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                                title="Supprimer">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p v-if="form.errors[`choices.${i}.text`]" class="text-red-500 text-[10px] font-bold">{{ form.errors[`choices.${i}.text`] }}</p>
+                                </div>
                             </div>
-                            <p v-if="form.errors[`choices.${i}.text`]" class="text-red-500 text-xs mt-1">{{ form.errors[`choices.${i}.text`] }}</p>
                         </div>
-                        <button type="button" @click="addChoice" class="text-indigo-600 text-sm hover:underline">+ Ajouter un choix</button>
+
+                        <button type="button" @click="addChoice" class="flex items-center justify-center gap-2 w-full py-2 border-2 border-dashed border-slate-200 rounded-xl text-xs font-bold text-slate-400 hover:border-indigo-300 hover:text-indigo-500 transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                            Ajouter un choix de réponse
+                        </button>
                     </div>
 
                     <!-- Code -->
