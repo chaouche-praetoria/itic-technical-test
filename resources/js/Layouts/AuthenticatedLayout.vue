@@ -17,6 +17,10 @@ const dismissHelpCard = () => {
     showHelpCard.value = false;
     localStorage.setItem('admin_show_help_card', 'false');
 };
+
+const can = (permission) => {
+    return page.props.auth.user.is_super_admin || page.props.auth.user.permissions.includes(permission);
+};
 </script>
 
 <template>
@@ -42,49 +46,49 @@ const dismissHelpCard = () => {
                         Dashboard
                     </SidebarLink>
 
-                    <SidebarLink :href="route('admin.questions.index')" :active="route().current('admin.questions.*')">
+                    <SidebarLink v-if="can('manage-questions')" :href="route('admin.questions.index')" :active="route().current('admin.questions.*')">
                         <template #icon>
                             <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </template>
                         Banque de questions
                     </SidebarLink>
 
-                    <SidebarLink :href="route('admin.templates.index')" :active="route().current('admin.templates.*')">
+                    <SidebarLink v-if="can('manage-templates')" :href="route('admin.templates.index')" :active="route().current('admin.templates.*')">
                         <template #icon>
                             <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         </template>
                         Templates de test
                     </SidebarLink>
 
-                    <SidebarLink :href="route('admin.candidates.index')" :active="route().current('admin.candidates.*')">
+                    <SidebarLink v-if="can('manage-candidates')" :href="route('admin.candidates.index')" :active="route().current('admin.candidates.*')">
                         <template #icon>
                             <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                         </template>
                         Candidats
                     </SidebarLink>
 
-                    <SidebarLink :href="route('admin.domains.index')" :active="route().current('admin.domains.*')">
+                    <SidebarLink v-if="can('manage-domains')" :href="route('admin.domains.index')" :active="route().current('admin.domains.*')">
                         <template #icon>
                             <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                         </template>
                         Domaines
                     </SidebarLink>
 
-                    <SidebarLink :href="route('admin.levels.index')" :active="route().current('admin.levels.*')">
+                    <SidebarLink v-if="can('manage-levels')" :href="route('admin.levels.index')" :active="route().current('admin.levels.*')">
                         <template #icon>
                             <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 012-2H7a2 2 0 01-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m-1 4h1m-5 10l-2-3m2 3l2-3" /></svg>
                         </template>
                         Niveaux
                     </SidebarLink>
 
-                    <SidebarLink v-if="$page.props.auth.user.is_super_admin" :href="route('admin.administrators.index')" :active="route().current('admin.administrators.*')">
+                    <SidebarLink v-if="can('manage-admins')" :href="route('admin.administrators.index')" :active="route().current('admin.administrators.*')">
                         <template #icon>
                             <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.333 9-6.03 9-11.623 0-1.312-.251-2.566-.707-3.719A11.946 11.946 0 0112 2.714z" /></svg>
                         </template>
                         Administrateurs
                     </SidebarLink>
 
-                    <SidebarLink v-if="$page.props.auth.user.is_super_admin" :href="route('admin.roles.index')" :active="route().current('admin.roles.*')">
+                    <SidebarLink v-if="can('manage-roles')" :href="route('admin.roles.index')" :active="route().current('admin.roles.*')">
                         <template #icon>
                             <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" /></svg>
                         </template>
@@ -176,31 +180,31 @@ const dismissHelpCard = () => {
                                 </template>
                                 Dashboard
                             </SidebarLink>
-                            <SidebarLink :href="route('admin.questions.index')" :active="route().current('admin.questions.*')">
+                            <SidebarLink v-if="can('manage-questions')" :href="route('admin.questions.index')" :active="route().current('admin.questions.*')">
                                 <template #icon>
                                     <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 </template>
                                 Questions
                             </SidebarLink>
-                            <SidebarLink :href="route('admin.templates.index')" :active="route().current('admin.templates.*')">
+                            <SidebarLink v-if="can('manage-templates')" :href="route('admin.templates.index')" :active="route().current('admin.templates.*')">
                                 <template #icon>
                                     <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 </template>
                                 Templates
                             </SidebarLink>
-                            <SidebarLink :href="route('admin.candidates.index')" :active="route().current('admin.candidates.*')">
+                            <SidebarLink v-if="can('manage-candidates')" :href="route('admin.candidates.index')" :active="route().current('admin.candidates.*')">
                                 <template #icon>
                                     <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                                 </template>
                                 Candidats
                             </SidebarLink>
-                            <SidebarLink :href="route('admin.domains.index')" :active="route().current('admin.domains.*')">
+                            <SidebarLink v-if="can('manage-domains')" :href="route('admin.domains.index')" :active="route().current('admin.domains.*')">
                                 <template #icon>
                                     <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                                 </template>
                                 Domaines
                             </SidebarLink>
-                            <SidebarLink :href="route('admin.levels.index')" :active="route().current('admin.levels.*')">
+                            <SidebarLink v-if="can('manage-levels')" :href="route('admin.levels.index')" :active="route().current('admin.levels.*')">
                                 <template #icon>
                                     <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 012-2H7a2 2 0 01-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m-1 4h1m-5 10l-2-3m2 3l2-3" /></svg>
                                 </template>

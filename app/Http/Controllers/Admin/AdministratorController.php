@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class AdministratorController extends Controller
@@ -19,6 +20,8 @@ class AdministratorController extends Controller
      */
     public function index()
     {
+        Gate::authorize('manage-admins');
+
         $administrators = User::with('roles')->get();
 
         return Inertia::render('Admin/Administrators/Index', [
@@ -32,6 +35,8 @@ class AdministratorController extends Controller
      */
     public function store(Request $request)
     {
+        Gate::authorize('manage-admins');
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|lowercase|max:255|unique:users',
@@ -58,6 +63,8 @@ class AdministratorController extends Controller
      */
     public function update(Request $request, User $administrator)
     {
+        Gate::authorize('manage-admins');
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'lowercase', 'max:255', Rule::unique('users')->ignore($administrator->id)],
@@ -81,6 +88,8 @@ class AdministratorController extends Controller
      */
     public function destroy(User $administrator)
     {
+        Gate::authorize('manage-admins');
+
         // Prevent deleting yourself
         if (auth()->id() === $administrator->id) {
             return redirect()->back()->with('error', 'Vous ne pouvez pas supprimer votre propre compte.');
@@ -96,6 +105,8 @@ class AdministratorController extends Controller
      */
     public function validateUser(Request $request, User $user)
     {
+        Gate::authorize('manage-admins');
+
         $defaultRole = Role::where('name', 'admin')->first();
         if ($defaultRole) {
             $user->roles()->sync([$defaultRole->id]);

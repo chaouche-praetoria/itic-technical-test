@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Permission;
 use App\Models\Role;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class RoleController extends Controller
@@ -15,6 +16,8 @@ class RoleController extends Controller
      */
     public function index()
     {
+        Gate::authorize('manage-roles');
+
         return Inertia::render('Admin/Roles/Index', [
             'roles' => Role::with('permissions')->get(),
             'permissions' => Permission::all(),
@@ -26,6 +29,8 @@ class RoleController extends Controller
      */
     public function store(Request $request)
     {
+        Gate::authorize('manage-roles');
+
         $request->validate([
             'name' => 'required|string|max:255|unique:roles',
             'label' => 'nullable|string|max:255',
@@ -50,6 +55,8 @@ class RoleController extends Controller
      */
     public function update(Request $request, Role $role)
     {
+        Gate::authorize('manage-roles');
+
         // Protection against modifying super-admin
         if ($role->name === 'super-admin') {
             return redirect()->back()->with('error', 'Le rôle Super Admin ne peut pas être modifié.');
@@ -77,6 +84,8 @@ class RoleController extends Controller
      */
     public function destroy(Role $role)
     {
+        Gate::authorize('manage-roles');
+
         // Protection
         if ($role->name === 'super-admin') {
             return redirect()->back()->with('error', 'Le rôle Super Admin ne peut pas être supprimé.');

@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class CandidateController extends Controller
@@ -26,12 +27,16 @@ class CandidateController extends Controller
 
     public function destroy(Candidate $candidate)
     {
+        Gate::authorize('manage-candidates');
+
         $candidate->delete();
         return redirect()->route('admin.candidates.index')->with('success', 'Dossier candidat supprimé.');
     }
 
     public function index(Request $request)
     {
+        Gate::authorize('manage-candidates');
+
         $candidates = Candidate::withCount('testSessions')
             ->when($request->search, fn($q) => $q->where(function ($q) use ($request) {
                 $q->where('first_name', 'like', "%{$request->search}%")
@@ -50,6 +55,8 @@ class CandidateController extends Controller
 
     public function show(Candidate $candidate)
     {
+        Gate::authorize('manage-candidates');
+
         $sessions = $candidate->testSessions()
             ->with('template.domain')
             ->latest()
@@ -76,6 +83,8 @@ class CandidateController extends Controller
 
     public function store(Request $request)
     {
+        Gate::authorize('manage-candidates');
+
         $validated = $request->validate([
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
@@ -89,6 +98,8 @@ class CandidateController extends Controller
 
     public function generateLink(Request $request, Candidate $candidate)
     {
+        Gate::authorize('manage-candidates');
+
         $request->validate([
             'test_template_id' => 'required|exists:test_templates,id',
             'send_email' => 'boolean',
@@ -129,6 +140,8 @@ class CandidateController extends Controller
 
     public function sessionDetail(TestSession $session)
     {
+        Gate::authorize('view-results');
+
         $session->load([
             'candidate',
             'template',
@@ -142,6 +155,8 @@ class CandidateController extends Controller
 
     public function sendSessionEmail(Request $request, TestSession $session)
     {
+        Gate::authorize('manage-candidates');
+
         $request->validate([
             'send_email' => 'nullable|boolean',
             'sync_hubspot' => 'nullable|boolean'
@@ -173,6 +188,8 @@ class CandidateController extends Controller
 
     public function gradeAnswer(Request $request, TestSession $session)
     {
+        Gate::authorize('grade-sessions');
+
         $request->validate([
             'question_id' => 'required|exists:questions,id',
             'score' => 'required|numeric|min:0|max:100',
@@ -198,6 +215,8 @@ class CandidateController extends Controller
 
     public function finalizeSession(TestSession $session)
     {
+        Gate::authorize('grade-sessions');
+
         $session->update(['status' => 'completed']);
 
         // Sync to HubSpot
@@ -227,6 +246,8 @@ class CandidateController extends Controller
 
     public function syncToHubSpot(Candidate $candidate)
     {
+        Gate::authorize('manage-candidates');
+
         Log::info("HubSpot: Starting PUSH to HubSpot for candidate: " . $candidate->id);
         
         // Get the latest completed session or the latest session with a score
@@ -276,6 +297,8 @@ class CandidateController extends Controller
 
     public function syncSpecificFromHubSpot(Candidate $candidate)
     {
+        Gate::authorize('manage-candidates');
+
         Log::info("PULL: syncSpecificFromHubSpot called for candidate: " . $candidate->id);
         
         if (!$candidate->email) {
@@ -310,6 +333,8 @@ class CandidateController extends Controller
 
     public function syncFromHubSpot()
     {
+        Gate::authorize('manage-candidates');
+
         $data = $this->hubspot->searchCandidates();
 
         if (!$data || !isset($data['results'])) {

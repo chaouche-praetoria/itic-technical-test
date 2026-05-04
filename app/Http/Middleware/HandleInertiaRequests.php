@@ -37,6 +37,9 @@ class HandleInertiaRequests extends Middleware
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
                     'is_super_admin' => $request->user()->isSuperAdmin(),
+                    'permissions' => $request->user()->isSuperAdmin() 
+                        ? \App\Models\Permission::pluck('name') 
+                        : $request->user()->roles->flatMap->permissions->pluck('name')->unique()->values(),
                 ] : null,
             ],
             'flash' => [

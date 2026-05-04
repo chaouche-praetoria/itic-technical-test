@@ -7,12 +7,15 @@ use App\Models\Domain;
 use App\Models\Theme;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class DomainController extends Controller
 {
     public function index()
     {
+        Gate::authorize('manage-domains');
+        
         return Inertia::render('Admin/Domains/Index', [
             'domains' => Domain::with('themes')->withCount(['questions', 'themes'])->latest()->get(),
         ]);
@@ -20,6 +23,8 @@ class DomainController extends Controller
 
     public function store(Request $request)
     {
+        Gate::authorize('manage-domains');
+
         $validated = $request->validate([
             'name' => 'required|string|max:100',
             'description' => 'nullable|string',
@@ -34,6 +39,8 @@ class DomainController extends Controller
 
     public function update(Request $request, Domain $domain)
     {
+        Gate::authorize('manage-domains');
+
         $validated = $request->validate([
             'name' => 'required|string|max:100',
             'description' => 'nullable|string',
@@ -47,6 +54,8 @@ class DomainController extends Controller
 
     public function storeTheme(Request $request, Domain $domain)
     {
+        Gate::authorize('manage-themes');
+
         $request->validate(['name' => 'required|string|max:100']);
 
         $domain->themes()->create([
@@ -55,5 +64,27 @@ class DomainController extends Controller
         ]);
 
         return back()->with('success', 'Thème créé.');
+    }
+
+    public function updateTheme(Request $request, Theme $theme)
+    {
+        Gate::authorize('manage-themes');
+
+        $validated = $request->validate(['name' => 'required|string|max:100']);
+        
+        $theme->update([
+            'name' => $validated['name'],
+            'slug' => Str::slug($validated['name']),
+        ]);
+
+        return back()->with('success', 'Thème mis à jour.');
+    }
+
+    public function destroyTheme(Theme $theme)
+    {
+        Gate::authorize('manage-themes');
+
+        $theme->delete();
+        return back()->with('success', 'Thème supprimé.');
     }
 }

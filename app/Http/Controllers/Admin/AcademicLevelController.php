@@ -6,12 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\AcademicLevel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class AcademicLevelController extends Controller
 {
     public function index()
     {
+        Gate::authorize('manage-levels');
+
         return Inertia::render('Admin/AcademicLevels/Index', [
             'levels' => AcademicLevel::with(['fallbackLevel'])
                 ->withCount(['questions', 'testTemplates'])
@@ -22,6 +25,8 @@ class AcademicLevelController extends Controller
 
     public function store(Request $request)
     {
+        Gate::authorize('manage-levels');
+
         $validated = $request->validate([
             'name' => 'required|string|max:100',
             'order' => 'nullable|integer|min:0',
@@ -37,6 +42,8 @@ class AcademicLevelController extends Controller
 
     public function update(Request $request, AcademicLevel $level)
     {
+        Gate::authorize('manage-levels');
+
         $validated = $request->validate([
             'name' => 'required|string|max:100',
             'order' => 'nullable|integer|min:0',
@@ -52,6 +59,8 @@ class AcademicLevelController extends Controller
 
     public function destroy(AcademicLevel $level)
     {
+        Gate::authorize('manage-levels');
+
         if ($level->questions()->count() > 0 || $level->testTemplates()->count() > 0) {
             return back()->with('error', 'Impossible de supprimer ce niveau car il est utilisé par des questions ou des templates.');
         }

@@ -7,12 +7,15 @@ use App\Models\AcademicLevel;
 use App\Models\Domain;
 use App\Models\TestTemplate;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class TestTemplateController extends Controller
 {
     public function index()
     {
+        Gate::authorize('manage-templates');
+
         return Inertia::render('Admin/Templates/Index', [
             'templates' => TestTemplate::with(['domain', 'academicLevel'])
                 ->withCount('testSessions')
@@ -23,6 +26,8 @@ class TestTemplateController extends Controller
 
     public function create()
     {
+        Gate::authorize('manage-templates');
+
         return Inertia::render('Admin/Templates/Form', [
             'domains' => Domain::with('themes')->where('is_active', true)->get(),
             'levels' => AcademicLevel::orderBy('order')->get(),
@@ -31,6 +36,8 @@ class TestTemplateController extends Controller
 
     public function store(Request $request)
     {
+        Gate::authorize('manage-templates');
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -59,6 +66,8 @@ class TestTemplateController extends Controller
 
     public function edit(TestTemplate $template)
     {
+        Gate::authorize('manage-templates');
+
         return Inertia::render('Admin/Templates/Form', [
             'template' => $template->load('rules.theme'),
             'domains' => Domain::with('themes')->where('is_active', true)->get(),
@@ -68,6 +77,8 @@ class TestTemplateController extends Controller
 
     public function update(Request $request, TestTemplate $template)
     {
+        Gate::authorize('manage-templates');
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -97,6 +108,8 @@ class TestTemplateController extends Controller
 
     public function destroy(TestTemplate $template)
     {
+        Gate::authorize('manage-templates');
+
         $template->delete();
         return redirect()->route('admin.templates.index')->with('success', 'Template supprimé.');
     }

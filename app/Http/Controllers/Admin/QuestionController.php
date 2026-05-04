@@ -9,6 +9,7 @@ use App\Models\Question;
 use App\Models\Theme;
 use App\Services\Judge0Service;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class QuestionController extends Controller
@@ -17,6 +18,8 @@ class QuestionController extends Controller
 
     public function index(Request $request)
     {
+        Gate::authorize('manage-questions');
+
         $query = Question::with(['domains', 'academicLevel', 'themes', 'choices'])
             ->when($request->search, fn($q) => $q->where('statement', 'like', "%{$request->search}%"))
             ->when($request->type, fn($q) => $q->where('type', $request->type))
@@ -33,6 +36,8 @@ class QuestionController extends Controller
 
     public function create()
     {
+        Gate::authorize('manage-questions');
+
         return Inertia::render('Admin/Questions/Form', [
             'domains' => Domain::with('themes')->where('is_active', true)->get(),
             'levels' => AcademicLevel::orderBy('order')->get(),
@@ -41,6 +46,8 @@ class QuestionController extends Controller
 
     public function store(Request $request)
     {
+        Gate::authorize('manage-questions');
+
         $validated = $request->validate([
             'type' => 'required|in:mcq,text,code',
             'domain_ids' => 'required|array|min:1',
@@ -92,6 +99,8 @@ class QuestionController extends Controller
 
     public function edit(Question $question)
     {
+        Gate::authorize('manage-questions');
+
         return Inertia::render('Admin/Questions/Form', [
             'question' => $question->load(['choices', 'domains', 'themes']),
             'domains' => Domain::with('themes')->where('is_active', true)->get(),
@@ -101,6 +110,8 @@ class QuestionController extends Controller
 
     public function update(Request $request, Question $question)
     {
+        Gate::authorize('manage-questions');
+
         $validated = $request->validate([
             'type' => 'required|in:mcq,text,code',
             'domain_ids' => 'required|array|min:1',
@@ -164,12 +175,16 @@ class QuestionController extends Controller
 
     public function destroy(Question $question)
     {
+        Gate::authorize('manage-questions');
+
         $question->delete();
         return redirect()->route('admin.questions.index')->with('success', 'Question supprimée.');
     }
 
     public function test(Request $request)
     {
+        Gate::authorize('manage-questions');
+
         $request->validate([
             'code' => 'required|string',
             'language' => 'required|string',

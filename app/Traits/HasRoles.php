@@ -34,6 +34,10 @@ trait HasRoles
      */
     public function hasPermission(string $permission): bool
     {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
         return $this->roles->flatMap->permissions->contains('name', $permission);
     }
 

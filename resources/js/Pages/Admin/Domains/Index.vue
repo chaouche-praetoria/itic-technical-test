@@ -11,6 +11,7 @@ const editingDomain = ref(null);
 const form = useForm({ name: '', description: '', color: '#3B82F6' });
 const themeForm = useForm({ name: '', domain_id: null });
 const showThemeModal = ref(false);
+const editingTheme = ref(null);
 
 function openCreate() {
     form.reset();
@@ -41,13 +42,33 @@ function submit() {
 function openTheme(domain) {
     themeForm.name = '';
     themeForm.domain_id = domain.id;
+    editingTheme.value = null;
     showThemeModal.value = true;
 }
 
+function openEditTheme(theme) {
+    themeForm.name = theme.name;
+    themeForm.domain_id = theme.domain_id;
+    editingTheme.value = theme;
+    showThemeModal.value = true;
+}
+
+function deleteTheme(theme) {
+    if (confirm('Voulez-vous vraiment supprimer ce thème ?')) {
+        themeForm.delete(route('admin.themes.destroy', theme.id));
+    }
+}
+
 function submitTheme() {
-    themeForm.post(route('admin.domains.themes.store', themeForm.domain_id), {
-        onSuccess: () => { showThemeModal.value = false; },
-    });
+    if (editingTheme.value) {
+        themeForm.put(route('admin.themes.update', editingTheme.value.id), {
+            onSuccess: () => { showThemeModal.value = false; },
+        });
+    } else {
+        themeForm.post(route('admin.themes.store', themeForm.domain_id), {
+            onSuccess: () => { showThemeModal.value = false; },
+        });
+    }
 }
 </script>
 
@@ -105,10 +126,18 @@ function submitTheme() {
                                 </button>
                             </div>
                             <div class="flex flex-wrap gap-2">
-                                <span v-for="theme in domain.themes" :key="theme.id"
-                                    class="bg-slate-50 text-slate-600 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-slate-100 hover:bg-white hover:border-indigo-100 transition-all cursor-default">
+                                <div v-for="theme in domain.themes" :key="theme.id"
+                                    class="bg-slate-50 text-slate-600 text-[10px] font-bold px-3 py-1.5 rounded-lg border border-slate-100 hover:bg-white hover:border-indigo-100 transition-all flex items-center gap-2 group/theme">
                                     {{ theme.name }}
-                                </span>
+                                    <div class="flex items-center gap-1 opacity-0 group-hover/theme:opacity-100 transition-opacity">
+                                        <button @click="openEditTheme(theme)" class="hover:text-indigo-600 transition-colors">
+                                            <svg class="size-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+                                        </button>
+                                        <button @click="deleteTheme(theme)" class="hover:text-rose-600 transition-colors">
+                                            <svg class="size-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                        </button>
+                                    </div>
+                                </div>
                                 <span v-if="domain.themes.length === 0" class="text-xs text-slate-300 italic font-medium">Aucun sous-thème</span>
                             </div>
                         </div>
@@ -167,8 +196,8 @@ function submitTheme() {
         <div v-if="showThemeModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl animate-reveal border border-slate-100">
                 <div class="mb-6">
-                    <h3 class="text-xl font-bold text-slate-900 mb-1">Nouveau Thème</h3>
-                    <p class="text-xs text-slate-500 font-medium">Ajouter une sous-catégorie spécifique.</p>
+                    <h3 class="text-xl font-bold text-slate-900 mb-1">{{ editingTheme ? 'Modifier le' : 'Nouveau' }} Thème</h3>
+                    <p class="text-xs text-slate-500 font-medium">{{ editingTheme ? 'Modifiez l\'intitulé de ce thème.' : 'Ajouter une sous-catégorie spécifique.' }}</p>
                 </div>
                 <form @submit.prevent="submitTheme" class="space-y-6">
                     <div>
@@ -184,7 +213,7 @@ function submitTheme() {
                         </button>
                         <button type="submit" :disabled="themeForm.processing"
                             class="flex-1 px-6 py-4 text-sm font-bold text-white bg-slate-900 rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 disabled:opacity-50 active:scale-[0.98]">
-                            Ajouter
+                            {{ editingTheme ? 'Mettre à jour' : 'Ajouter' }}
                         </button>
                     </div>
                 </form>
