@@ -26,6 +26,9 @@ const form = useForm({
     choices: props.question?.choices?.length
         ? props.question.choices.map(c => ({ text: c.text, is_correct: c.is_correct }))
         : [{ text: '', is_correct: false }, { text: '', is_correct: false }],
+    explanation: props.question?.explanation || '',
+    points: props.question?.points || 1,
+    image: null,
 });
 
 const themes = computed(() => {
@@ -141,7 +144,10 @@ function removeChoice(i) {
 
 function submit() {
     if (props.question) {
-        form.put(route('admin.questions.update', props.question.id));
+        form.transform((data) => ({
+            ...data,
+            _method: 'PUT',
+        })).post(route('admin.questions.update', props.question.id));
     } else {
         form.post(route('admin.questions.store'));
     }
@@ -301,25 +307,52 @@ watch(() => form.multiple_answers, () => {
                         </div>
                     </div>
 
-                    <!-- Difficulty -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Difficulté</label>
-                        <div class="flex gap-3">
-                            <label v-for="d in [{val:'easy',label:'Facile'},{val:'medium',label:'Moyen'},{val:'hard',label:'Difficile'}]" :key="d.val"
-                                class="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" v-model="form.difficulty" :value="d.val" class="text-indigo-600" />
-                                <span class="text-sm">{{ d.label }}</span>
-                            </label>
+                    <!-- Difficulty & Points -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Difficulté</label>
+                            <div class="flex gap-3">
+                                <label v-for="d in [{val:'easy',label:'Facile'},{val:'medium',label:'Moyen'},{val:'hard',label:'Difficile'}]" :key="d.val"
+                                    class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" v-model="form.difficulty" :value="d.val" class="text-indigo-600" />
+                                    <span class="text-sm">{{ d.label }}</span>
+                                </label>
+                            </div>
+                            <p v-if="form.errors.difficulty" class="text-red-500 text-xs mt-1">{{ form.errors.difficulty }}</p>
                         </div>
-                        <p v-if="form.errors.difficulty" class="text-red-500 text-xs mt-1">{{ form.errors.difficulty }}</p>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Points</label>
+                            <input type="number" v-model="form.points" min="0" 
+                                class="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500" />
+                            <p v-if="form.errors.points" class="text-red-500 text-xs mt-1">{{ form.errors.points }}</p>
+                        </div>
                     </div>
 
-                    <!-- Statement -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Énoncé</label>
-                        <textarea v-model="form.statement" rows="4" required
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"></textarea>
-                        <p v-if="form.errors.statement" class="text-red-500 text-xs mt-1">{{ form.errors.statement }}</p>
+                    <!-- Statement & Image -->
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Énoncé</label>
+                            <textarea v-model="form.statement" rows="4" required
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                            <p v-if="form.errors.statement" class="text-red-500 text-xs mt-1">{{ form.errors.statement }}</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Image d'illustration (optionnelle)</label>
+                            <div class="flex items-center gap-6">
+                                <div v-if="question?.image_path || form.image" class="relative group">
+                                    <img :src="form.image ? URL.createObjectURL(form.image) : `/storage/${question.image_path}`" 
+                                        class="size-32 object-cover rounded-xl border border-slate-200" />
+                                    <button type="button" @click="form.image = null" 
+                                        class="absolute -top-2 -right-2 bg-rose-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                    </button>
+                                </div>
+                                <input type="file" @input="form.image = $event.target.files[0]" 
+                                    class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" />
+                            </div>
+                            <p v-if="form.errors.image" class="text-red-500 text-xs mt-1">{{ form.errors.image }}</p>
+                        </div>
                     </div>
 
                     <!-- MCQ Choices -->
@@ -477,6 +510,15 @@ watch(() => form.multiple_answers, () => {
                                 <div v-if="testResult.output" class="mt-2 p-2 bg-black/5 rounded whitespace-pre-wrap truncate max-h-32">{{ testResult.output }}</div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Explanation / Correction -->
+                    <div class="pt-8 border-t border-slate-100">
+                        <label class="block text-sm font-bold text-slate-800 mb-2">Explication / Correction</label>
+                        <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-3">Cette explication sera montrée au candidat après sa réponse</p>
+                        <textarea v-model="form.explanation" rows="3" placeholder="Détaillez la solution ou donnez des indices..."
+                            class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50/50"></textarea>
+                        <p v-if="form.errors.explanation" class="text-red-500 text-xs mt-1">{{ form.errors.explanation }}</p>
                     </div>
 
                     <!-- Actions -->

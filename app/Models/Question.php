@@ -12,6 +12,7 @@ class Question extends Model
         'type', 'academic_level_id',
         'difficulty', 'statement', 'multiple_answers',
         'unit_tests', 'default_language', 'initial_code', 'is_active',
+        'explanation', 'points', 'image_path',
     ];
 
     protected $casts = [

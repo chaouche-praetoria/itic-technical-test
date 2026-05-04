@@ -206,6 +206,7 @@ const cleanLabel = (label) => {
                                     <th class="px-8 py-5 text-left border-b border-slate-100 uppercase">Énoncé de la question</th>
                                     <th class="px-8 py-5 text-left border-b border-slate-100 uppercase">Type & Thématique</th>
                                     <th class="px-8 py-5 text-center border-b border-slate-100 uppercase">Difficulté</th>
+                                    <th class="px-8 py-5 text-center border-b border-slate-100 uppercase">Points</th>
                                     <th class="px-8 py-5 text-right border-b border-slate-100 uppercase">Actions</th>
                                 </tr>
                             </thead>
@@ -253,6 +254,14 @@ const cleanLabel = (label) => {
                                         }" class="px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border">
                                             {{ difficultyLabel[q.difficulty] }}
                                         </span>
+                                    </td>
+                                    <td class="px-8 py-6 text-center">
+                                        <div class="flex flex-col items-center gap-1">
+                                            <span class="text-sm font-black text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
+                                                {{ q.points }}
+                                            </span>
+                                            <span class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">points</span>
+                                        </div>
                                     </td>
                                     <td class="px-8 py-6 text-right">
                                         <div class="flex justify-end gap-2">
@@ -351,7 +360,11 @@ const cleanLabel = (label) => {
                                 <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Difficulté</span>
                                 <span class="px-3 py-1 bg-slate-100 rounded-lg text-xs font-bold text-slate-600">{{ difficultyLabel[selectedQuestion.difficulty] }}</span>
                             </div>
-                            <div class="col-span-2">
+                            <div>
+                                <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Points</span>
+                                <span class="px-3 py-1 bg-indigo-600 text-white rounded-lg text-xs font-black">{{ selectedQuestion.points }} pts</span>
+                            </div>
+                            <div class="col-span-1">
                                 <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Domaines</span>
                                 <div class="flex flex-wrap gap-2">
                                     <span v-for="d in selectedQuestion.domains" :key="d.id" class="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold">{{ d.name }}</span>
@@ -359,9 +372,12 @@ const cleanLabel = (label) => {
                             </div>
                         </div>
 
-                        <!-- Statement -->
+                        <!-- Statement & Image -->
                         <div>
                             <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Énoncé</span>
+                            <div v-if="selectedQuestion.image_path" class="mb-4">
+                                <img :src="`/storage/${selectedQuestion.image_path}`" class="max-h-64 rounded-2xl border border-slate-100 shadow-sm" />
+                            </div>
                             <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 text-lg font-medium text-slate-800 leading-relaxed">
                                 {{ selectedQuestion.statement }}
                             </div>
@@ -405,6 +421,13 @@ const cleanLabel = (label) => {
                                 </div>
                             </div>
                         </div>
+                        <!-- Explanation -->
+                        <div v-if="selectedQuestion.explanation" class="mt-8">
+                            <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Explication / Correction</span>
+                            <div class="p-6 bg-emerald-50 rounded-2xl border border-emerald-100 text-sm font-medium text-emerald-800 leading-relaxed shadow-sm">
+                                {{ selectedQuestion.explanation }}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -446,6 +469,10 @@ const cleanLabel = (label) => {
                                 <span v-if="selectedQuestion.type === 'mcq'" class="px-4 py-1.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 text-[10px] font-black uppercase tracking-wider">
                                     {{ selectedQuestion.multiple_answers ? 'Plusieurs réponses possibles' : 'Réponse unique' }}
                                 </span>
+                            </div>
+
+                            <div v-if="selectedQuestion.image_path" class="mb-6">
+                                <img :src="`/storage/${selectedQuestion.image_path}`" class="max-h-80 rounded-2xl border border-slate-100 shadow-lg" />
                             </div>
 
                             <h2 class="text-2xl font-bold text-slate-900 mb-10 leading-tight">

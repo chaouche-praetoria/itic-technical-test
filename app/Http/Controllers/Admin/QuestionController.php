@@ -56,8 +56,16 @@ class QuestionController extends Controller
             'default_language' => 'nullable|string',
             'choices' => 'exclude_unless:type,mcq|required|array',
             'choices.*.text' => 'required|string',
+            'choices.*.text' => 'required|string',
             'choices.*.is_correct' => 'required|boolean',
+            'explanation' => 'nullable|string',
+            'points' => 'required|integer|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
+
+        if ($request->hasFile('image')) {
+            $validated['image_path'] = $request->file('image')->store('questions', 'public');
+        }
 
         $question = Question::create($validated);
         $question->domains()->sync($request->domain_ids);
@@ -98,8 +106,20 @@ class QuestionController extends Controller
             'default_language' => 'nullable|string',
             'choices' => 'exclude_unless:type,mcq|required|array',
             'choices.*.text' => 'required|string',
+            'choices.*.text' => 'required|string',
             'choices.*.is_correct' => 'required|boolean',
+            'explanation' => 'nullable|string',
+            'points' => 'required|integer|min:0',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
+
+        if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($question->image_path) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($question->image_path);
+            }
+            $validated['image_path'] = $request->file('image')->store('questions', 'public');
+        }
 
         $question->update($validated);
         $question->domains()->sync($request->domain_ids);

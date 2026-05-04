@@ -126,6 +126,10 @@ jobs:
             
             # Only attempt exec if container is running (even if not healthy, we try)
             if [ "\$(docker inspect -f '{{.State.Status}}' iticparis_app)" = "running" ]; then
+                echo "--- [LARAVEL] Running Migrations"
+                docker compose -p itic-technical-test exec -T app php artisan migrate --force
+                echo "--- [LARAVEL] Linking Storage"
+                docker compose -p itic-technical-test exec -T app php artisan storage:link || true
                 docker compose -p itic-technical-test exec -T app php artisan optimize:clear
             fi
 
