@@ -7,9 +7,11 @@ const props = defineProps({ candidates: Object, filters: Object });
 
 const search = ref(props.filters.search || '');
 const showModal = ref(false);
+const showImportModal = ref(false);
 const searching = ref(false);
 const syncing = ref(false);
 const form = useForm({ first_name: '', last_name: '', email: '', phone: '' });
+const importForm = useForm({ file: null });
 
 function syncHubSpot() {
     syncing.value = true;
@@ -36,6 +38,15 @@ function submit() {
         onSuccess: () => { 
             showModal.value = false; 
             form.reset(); 
+        },
+    });
+}
+
+function importCandidates() {
+    importForm.post(route('admin.candidates.import'), {
+        onSuccess: () => {
+            showImportModal.value = false;
+            importForm.reset();
         },
     });
 }
@@ -80,6 +91,11 @@ function deleteCandidate(candidate) {
                         <svg v-if="syncing" class="size-4 animate-spin text-indigo-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
                         <svg v-else class="size-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         Importer de HubSpot
+                    </button>
+                    <button @click="showImportModal = true"
+                        class="bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-xl hover:bg-slate-50 font-bold text-sm transition-all flex items-center justify-center gap-3 shadow-sm">
+                        <svg class="size-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Importer CSV/XLSX
                     </button>
                     <button @click="showModal = true" 
                         class="bg-slate-900 text-white px-5 py-2.5 rounded-xl hover:bg-slate-800 font-bold text-sm shadow-xl shadow-slate-200 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 w-fit">
@@ -227,6 +243,58 @@ function deleteCandidate(candidate) {
                         <button type="submit" :disabled="form.processing"
                             class="flex-1 px-6 py-4 text-sm font-bold text-white bg-slate-900 rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 disabled:opacity-50 active:scale-[0.98]">
                             Enregistrer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Import Candidates Modal -->
+        <div v-if="showImportModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl animate-reveal border border-slate-100">
+                <div class="mb-6">
+                    <h3 class="text-2xl font-bold text-slate-900 mb-1">Importer des candidats</h3>
+                    <p class="text-sm text-slate-500 font-medium">Téléchargez un fichier CSV ou Excel pour importer plusieurs candidats.</p>
+                </div>
+                
+                <div class="mb-6 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Format attendu</h4>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Le fichier doit contenir les colonnes suivantes (en-tête obligatoire) :<br>
+                        <span class="font-bold">Prenom, Nom, Email, Telephone, Formation</span>
+                    </p>
+                </div>
+
+                <form @submit.prevent="importCandidates" class="space-y-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Fichier (CSV, XLSX)</label>
+                        <div class="relative">
+                            <input type="file" @input="importForm.file = $event.target.files[0]"
+                                class="w-full bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl px-4 py-8 text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium text-center file:hidden cursor-pointer hover:border-indigo-300"
+                                accept=".csv,.xlsx,.xls" />
+                            <div v-if="importForm.file" class="mt-2 text-center text-xs font-bold text-indigo-600">
+                                {{ importForm.file.name }}
+                            </div>
+                            <div v-else class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center gap-2">
+                                <svg class="size-6 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                                <span class="text-xs text-slate-400">Cliquez ou glissez un fichier ici</span>
+                            </div>
+                        </div>
+                        <p v-if="importForm.errors.file" class="text-rose-500 text-xs mt-2 ml-1 font-bold">{{ importForm.errors.file }}</p>
+                    </div>
+
+                    <div v-if="importForm.progress" class="w-full bg-slate-100 rounded-full h-1.5">
+                        <div class="bg-indigo-600 h-1.5 rounded-full transition-all" :style="{ width: `${importForm.progress.percentage}%` }"></div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button type="button" @click="showImportModal = false"
+                            class="flex-1 px-6 py-4 text-sm font-bold text-slate-600 bg-slate-100 rounded-2xl hover:bg-slate-200 transition-all active:scale-[0.98]">
+                            Annuler
+                        </button>
+                        <button type="submit" :disabled="importForm.processing || !importForm.file"
+                            class="flex-1 px-6 py-4 text-sm font-bold text-white bg-slate-900 rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 disabled:opacity-50 active:scale-[0.98]">
+                            {{ importForm.processing ? 'Importation...' : 'Importer' }}
                         </button>
                     </div>
                 </form>

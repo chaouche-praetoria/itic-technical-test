@@ -64,6 +64,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     // Candidates
     Route::get('/candidates', [CandidateController::class, 'index'])->name('candidates.index');
     Route::post('/candidates/refresh-all', [CandidateController::class, 'syncFromHubSpot'])->name('candidates.sync-hubspot');
+    Route::post('/candidates/import', [CandidateController::class, 'import'])->name('candidates.import');
     Route::post('/candidates', [CandidateController::class, 'store'])->name('candidates.store');
     Route::get('/candidates/{candidate}', [CandidateController::class, 'show'])->name('candidates.show');
     Route::delete('/candidates/{candidate}', [CandidateController::class, 'destroy'])->name('candidates.destroy');

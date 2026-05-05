@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\CandidatesImport;
 
 class CandidateController extends Controller
 {
@@ -381,5 +383,22 @@ class CandidateController extends Controller
         }
 
         return back()->with('success', "Sync terminée : {$createdCount} importés, {$updatedCount} mis à jour.");
+    }
+
+    public function import(Request $request)
+    {
+        Gate::authorize('manage-candidates');
+
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv,txt|max:10240',
+        ]);
+
+        try {
+            Excel::import(new CandidatesImport, $request->file('file'));
+            return back()->with('success', 'Importation terminée avec succès.');
+        } catch (\Exception $e) {
+            Log::error('Import error: ' . $e->getMessage());
+            return back()->with('error', 'Erreur lors de l\'importation : ' . $e->getMessage());
+        }
     }
 }
