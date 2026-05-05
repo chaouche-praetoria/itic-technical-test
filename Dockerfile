@@ -17,10 +17,11 @@ RUN apk add --no-cache \
     shadow \
     rsync \
     su-exec \
-    icu-dev
+    icu-dev \
+    libzip-dev
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath intl
+RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath intl zip xml
 RUN docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype \
     && docker-php-ext-install gd
 RUN docker-php-ext-enable opcache \
