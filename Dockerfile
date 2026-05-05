@@ -52,7 +52,7 @@ FROM base AS production
 COPY --chown=laravel:laravel . .
 
 # Install PHP dependencies (no dev)
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer update --no-dev --optimize-autoloader --no-interaction
 
 # Install Node dependencies and build assets
 RUN npm ci && npm run build && rm -rf node_modules
