@@ -8,11 +8,13 @@ const props = defineProps({
     session: Object,
     candidate: Object,
     questions: Array,
+    existingAnswers: Object,
+    initialIndex: Number,
 });
 
 // State
-const currentIndex = ref(0);
-const answers = ref({});
+const currentIndex = ref(props.initialIndex || 0);
+const answers = ref(props.existingAnswers || {});
 const submitting = ref(false);
 const submitted = ref(false);
 const codeExecuting = ref(false);
@@ -234,7 +236,7 @@ watch(currentIndex, () => {
         codeAnswer.value = existing?.code || q.initial_code || '';
         selectedLanguage.value = existing?.language || q.default_language || 'javascript';
     }
-});
+}, { immediate: true });
 
 async function executeCode() {
     codeExecuting.value = true;

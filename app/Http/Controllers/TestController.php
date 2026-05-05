@@ -84,6 +84,18 @@ class TestController extends Controller
             'order' => $sq->order,
         ]);
 
+        // Load existing answers
+        $existingAnswers = $session->answers->pluck('answer', 'question_id');
+        
+        // Find the first unanswered question index to resume
+        $currentIndex = 0;
+        foreach ($questions as $index => $q) {
+            if (!$existingAnswers->has($q['id'])) {
+                $currentIndex = $index;
+                break;
+            }
+        }
+
         return Inertia::render('Test/Take', [
             'session' => [
                 'id' => $session->id,
@@ -95,6 +107,8 @@ class TestController extends Controller
             ],
             'candidate' => ['name' => $session->candidate->full_name],
             'questions' => $questions,
+            'existingAnswers' => $existingAnswers,
+            'initialIndex' => $currentIndex,
         ]);
     }
 
