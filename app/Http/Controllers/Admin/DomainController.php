@@ -17,7 +17,9 @@ class DomainController extends Controller
         Gate::authorize('manage-domains');
         
         return Inertia::render('Admin/Domains/Index', [
-            'domains' => Domain::with('themes')->withCount(['questions', 'themes'])->latest()->get(),
+            'domains' => Domain::with(['themes' => function($q) {
+                $q->withCount('questions');
+            }])->withCount(['questions', 'themes'])->latest()->get(),
             'allThemes' => Theme::orderBy('name')->get(),
         ]);
     }
