@@ -3,7 +3,12 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
-const props = defineProps({ domains: Array, allThemes: Array });
+const props = defineProps({ 
+    domains: Array, 
+    allThemes: Array,
+    levels: Array,
+    themeStats: Object
+});
 
 const search = ref('');
 const filteredDomains = ref(props.domains);
@@ -88,6 +93,12 @@ function submitTheme() {
     }
 }
 
+const getLevelCount = (themeId, levelId) => {
+    const stats = props.themeStats[themeId] || [];
+    const stat = stats.find(s => s.academic_level_id === levelId);
+    return stat ? stat.count : 0;
+};
+
 import { watch } from 'vue';
 watch(() => props.domains, () => {
     filterDomains();
@@ -165,26 +176,53 @@ watch(() => props.domains, () => {
                                         <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
                                     </button>
                                 </div>
-                                <div class="flex flex-wrap gap-2">
+                                <div class="grid grid-cols-1 gap-3">
                                     <div v-for="theme in domain.themes" :key="theme.id"
-                                        class="group/theme relative flex items-center gap-2 bg-white text-slate-600 text-[11px] font-bold pl-4 pr-3 py-2 rounded-xl border border-slate-200 hover:border-indigo-600 hover:text-indigo-600 transition-all">
-                                        {{ theme.name }}
-                                        <span class="ml-1 text-[9px] text-slate-400 font-medium opacity-60">({{ theme.questions_count }})</span>
-                                        <div class="flex items-center gap-1.5 border-l border-slate-100 pl-2 ml-1 opacity-0 group-hover/theme:opacity-100 transition-opacity translate-x-2 group-hover/theme:translate-x-0">
-                                            <button @click="openEditTheme(theme)" class="p-1 hover:bg-indigo-50 rounded-lg transition-colors">
-                                                <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
-                                            </button>
-                                             <button @click="detachTheme(domain, theme)" title="Retirer du domaine" class="p-1 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-colors">
-                                                 <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                                             </button>
-                                             <button @click="deleteThemeGlobally(theme)" title="Supprimer définitivement" class="p-1 hover:bg-red-100 hover:text-red-700 rounded-lg transition-colors ml-1 border border-transparent hover:border-red-200">
-                                                 <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                             </button>
+                                        class="group/theme relative bg-slate-50/50 hover:bg-white p-4 rounded-2xl border border-slate-100 hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300">
+                                        
+                                        <div class="flex items-center justify-between mb-3">
+                                            <div class="flex items-center gap-2">
+                                                <div class="size-1.5 rounded-full bg-indigo-500 shadow-sm shadow-indigo-500/50"></div>
+                                                <span class="font-bold text-slate-900 text-xs">{{ theme.name }}</span>
+                                            </div>
+                                            
+                                            <div class="flex items-center gap-1 opacity-0 group-hover/theme:opacity-100 transition-all scale-95 group-hover/theme:scale-100">
+                                                <button @click="openEditTheme(theme)" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">
+                                                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+                                                </button>
+                                                <button @click="detachTheme(domain, theme)" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all">
+                                                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                                </button>
+                                                <button @click="deleteThemeGlobally(theme)" class="p-1.5 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all">
+                                                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                                            <div v-for="level in levels" :key="level.id" 
+                                                class="flex flex-col min-w-[45px] transition-opacity"
+                                                :class="getLevelCount(theme.id, level.id) > 0 ? 'opacity-100' : 'opacity-30'">
+                                                <span class="text-[7px] font-black text-slate-400 uppercase tracking-tighter">{{ level.name.split(' ')[0] }}</span>
+                                                <div class="flex items-center gap-1">
+                                                    <span class="text-[10px] font-black" :class="getLevelCount(theme.id, level.id) > 0 ? 'text-slate-900' : 'text-slate-300'">
+                                                        {{ getLevelCount(theme.id, level.id) }}
+                                                    </span>
+                                                    <div v-if="getLevelCount(theme.id, level.id) > 0" class="size-1 rounded-full bg-emerald-500"></div>
+                                                </div>
+                                            </div>
+                                            <div class="ml-auto pl-4 border-l border-slate-100 flex flex-col items-end">
+                                                <span class="text-[7px] font-black text-slate-400 uppercase tracking-tighter">Total</span>
+                                                <span class="text-xs font-black text-indigo-600">{{ theme.questions_count }}</span>
+                                            </div>
                                         </div>
                                     </div>
                                     <div v-if="domain.themes.length === 0" 
-                                        class="w-full py-6 flex flex-col items-center justify-center border-2 border-dashed border-slate-100 rounded-2xl gap-2">
-                                        <p class="text-[10px] text-slate-300 font-bold uppercase tracking-widest">Aucun sous-thème</p>
+                                        class="w-full py-10 flex flex-col items-center justify-center border-2 border-dashed border-slate-100 rounded-[32px] gap-3 bg-slate-50/30">
+                                        <div class="size-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-200">
+                                            <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                                        </div>
+                                        <p class="text-[10px] text-slate-300 font-black uppercase tracking-[0.2em]">Aucun sous-thème actif</p>
                                     </div>
                                 </div>
                             </div>

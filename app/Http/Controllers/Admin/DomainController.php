@@ -16,11 +16,23 @@ class DomainController extends Controller
     {
         Gate::authorize('manage-domains');
         
+        $levels = \App\Models\AcademicLevel::orderBy('order')->get();
+        
+        $themeStats = \Illuminate\Support\Facades\DB::table('question_theme')
+            ->join('questions', 'question_theme.question_id', '=', 'questions.id')
+            ->select('theme_id', 'academic_level_id', \Illuminate\Support\Facades\DB::raw('count(*) as count'))
+            ->where('questions.is_active', true)
+            ->groupBy('theme_id', 'academic_level_id')
+            ->get()
+            ->groupBy('theme_id');
+
         return Inertia::render('Admin/Domains/Index', [
             'domains' => Domain::with(['themes' => function($q) {
                 $q->withCount('questions');
             }])->withCount(['questions', 'themes'])->latest()->get(),
             'allThemes' => Theme::orderBy('name')->get(),
+            'levels' => $levels,
+            'themeStats' => $themeStats,
         ]);
     }
 
