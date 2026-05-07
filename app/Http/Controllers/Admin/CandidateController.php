@@ -223,6 +223,9 @@ class CandidateController extends Controller
     {
         Gate::authorize('grade-sessions');
 
+        // Recalculate everything (protected mode by default)
+        $this->scoring->calculateSessionScores($session);
+
         $session->update(['status' => 'completed']);
 
         // Sync to HubSpot
@@ -248,6 +251,15 @@ class CandidateController extends Controller
         }
 
         return back()->with('success', 'Session marquée comme complétée et synchronisée avec HubSpot.');
+    }
+
+    public function recalculateScore(TestSession $session)
+    {
+        Gate::authorize('grade-sessions');
+
+        $this->scoring->calculateSessionScores($session, true); // Force recalculate
+
+        return back()->with('success', 'Score recalculé avec succès (incluant les QCM).');
     }
 
     public function syncToHubSpot(Candidate $candidate)

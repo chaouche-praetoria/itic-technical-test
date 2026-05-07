@@ -7,7 +7,7 @@ use App\Models\Question;
 
 class TestScoringService
 {
-    public function calculateSessionScores(TestSession $session): void
+    public function calculateSessionScores(TestSession $session, bool $force = false): void
     {
         $session->load([
             'sessionQuestions.question' => function($q) {
@@ -35,13 +35,15 @@ class TestScoringService
                 continue;
             }
 
-            $score = $answerRecord->score ?? 0;
+            $score = $answerRecord->score;
 
-            // For MCQ, we re-verify if not already set or for consistency
-            if ($question->type === 'mcq') {
+            // Only re-score MCQ if forced or if score is not yet set
+            if ($question->type === 'mcq' && ($force || $score === null)) {
                 $score = $this->scoreMcq($question, $answerRecord->answer);
                 $answerRecord->update(['score' => $score]);
             }
+            
+            $score = $score ?? 0;
             // For Code, score is stored during execution
             // For Text, score is updated via manual grading
 

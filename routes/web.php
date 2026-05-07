@@ -74,6 +74,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::get('/sessions/{session}', [CandidateController::class, 'sessionDetail'])->name('sessions.show');
     Route::post('/sessions/{session}/grade', [CandidateController::class, 'gradeAnswer'])->name('sessions.grade');
     Route::post('/sessions/{session}/finalize', [CandidateController::class, 'finalizeSession'])->name('sessions.finalize');
+    Route::post('/sessions/{session}/recalculate', [CandidateController::class, 'recalculateScore'])->name('sessions.recalculate');
 });
 
 require __DIR__.'/auth.php';

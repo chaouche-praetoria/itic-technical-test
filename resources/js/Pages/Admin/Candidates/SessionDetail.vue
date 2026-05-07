@@ -25,8 +25,14 @@ function saveGrade(questionId) {
 }
 
 function finalize() {
-    if (confirm('Marquer cette session comme terminée ?')) {
+    if (confirm('Marquer cette session comme terminée et synchroniser avec HubSpot ?')) {
         useForm({}).post(route('admin.sessions.finalize', props.session.id));
+    }
+}
+
+function recalculate() {
+    if (confirm("Voulez-vous recalculer tous les scores de cette session, y compris les QCM ? Cela peut modifier la note si les options des questions ont été changées depuis le passage du test.")) {
+        useForm({}).post(route('admin.sessions.recalculate', props.session.id));
     }
 }
 
@@ -109,11 +115,18 @@ const formatTime = (ts) => {
                     <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                     Fiche candidat
                 </Link>
-                <button v-if="session.status === 'pending_review'" @click="finalize"
-                    class="px-5 py-2.5 bg-amber-500 text-white rounded-xl text-xs font-bold hover:bg-amber-600 shadow-lg shadow-amber-200 transition-all active:scale-[0.98] flex items-center gap-2">
-                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                    Finaliser la correction
-                </button>
+                <div class="flex items-center gap-3">
+                    <button @click="recalculate" 
+                        class="px-5 py-2.5 bg-amber-50 text-amber-600 rounded-xl text-xs font-bold hover:bg-amber-100 transition-all active:scale-[0.98] flex items-center gap-2 border border-amber-100">
+                        <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Recalculer
+                    </button>
+                    <button v-if="session.status === 'pending_review'" @click="finalize"
+                        class="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-all active:scale-[0.98] flex items-center gap-2 shadow-lg shadow-emerald-100">
+                        <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        Finaliser
+                    </button>
+                </div>
             </div>
         </template>
 

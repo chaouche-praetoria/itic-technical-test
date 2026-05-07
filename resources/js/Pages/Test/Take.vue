@@ -272,6 +272,7 @@ async function submitTest() {
 
     try {
         const res = await axios.post(`/test/${props.session.token}/submit`);
+        submitted.value = true; // Avoid beforeunload popup
         window.location.href = res.data.redirect;
     } catch (e) {
         submitting.value = false;
