@@ -24,13 +24,14 @@ const filterDomains = () => {
 const showModal = ref(false);
 const editingDomain = ref(null);
 
-const form = useForm({ name: '', description: '', color: '#3B82F6' });
+const form = useForm({ name: '', description: '', color: '#3B82F6', is_active: true });
 const themeForm = useForm({ name: '', domain_id: null });
 const showThemeModal = ref(false);
 const editingTheme = ref(null);
 
 function openCreate() {
     form.reset();
+    form.is_active = true;
     editingDomain.value = null;
     showModal.value = true;
 }
@@ -39,8 +40,15 @@ function openEdit(domain) {
     form.name = domain.name;
     form.description = domain.description || '';
     form.color = domain.color;
+    form.is_active = !!domain.is_active;
     editingDomain.value = domain;
     showModal.value = true;
+}
+
+function deleteDomain(domain) {
+    if (confirm(`Voulez-vous vraiment supprimer le domaine "${domain.name}" ?`)) {
+        form.delete(route('admin.domains.destroy', domain.id));
+    }
 }
 
 function submit() {
@@ -141,15 +149,21 @@ watch(() => props.domains, () => {
                         <div class="p-8 flex-1 flex flex-col">
                             <div class="flex items-start justify-between mb-6">
                                 <div class="flex flex-col gap-1">
-                                    <h3 class="font-black text-xl text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight">{{ domain.name }}</h3>
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="font-black text-xl text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight">{{ domain.name }}</h3>
+                                        <span v-if="!domain.is_active" class="px-2 py-0.5 rounded-full bg-slate-100 text-[8px] font-black text-slate-400 uppercase tracking-tighter border border-slate-200">Inactif</span>
+                                    </div>
                                     <div class="flex items-center gap-2">
                                         <span class="size-1.5 rounded-full" :style="{ backgroundColor: domain.color }"></span>
                                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Spécialité</span>
                                     </div>
                                 </div>
                                 <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button @click="openEdit(domain)" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all">
+                                    <button @click="openEdit(domain)" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all" title="Modifier">
                                         <svg class="size-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    </button>
+                                    <button @click="deleteDomain(domain)" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="Supprimer">
+                                        <svg class="size-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                     </button>
                                 </div>
                             </div>
@@ -270,6 +284,15 @@ watch(() => props.domains, () => {
                             <input v-model="form.color" type="color" class="size-12 rounded-xl bg-slate-50 cursor-pointer overflow-hidden border-none p-1 shadow-sm" />
                             <span class="text-sm font-mono text-slate-400 uppercase tracking-wider">{{ form.color }}</span>
                         </div>
+                    </div>
+                    <div class="flex items-center gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <button type="button" @click="form.is_active = !form.is_active" 
+                            class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                            :class="form.is_active ? 'bg-indigo-600' : 'bg-slate-200'">
+                            <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                                :class="form.is_active ? 'translate-x-5' : 'translate-x-0'"></span>
+                        </button>
+                        <span class="text-xs font-bold text-slate-700">Domaine actif</span>
                     </div>
                     <div class="flex gap-4 pt-4">
                         <button type="button" @click="showModal = false"

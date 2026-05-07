@@ -113,4 +113,16 @@ class DomainController extends Controller
         $domain->themes()->detach($theme->id);
         return back()->with('success', 'Thème retiré de ce domaine.');
     }
+
+    public function destroy(Domain $domain)
+    {
+        Gate::authorize('manage-domains');
+
+        if ($domain->questions()->exists()) {
+            return back()->with('error', 'Impossible de supprimer ce domaine car il contient encore des questions.');
+        }
+
+        $domain->delete();
+        return back()->with('success', 'Domaine supprimé avec succès.');
+    }
 }
