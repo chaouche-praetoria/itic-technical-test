@@ -10,6 +10,7 @@ use App\Models\Theme;
 use App\Services\Judge0Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class QuestionController extends Controller
@@ -61,7 +62,21 @@ class QuestionController extends Controller
             'unit_tests' => 'nullable|string',
             'initial_code' => 'nullable|string',
             'default_language' => 'nullable|string',
-            'choices' => 'exclude_unless:type,mcq|required|array',
+            'choices' => [
+                'exclude_unless:type,mcq',
+                'required',
+                'array',
+                function ($attribute, $value, $fail) {
+                    $texts = collect($value)
+                        ->map(fn($c) => trim($c['text'] ?? ''))
+                        ->filter()
+                        ->map(fn($t) => strtolower($t));
+                    
+                    if ($texts->count() !== $texts->unique()->count()) {
+                        $fail('Les options de réponse ne peuvent pas être identiques.');
+                    }
+                }
+            ],
             'choices.*.text' => 'nullable|string',
             'choices.*.is_correct' => 'required|boolean',
             'choices.*.image' => 'nullable|image|max:2048',
@@ -125,11 +140,29 @@ class QuestionController extends Controller
             'unit_tests' => 'nullable|string',
             'initial_code' => 'nullable|string',
             'default_language' => 'nullable|string',
-            'choices' => 'exclude_unless:type,mcq|required|array',
+            'choices' => [
+                'exclude_unless:type,mcq',
+                'required',
+                'array',
+                function ($attribute, $value, $fail) {
+                    $texts = collect($value)
+                        ->map(fn($c) => trim($c['text'] ?? ''))
+                        ->filter()
+                        ->map(fn($t) => strtolower($t));
+                    
+                    if ($texts->count() !== $texts->unique()->count()) {
+                        $fail('Les options de réponse ne peuvent pas être identiques.');
+                    }
+                }
+            ],
             'choices.*.text' => 'nullable|string',
             'choices.*.is_correct' => 'required|boolean',
             'choices.*.image' => 'nullable|image|max:2048',
             'choices.*.image_path' => 'nullable|string',
+            'choices.*.id' => [
+                'nullable',
+                Rule::exists('question_choices', 'id')->where('question_id', $question->id)
+            ],
             'explanation' => 'nullable|string',
             'points' => 'required|integer|min:0',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
@@ -149,7 +182,11 @@ class QuestionController extends Controller
         
 
         if ($validated['type'] === 'mcq') {
-            $question->choices()->delete();
+            $incomingIds = collect($validated['choices'])->pluck('id')->filter()->all();
+            
+            // Delete choices that are not in the request
+            $question->choices()->whereNotIn('id', $incomingIds)->delete();
+
             foreach ($validated['choices'] as $i => $choice) {
                 $choiceData = [
                     'text' => $choice['text'] ?? null,
@@ -163,10 +200,13 @@ class QuestionController extends Controller
                     $choiceData['image_path'] = $choice['image_path'];
                 }
 
-                $question->choices()->create($choiceData);
+                if (!empty($choice['id'])) {
+                    $question->choices()->where('id', $choice['id'])->update($choiceData);
+                } else {
+                    $question->choices()->create($choiceData);
+                }
             }
-        }
- else {
+        } else {
             $question->choices()->delete();
         }
 

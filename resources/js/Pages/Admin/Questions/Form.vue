@@ -71,12 +71,23 @@ const validationErrors = computed(() => {
     if (form.type === 'mcq') {
         const hasCorrect = form.choices.some(c => c.is_correct);
         if (!hasCorrect) errors.push("Au moins une réponse correcte est requise.");
+
+        // Check for duplicates
+        const texts = form.choices.map(c => c.text?.trim().toLowerCase()).filter(t => t);
+        const hasDuplicates = texts.some((t, i) => texts.indexOf(t) !== i);
+        if (hasDuplicates) errors.push("Les options de réponse doivent être uniques.");
     }
     if (form.type === 'code') {
         if (!form.unit_tests.trim()) errors.push("Les tests unitaires sont recommandés pour valider le code.");
     }
     return errors;
 });
+
+const isDuplicate = (text) => {
+    if (!text?.trim()) return false;
+    const t = text.trim().toLowerCase();
+    return form.choices.filter(c => c.text?.trim().toLowerCase() === t).length > 1;
+};
 
 const isDirty = computed(() => form.isDirty);
 
@@ -173,6 +184,10 @@ function removeChoice(i) {
 }
 
 function submit() {
+    if (validationErrors.value.some(err => !err.includes('recommandés'))) {
+        return;
+    }
+    
     if (props.question) {
         form.transform((data) => ({
             ...data,
@@ -415,8 +430,11 @@ watch(() => form.multiple_answers, () => {
                                     <div class="flex items-center gap-3">
                                         <div class="flex-1 flex flex-col gap-2">
                                             <input type="text" v-model="choice.text" placeholder="Entrez le texte de la réponse..."
-                                                class="w-full border-none bg-transparent p-0 text-sm focus:ring-0 placeholder:text-slate-400 font-medium"
-                                                :class="{'text-emerald-900': choice.is_correct}" />
+                                                class="w-full border-none bg-transparent p-0 text-sm focus:ring-0 placeholder:text-slate-400 font-medium transition-colors"
+                                                :class="[
+                                                    choice.is_correct ? 'text-emerald-900' : 'text-slate-700',
+                                                    isDuplicate(choice.text) ? 'text-rose-600 bg-rose-50 px-2 py-0.5 rounded' : ''
+                                                ]" />
                                             
                                             <!-- Choice Image Upload -->
                                             <div class="flex items-center gap-3">
@@ -571,8 +589,8 @@ watch(() => form.multiple_answers, () => {
                         <Link :href="route('admin.questions.index')" class="px-5 py-2.5 text-sm font-bold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all active:scale-[0.98]">
                             Annuler
                         </Link>
-                        <button type="submit" :disabled="form.processing"
-                            class="px-8 py-2.5 text-sm font-bold text-white bg-slate-900 rounded-xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 disabled:opacity-50 active:scale-[0.98]">
+                        <button type="submit" :disabled="form.processing || validationErrors.some(err => !err.includes('recommandés'))"
+                            class="px-8 py-2.5 text-sm font-bold text-white bg-slate-900 rounded-xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]">
                             {{ question ? 'Enregistrer les modifications' : 'Créer la question' }}
                         </button>
                     </div>

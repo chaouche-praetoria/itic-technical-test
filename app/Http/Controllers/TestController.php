@@ -177,7 +177,14 @@ class TestController extends Controller
     {
         $session = TestSession::where('token', $token)
             ->where('status', 'in_progress')
-            ->with(['sessionQuestions.question', 'answers'])
+            ->with([
+                'sessionQuestions.question' => function($q) {
+                    $q->with(['choices' => function($c) {
+                        $c->withTrashed();
+                    }]);
+                },
+                'answers'
+            ])
             ->firstOrFail();
 
         // 1. Initial MCQ Scoring Update

@@ -147,7 +147,11 @@ class CandidateController extends Controller
         $session->load([
             'candidate',
             'template',
-            'sessionQuestions.question.choices',
+            'sessionQuestions.question' => function($q) {
+                $q->with(['choices' => function($c) {
+                    $c->withTrashed();
+                }]);
+            },
             'answers',
             'activityLogs',
         ]);

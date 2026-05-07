@@ -40,6 +40,50 @@ const getScoreColor = (score) => {
     if (score >= 50) return 'text-amber-500';
     return 'text-rose-500';
 };
+
+const formatEvent = (event) => {
+    const labels = {
+        session_heartbeat: 'Activité système',
+        window_blur: '⚠️ Perte de focus',
+        window_focus: 'Récupération focus',
+        tab_switch: '⚠️ Changement d\'onglet',
+        tab_return: 'Retour onglet',
+        copy_paste_attempt: '🚫 Copier/Coller',
+        forbidden_key_combo: '🚫 Raccourci interdit',
+        question_timer_expired: 'Temps question expiré',
+        question_answered: 'Question répondue',
+    };
+    return labels[event.toLowerCase()] || event;
+};
+
+const formatMetadata = (event, metadata) => {
+    if (!metadata) return '';
+    const e = event.toLowerCase();
+    if (e === 'session_heartbeat') {
+        const min = Math.floor(metadata.remaining / 60);
+        const sec = metadata.remaining % 60;
+        return `Question ${metadata.currentIndex + 1}, ${metadata.answeredCount} répondues, ${min}m ${sec}s restantes`;
+    }
+    if (metadata.count) {
+        let text = `Avertissement #${metadata.count}`;
+        if (metadata.combo) text += ` (${metadata.combo})`;
+        if (metadata.type) text += ` (${metadata.type})`;
+        return text;
+    }
+    if (e === 'question_timer_expired') {
+        return `Question n°${(metadata.index || 0) + 1}`;
+    }
+    return JSON.stringify(metadata);
+};
+
+const formatTime = (ts) => {
+    try {
+        const d = new Date(ts);
+        return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    } catch (e) {
+        return ts;
+    }
+};
 </script>
 
 <template>
@@ -248,14 +292,16 @@ const getScoreColor = (score) => {
                         <div class="space-y-6 max-h-[400px] overflow-y-auto custom-scrollbar pr-4">
                             <div v-for="log in session.activity_logs" :key="log.id"
                                 class="flex items-start gap-6 group">
-                                <span class="text-[10px] font-bold text-slate-500 font-mono pt-1 grow-0 shrink-0 w-28">{{ log.occurred_at }}</span>
+                                <span class="text-[10px] font-bold text-slate-500 font-mono pt-1 grow-0 shrink-0 w-24">{{ formatTime(log.occurred_at) }}</span>
                                 <div class="flex flex-col grow min-w-0">
                                     <div class="flex items-center gap-3">
-                                        <span :class="log.event.includes('tab') || log.event.includes('blur') ? 'text-rose-400 bg-rose-500/10 border-rose-500/20' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'"
-                                            class="text-[10px] font-bold px-2.5 py-0.5 rounded border uppercase tracking-widest shadow-lg">
-                                            {{ log.event }}
+                                        <span :class="log.event.toLowerCase().includes('tab') || log.event.toLowerCase().includes('blur') || log.event.toLowerCase().includes('copy') || log.event.toLowerCase().includes('forbidden') ? 'text-rose-400 bg-rose-500/10 border-rose-500/20' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'"
+                                            class="text-[10px] font-bold px-2.5 py-0.5 rounded border uppercase tracking-widest shadow-lg whitespace-nowrap">
+                                            {{ formatEvent(log.event) }}
                                         </span>
-                                        <span v-if="log.metadata" class="text-slate-500 text-[10px] font-mono truncate opacity-60 break-all">{{ JSON.stringify(log.metadata) }}</span>
+                                        <span v-if="log.metadata" class="text-slate-200 text-[10px] font-medium opacity-80 break-words leading-relaxed">
+                                            {{ formatMetadata(log.event, log.metadata) }}
+                                        </span>
                                     </div>
                                     <div class="h-6 ml-1 mt-1 border-l-2 border-slate-800 group-last:hidden"></div>
                                 </div>

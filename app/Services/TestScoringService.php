@@ -9,7 +9,14 @@ class TestScoringService
 {
     public function calculateSessionScores(TestSession $session): void
     {
-        $session->load(['sessionQuestions.question.choices', 'answers']);
+        $session->load([
+            'sessionQuestions.question' => function($q) {
+                $q->with(['choices' => function($c) {
+                    $c->withTrashed();
+                }]);
+            }, 
+            'answers'
+        ]);
 
         $totalScore = 0;
         $correctCount = 0;
