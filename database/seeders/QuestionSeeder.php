@@ -12,7 +12,7 @@ class QuestionSeeder extends Seeder
 {
     private function theme(Domain $domain, string $slug): ?Theme
     {
-        return Theme::where('domain_id', $domain->id)->where('slug', $slug)->first();
+        return $domain->themes()->where('slug', $slug)->first();
     }
 
     private function mcq(array $data, Domain $domain, Theme $theme, AcademicLevel $level): void
@@ -22,13 +22,15 @@ class QuestionSeeder extends Seeder
         }
         $q = Question::create([
             'type'               => 'mcq',
-            'domain_id'          => $domain->id,
-            'theme_id'           => $theme->id,
             'academic_level_id'  => $level->id,
             'difficulty'         => $data['difficulty'],
             'statement'          => $data['statement'],
             'multiple_answers'   => $data['multiple_answers'] ?? false,
         ]);
+        
+        $q->domains()->attach($domain->id);
+        $q->themes()->attach($theme->id);
+
         foreach ($data['choices'] as $i => $choice) {
             $q->choices()->create(['text' => $choice[0], 'is_correct' => $choice[1], 'order' => $i]);
         }
@@ -39,14 +41,15 @@ class QuestionSeeder extends Seeder
         if (Question::where('statement', $data['statement'])->exists()) {
             return;
         }
-        Question::create([
+        $q = Question::create([
             'type'              => 'text',
-            'domain_id'         => $domain->id,
-            'theme_id'          => $theme->id,
             'academic_level_id' => $level->id,
             'difficulty'        => $data['difficulty'],
             'statement'         => $data['statement'],
         ]);
+
+        $q->domains()->attach($domain->id);
+        $q->themes()->attach($theme->id);
     }
 
     private function code(array $data, Domain $domain, Theme $theme, AcademicLevel $level): void
@@ -54,16 +57,17 @@ class QuestionSeeder extends Seeder
         if (Question::where('statement', $data['statement'])->exists()) {
             return;
         }
-        Question::create([
+        $q = Question::create([
             'type'              => 'code',
-            'domain_id'         => $domain->id,
-            'theme_id'          => $theme->id,
             'academic_level_id' => $level->id,
             'difficulty'        => $data['difficulty'],
             'statement'         => $data['statement'],
             'unit_tests'        => json_encode($data['unit_tests']),
             'default_language'  => $data['default_language'] ?? 'javascript',
         ]);
+
+        $q->domains()->attach($domain->id);
+        $q->themes()->attach($theme->id);
     }
 
     public function run(): void
