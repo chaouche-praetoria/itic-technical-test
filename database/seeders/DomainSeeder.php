@@ -93,10 +93,14 @@ class DomainSeeder extends Seeder
             );
 
             foreach ($themes as $themeName) {
-                Theme::firstOrCreate(
-                    ['slug' => Str::slug($themeName), 'domain_id' => $domain->id],
-                    ['name' => $themeName, 'slug' => Str::slug($themeName), 'domain_id' => $domain->id]
+                $theme = Theme::firstOrCreate(
+                    ['slug' => Str::slug($themeName)],
+                    ['name' => $themeName, 'slug' => Str::slug($themeName)]
                 );
+
+                if (!$theme->domains()->where('domains.id', $domain->id)->exists()) {
+                    $theme->domains()->attach($domain->id);
+                }
             }
         }
     }

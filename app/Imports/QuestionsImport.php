@@ -53,9 +53,15 @@ class QuestionsImport implements ToCollection, WithHeadingRow, WithValidation, S
                 $themeIds = [];
                 foreach ($themeNames as $tName) {
                     $theme = Theme::firstOrCreate(
-                        ['slug' => Str::slug($tName), 'domain_id' => $domain->id],
-                        ['name' => $tName, 'slug' => Str::slug($tName), 'domain_id' => $domain->id]
+                        ['slug' => Str::slug($tName)],
+                        ['name' => $tName, 'slug' => Str::slug($tName)]
                     );
+
+                    // Ensure theme is associated with the domain
+                    if (!$theme->domains()->where('domains.id', $domain->id)->exists()) {
+                        $theme->domains()->attach($domain->id);
+                    }
+
                     $themeIds[] = $theme->id;
                 }
                 $question->themes()->sync($themeIds);
