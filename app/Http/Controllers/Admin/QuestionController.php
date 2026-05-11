@@ -8,6 +8,8 @@ use App\Models\Domain;
 use App\Models\Question;
 use App\Models\Theme;
 use App\Services\Judge0Service;
+use App\Imports\QuestionsImport;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
@@ -234,5 +236,51 @@ class QuestionController extends Controller
         $result = $this->judge0->execute($request->code, $request->language, $request->unit_tests);
 
         return response()->json($result);
+    }
+
+    public function import(Request $request)
+    {
+        Gate::authorize('manage-questions');
+
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv,txt|max:10240',
+        ]);
+
+        try {
+            Excel::import(new QuestionsImport, $request->file('file'));
+            return redirect()->route('admin.questions.index')->with('success', 'Importation terminée avec succès.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Erreur lors de l\'importation : ' . $e->getMessage());
+        }
+    }
+
+    public function downloadTemplate()
+    {
+        Gate::authorize('manage-questions');
+
+        $headers = [
+            'domaine', 'niveau', 'themes', 'difficulte', 'enonce', 'points', 'explication', 'reponse_multiple',
+            'choix_1', 'correct_1', 'choix_2', 'correct_2', 'choix_3', 'correct_3', 'choix_4', 'correct_4', 'choix_5', 'correct_5', 'choix_6', 'correct_6'
+        ];
+
+        $example = [
+            'Informatique', 'Bachelor', 'PHP, Laravel', 'medium', 'Quelle est la fonction pour afficher du texte en PHP ?', '2', 'La fonction echo est la plus commune.', '0',
+            'echo', '1', 'print_text', '0', 'display', '0', 'show', '0', '', '0', '', '0'
+        ];
+
+        $callback = function() use ($headers, $example) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $headers);
+            fputcsv($file, $example);
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=template_questions_qcm.csv",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ]);
     }
 }

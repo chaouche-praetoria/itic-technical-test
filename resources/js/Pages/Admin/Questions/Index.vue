@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { ref, watch, computed } from 'vue';
 import axios from 'axios';
 import CodeEditor from '@/Components/CodeEditor.vue';
@@ -22,6 +22,20 @@ const deleting = ref(false);
 const showDetails = ref(false);
 const showPreview = ref(false);
 const selectedQuestion = ref(null);
+const showImportModal = ref(false);
+
+const importForm = useForm({
+    file: null,
+});
+
+function submitImport() {
+    importForm.post(route('admin.questions.import'), {
+        onSuccess: () => {
+            showImportModal.value = false;
+            importForm.reset();
+        },
+    });
+}
 
 // Preview state
 const previewAnswers = ref({});
@@ -149,11 +163,18 @@ const cleanLabel = (label) => {
                     <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Banque de questions</h2>
                     <p class="text-sm text-slate-500 font-medium">Gérez votre bibliothèque de questions interactives.</p>
                 </div>
-                <Link :href="route('admin.questions.create')" 
-                    class="bg-slate-900 text-white px-5 py-2.5 rounded-xl hover:bg-slate-800 font-bold text-sm shadow-xl shadow-slate-200 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 w-fit">
-                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                    Nouvelle question
-                </Link>
+                <div class="flex items-center gap-3">
+                    <button @click="showImportModal = true"
+                        class="bg-white text-slate-900 border border-slate-200 px-5 py-2.5 rounded-xl hover:bg-slate-50 font-bold text-sm shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3">
+                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                        Importer
+                    </button>
+                    <Link :href="route('admin.questions.create')" 
+                        class="bg-slate-900 text-white px-5 py-2.5 rounded-xl hover:bg-slate-800 font-bold text-sm shadow-xl shadow-slate-200 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 w-fit">
+                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                        Nouvelle question
+                    </Link>
+                </div>
             </div>
         </template>
 
@@ -591,6 +612,57 @@ const cleanLabel = (label) => {
                         Quitter l'aperçu
                     </button>
                 </div>
+            </div>
+        </div>
+        <!-- Import Modal -->
+        <div v-if="showImportModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+            <div class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl animate-reveal border border-slate-100">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-slate-900">Importer des questions</h3>
+                    <button @click="showImportModal = false" class="text-slate-400 hover:text-slate-600 transition-colors">
+                        <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <form @submit.prevent="submitImport" class="space-y-6">
+                    <div class="p-6 border-2 border-dashed border-slate-200 rounded-2xl text-center hover:border-indigo-400 transition-colors cursor-pointer relative">
+                        <input type="file" @input="importForm.file = $event.target.files[0]" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept=".csv,.xlsx,.xls" />
+                        <div class="space-y-2">
+                            <svg class="size-10 text-slate-300 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                            <div class="text-sm text-slate-600 font-medium">
+                                <span v-if="!importForm.file">Cliquez ou glissez un fichier Excel/CSV</span>
+                                <span v-else class="text-indigo-600 font-bold">{{ importForm.file.name }}</span>
+                            </div>
+                            <p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Format accepté : CSV, XLSX</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl flex items-start gap-3">
+                        <svg class="size-5 text-indigo-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <div>
+                            <p class="text-xs text-slate-600 leading-relaxed font-medium">
+                                Utilisez notre modèle pour structurer vos questions QCM (énoncés, thèmes, choix, réponses correctes).
+                            </p>
+                            <a :href="route('admin.questions.template')" class="text-indigo-600 text-xs font-bold hover:underline mt-1 inline-block">Télécharger le modèle (.csv)</a>
+                        </div>
+                    </div>
+
+                    <div v-if="importForm.errors.file" class="text-rose-500 text-xs font-bold animate-shake">
+                        {{ importForm.errors.file }}
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button type="button" @click="showImportModal = false"
+                            class="flex-1 px-6 py-3 text-sm font-bold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all">
+                            Annuler
+                        </button>
+                        <button type="submit" :disabled="importForm.processing || !importForm.file"
+                            class="flex-1 px-6 py-3 text-sm font-bold text-white bg-slate-900 rounded-xl hover:bg-slate-800 transition-all disabled:opacity-50 shadow-xl shadow-slate-200">
+                            <span v-if="!importForm.processing">Lancer l'import</span>
+                            <svg v-else class="size-4 animate-spin mx-auto" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </Teleport>
