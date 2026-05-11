@@ -106,6 +106,21 @@ class QuestionsImport implements ToCollection, WithHeadingRow, WithValidation, S
             $data['difficulte'] = $map[$diff] ?? $diff;
         }
 
+        // Cast text fields to string to avoid validation errors with numeric values from Excel
+        $textFields = ['enonce', 'domaine', 'niveau', 'explication'];
+        foreach ($textFields as $field) {
+            if (isset($data[$field])) {
+                $data[$field] = (string) $data[$field];
+            }
+        }
+
+        // Cast choice fields to string
+        for ($i = 1; $i <= 6; $i++) {
+            if (isset($data["choix_$i"])) {
+                $data["choix_$i"] = (string) $data["choix_$i"];
+            }
+        }
+
         return $data;
     }
 }
