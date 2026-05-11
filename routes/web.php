@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\CandidateController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DomainController;
+use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\TestTemplateController;
 use App\Http\Controllers\ProfileController;
@@ -46,10 +47,15 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::get('/domains', [DomainController::class, 'index'])->name('domains.index');
     Route::post('/domains', [DomainController::class, 'store'])->name('domains.store');
     Route::put('/domains/{domain}', [DomainController::class, 'update'])->name('domains.update');
+    Route::delete('/domains/{domain}', [DomainController::class, 'destroy'])->name('domains.destroy');
     Route::post('/domains/{domain}/themes', [DomainController::class, 'storeTheme'])->name('domains.themes.store');
-    Route::put('/themes/{theme}', [DomainController::class, 'updateTheme'])->name('themes.update');
-    Route::delete('/themes/{theme}', [DomainController::class, 'destroyTheme'])->name('themes.destroy');
     Route::delete('/domains/{domain}/themes/{theme}', [DomainController::class, 'detachTheme'])->name('domains.themes.detach');
+
+    // Dedicated Themes Management
+    Route::get('/themes', [ThemeController::class, 'index'])->name('themes.index');
+    Route::post('/themes', [ThemeController::class, 'store'])->name('themes.store');
+    Route::put('/themes/{theme}', [ThemeController::class, 'update'])->name('themes.update');
+    Route::delete('/themes/{theme}', [ThemeController::class, 'destroy'])->name('themes.destroy');
 
     // Academic Levels
     Route::resource('levels', \App\Http\Controllers\Admin\AcademicLevelController::class)->except(['show']);
