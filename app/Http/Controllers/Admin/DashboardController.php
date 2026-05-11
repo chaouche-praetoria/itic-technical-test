@@ -48,7 +48,8 @@ class DashboardController extends Controller
 
         $scoresByLevel = DB::table('test_sessions')
             ->join('test_templates', 'test_sessions.test_template_id', '=', 'test_templates.id')
-            ->join('academic_levels', 'test_templates.academic_level_id', '=', 'academic_levels.id')
+            ->join('academic_level_test_template', 'test_templates.id', '=', 'academic_level_test_template.test_template_id')
+            ->join('academic_levels', 'academic_level_test_template.academic_level_id', '=', 'academic_levels.id')
             ->where('test_sessions.status', 'completed')
             ->select('academic_levels.name', DB::raw('AVG(test_sessions.score) as avg_score'), DB::raw('COUNT(*) as total'))
             ->groupBy('academic_levels.id', 'academic_levels.name')
