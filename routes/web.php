@@ -56,6 +56,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
     // Questions
     Route::get('questions/template', [QuestionController::class, 'downloadTemplate'])->name('questions.template');
+    Route::get('questions/export', [QuestionController::class, 'export'])->name('questions.export');
     Route::post('questions/import', [QuestionController::class, 'import'])->name('questions.import');
     Route::post('questions/test', [QuestionController::class, 'test'])->name('questions.test');
     Route::resource('questions', QuestionController::class)->except(['show']);

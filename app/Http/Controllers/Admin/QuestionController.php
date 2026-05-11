@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicLevel;
 use App\Models\Domain;
-use App\Models\Question;
 use App\Models\Theme;
 use App\Services\Judge0Service;
 use App\Imports\QuestionsImport;
+use App\Exports\QuestionsExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -252,6 +252,20 @@ class QuestionController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Erreur lors de l\'importation : ' . $e->getMessage());
         }
+    }
+
+    public function export(Request $request)
+    {
+        Gate::authorize('manage-questions');
+
+        $query = Question::with(['domains', 'academicLevel', 'themes', 'choices'])
+            ->when($request->search, fn($q) => $q->where('statement', 'like', "%{$request->search}%"))
+            ->when($request->type, fn($q) => $q->where('type', $request->type))
+            ->when($request->domain_id, fn($q) => $q->whereHas('domains', fn($dq) => $dq->where('domains.id', $request->domain_id)))
+            ->when($request->difficulty, fn($q) => $q->where('difficulty', $request->difficulty))
+            ->latest();
+
+        return Excel::download(new QuestionsExport($query->get()), 'questions_export_' . now()->format('Y-m-d_H-i') . '.xlsx');
     }
 
     public function downloadTemplate()
