@@ -1,8 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
-import debounce from 'lodash/debounce';
+import { ref, watch, onUnmounted } from 'vue';
 
 const props = defineProps({
     themes: Array,
@@ -19,12 +18,20 @@ const form = useForm({
     domain_ids: []
 });
 
-watch(search, debounce((value) => {
-    router.get(route('admin.themes.index'), { search: value }, {
-        preserveState: true,
-        replace: true
-    });
-}, 300));
+let searchTimeout = null;
+watch(search, (value) => {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        router.get(route('admin.themes.index'), { search: value }, {
+            preserveState: true,
+            replace: true
+        });
+    }, 300);
+});
+
+onUnmounted(() => {
+    if (searchTimeout) clearTimeout(searchTimeout);
+});
 
 function openCreate() {
     form.reset();
