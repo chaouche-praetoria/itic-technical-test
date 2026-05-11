@@ -19,8 +19,8 @@ class AcademicLevel extends Model
         return $this->hasMany(Question::class);
     }
 
-    public function testTemplates(): HasMany
+    public function testTemplates(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->hasMany(TestTemplate::class);
+        return $this->belongsToMany(TestTemplate::class);
     }
 }

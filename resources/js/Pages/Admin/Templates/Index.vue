@@ -58,7 +58,9 @@ function deleteTemplate(id) {
                                     <td class="px-8 py-6">
                                         <div class="flex flex-col">
                                             <span class="text-slate-700 font-semibold">{{ t.domain?.name }}</span>
-                                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">{{ t.academic_level?.name || 'Tous niveaux' }} • {{ t.duration_minutes }} min</span>
+                                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">
+                                                {{ t.academic_levels?.length ? t.academic_levels.map(l => l.name).join(', ') : 'Tous niveaux' }} • {{ t.duration_minutes }} min
+                                            </span>
                                         </div>
                                     </td>
                                     <td class="px-8 py-6 text-center">

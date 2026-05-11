@@ -229,7 +229,7 @@ class CandidateController extends Controller
         $session->update(['status' => 'completed']);
 
         // Sync to HubSpot
-        $session->load(['candidate', 'template.academicLevel']);
+        $session->load(['candidate', 'template.academicLevels']);
         if ($session->candidate && $session->candidate->email) {
             $scoreStr = number_format($session->score, 2);
             $resultLabel = $session->score >= 70 ? 'admis' : 'Echec - A requalifier';

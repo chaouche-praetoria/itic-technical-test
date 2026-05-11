@@ -99,24 +99,27 @@ class TestScoringService
 
     public function getProposedOrientation(TestSession $session): string
     {
-        $session->loadMissing('template.academicLevel.fallbackLevel');
-        $currentLevel = $session->template->academicLevel;
+        $session->loadMissing('template.academicLevels.fallbackLevel');
+        $currentLevels = $session->template->academicLevels;
         
-        if (!$currentLevel) {
+        if ($currentLevels->isEmpty()) {
             return '';
         }
 
+        // Pick the highest level as the primary target
+        $primaryLevel = $currentLevels->sortByDesc('order')->first();
+
         // Success (>= 70): No downgrade
         if ($session->score >= 70) {
-            return $currentLevel->name;
+            return $primaryLevel->name;
         }
 
         // Failure (< 70): Dynamic downgrade logic
-        if ($currentLevel->fallbackLevel) {
-            return $currentLevel->fallbackLevel->name;
+        if ($primaryLevel->fallbackLevel) {
+            return $primaryLevel->fallbackLevel->name;
         }
 
-        // Default to current level name if no fallback is defined
-        return $currentLevel->name;
+        // Default to primary level name if no fallback is defined
+        return $primaryLevel->name;
     }
 }

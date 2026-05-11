@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class TestTemplate extends Model
 {
     protected $fillable = [
-        'name', 'description', 'domain_id', 'academic_level_id',
+        'name', 'description', 'domain_id',
         'duration_minutes', 'question_timer', 'question_time_seconds',
         'single_attempt', 'link_expiry_hours', 'is_active',
     ];
@@ -25,9 +25,9 @@ class TestTemplate extends Model
         return $this->belongsTo(Domain::class);
     }
 
-    public function academicLevel(): BelongsTo
+    public function academicLevels(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsTo(AcademicLevel::class);
+        return $this->belongsToMany(AcademicLevel::class);
     }
 
     public function rules(): HasMany

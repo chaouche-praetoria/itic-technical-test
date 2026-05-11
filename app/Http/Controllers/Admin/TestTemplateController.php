@@ -17,7 +17,7 @@ class TestTemplateController extends Controller
         Gate::authorize('manage-templates');
 
         return Inertia::render('Admin/Templates/Index', [
-            'templates' => TestTemplate::with(['domain', 'academicLevel'])
+            'templates' => TestTemplate::with(['domain', 'academicLevels'])
                 ->withCount('testSessions')
                 ->latest()
                 ->paginate(20),
@@ -42,7 +42,8 @@ class TestTemplateController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'domain_id' => 'required|exists:domains,id',
-            'academic_level_id' => 'required|exists:academic_levels,id',
+            'academic_level_ids' => 'required|array|min:1',
+            'academic_level_ids.*' => 'exists:academic_levels,id',
             'duration_minutes' => 'required|integer|min:5',
             'question_timer' => 'boolean',
             'question_time_seconds' => 'nullable|integer|min:10',
@@ -56,6 +57,7 @@ class TestTemplateController extends Controller
         ]);
 
         $template = TestTemplate::create($validated);
+        $template->academicLevels()->sync($validated['academic_level_ids']);
 
         foreach ($request->rules as $rule) {
             $template->rules()->create($rule);
@@ -69,7 +71,7 @@ class TestTemplateController extends Controller
         Gate::authorize('manage-templates');
 
         return Inertia::render('Admin/Templates/Form', [
-            'template' => $template->load('rules.theme'),
+            'template' => $template->load(['rules.theme', 'academicLevels']),
             'domains' => Domain::with('themes')->where('is_active', true)->get(),
             'levels' => AcademicLevel::orderBy('order')->get(),
         ]);
@@ -83,7 +85,8 @@ class TestTemplateController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'domain_id' => 'required|exists:domains,id',
-            'academic_level_id' => 'required|exists:academic_levels,id',
+            'academic_level_ids' => 'required|array|min:1',
+            'academic_level_ids.*' => 'exists:academic_levels,id',
             'duration_minutes' => 'required|integer|min:5',
             'question_timer' => 'boolean',
             'question_time_seconds' => 'nullable|integer|min:10',
@@ -97,6 +100,7 @@ class TestTemplateController extends Controller
         ]);
 
         $template->update($validated);
+        $template->academicLevels()->sync($validated['academic_level_ids']);
         $template->rules()->delete();
 
         foreach ($request->rules as $rule) {
@@ -109,6 +113,10 @@ class TestTemplateController extends Controller
     public function destroy(TestTemplate $template)
     {
         Gate::authorize('manage-templates');
+
+        if ($template->testSessions()->exists()) {
+            return back()->with('error', 'Impossible de supprimer ce modèle car il est lié à des sessions de test.');
+        }
 
         $template->delete();
         return redirect()->route('admin.templates.index')->with('success', 'Template supprimé.');

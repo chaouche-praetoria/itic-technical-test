@@ -9,7 +9,7 @@ const form = useForm({
     name: props.template?.name || '',
     description: props.template?.description || '',
     domain_id: props.template?.domain_id || '',
-    academic_level_id: props.template?.academic_level_id || '',
+    academic_level_ids: props.template?.academic_levels?.map(l => l.id) || [],
     duration_minutes: props.template?.duration_minutes || 60,
     question_timer: props.template?.question_timer || false,
     question_time_seconds: props.template?.question_time_seconds || null,
@@ -93,11 +93,15 @@ function submit() {
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Niveau</label>
-                            <select v-model="form.academic_level_id" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                                <option value="">Sélectionner...</option>
-                                <option v-for="l in levels" :key="l.id" :value="l.id">{{ l.name }}</option>
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Niveaux académiques</label>
+                            <div class="flex flex-wrap gap-x-6 gap-y-2 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                                <label v-for="l in levels" :key="l.id" class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                    <input type="checkbox" :value="l.id" v-model="form.academic_level_ids" 
+                                        class="size-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 transition-all" />
+                                    <span class="font-medium">{{ l.name }}</span>
+                                </label>
+                            </div>
+                            <div v-if="form.errors.academic_level_ids" class="text-xs text-rose-500 mt-1 font-medium">{{ form.errors.academic_level_ids }}</div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Durée (minutes)</label>

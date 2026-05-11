@@ -22,9 +22,15 @@ class TestGeneratorService
         ]);
 
         $order = 0;
+        $levelIds = $template->academicLevels->pluck('id')->toArray();
+
         foreach ($template->rules as $rule) {
             $query = Question::whereHas('themes', fn($q) => $q->where('themes.id', $rule->theme_id))
                 ->where('is_active', true);
+
+            if (!empty($levelIds)) {
+                $query->whereIn('academic_level_id', $levelIds);
+            }
 
             if ($rule->question_type) {
                 $query->where('type', $rule->question_type);
