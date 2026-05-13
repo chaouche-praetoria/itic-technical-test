@@ -158,47 +158,47 @@ const cleanLabel = (label) => {
     <Head title="Questions" />
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Banque de questions</h2>
-                    <p class="text-sm text-slate-500 font-medium">Gérez votre bibliothèque de questions interactives.</p>
+                    <h2 class="text-xl font-bold text-slate-900 tracking-tight">Banque de questions</h2>
+                    <p class="text-xs text-slate-500 font-medium">Gérez votre bibliothèque de questions interactives.</p>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
                     <a :href="route('admin.questions.export', { search, type, domain_id: domainId, difficulty })"
-                        class="bg-white text-slate-900 border border-slate-200 px-5 py-2.5 rounded-xl hover:bg-slate-50 font-bold text-sm shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3">
-                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        class="bg-white text-slate-900 border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-50 font-bold text-xs shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2">
+                        <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                         Exporter
                     </a>
                     <button @click="showImportModal = true"
-                        class="bg-white text-slate-900 border border-slate-200 px-5 py-2.5 rounded-xl hover:bg-slate-50 font-bold text-sm shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3">
-                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                        class="bg-white text-slate-900 border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-50 font-bold text-xs shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2">
+                        <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                         Importer
                     </button>
                     <Link :href="route('admin.questions.create')" 
-                        class="bg-slate-900 text-white px-5 py-2.5 rounded-xl hover:bg-slate-800 font-bold text-sm shadow-xl shadow-slate-200 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 w-fit">
-                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                        Nouvelle question
+                        class="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 font-bold text-xs shadow-xl shadow-slate-200 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 w-fit">
+                        <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                        Nouvelle
                     </Link>
                 </div>
             </div>
         </template>
 
-        <div class="py-10 animate-reveal">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-8">
+        <div class="py-6 animate-reveal">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
                 <!-- Advanced Filters -->
-                <div class="premium-card p-6 glass-card grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div class="premium-card p-4 glass-card grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
                     <div class="md:col-span-1">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Recherche</label>
+                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Recherche</label>
                         <div class="relative">
                             <input v-model="search" type="text" placeholder="Énoncé..." 
-                                class="w-full bg-slate-50 border-none rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium text-slate-700 pl-10" />
-                            <svg v-if="!filtering" class="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                            <svg v-else class="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-indigo-400 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+                                class="w-full bg-slate-50 border-none rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium text-slate-700 pl-9" />
+                            <svg v-if="!filtering" class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            <svg v-else class="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-indigo-400 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
                         </div>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Type</label>
-                        <select v-model="type" class="w-full bg-slate-50 border-none rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium text-slate-700">
+                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Type</label>
+                        <select v-model="type" class="w-full bg-slate-50 border-none rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium text-slate-700">
                             <option value="">Tous les types</option>
                             <option value="mcq">QCM</option>
                             <option value="text">Texte libre</option>
@@ -206,15 +206,15 @@ const cleanLabel = (label) => {
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Domaine</label>
-                        <select v-model="domainId" class="w-full bg-slate-50 border-none rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium text-slate-700">
+                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Domaine</label>
+                        <select v-model="domainId" class="w-full bg-slate-50 border-none rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium text-slate-700">
                             <option value="">Tous les domaines</option>
                             <option v-for="d in domains" :key="d.id" :value="d.id">{{ d.name }}</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Difficulté</label>
-                        <select v-model="difficulty" class="w-full bg-slate-50 border-none rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium text-slate-700">
+                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Difficulté</label>
+                        <select v-model="difficulty" class="w-full bg-slate-50 border-none rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium text-slate-700">
                             <option value="">Toutes les difficultés</option>
                             <option value="easy">Facile</option>
                             <option value="medium">Moyen</option>
@@ -226,14 +226,14 @@ const cleanLabel = (label) => {
                 <!-- Table -->
                 <div class="premium-card overflow-hidden">
                     <div class="overflow-x-auto">
-                        <table class="w-full text-sm border-collapse">
+                        <table class="w-full text-[13px] border-collapse">
                             <thead>
-                                <tr class="bg-slate-50/50 text-slate-400 text-xs uppercase tracking-widest font-bold">
-                                    <th class="px-8 py-5 text-left border-b border-slate-100 uppercase">Énoncé de la question</th>
-                                    <th class="px-8 py-5 text-left border-b border-slate-100 uppercase">Type & Thématique</th>
-                                    <th class="px-8 py-5 text-center border-b border-slate-100 uppercase">Difficulté</th>
-                                    <th class="px-8 py-5 text-center border-b border-slate-100 uppercase">Points</th>
-                                    <th class="px-8 py-5 text-right border-b border-slate-100 uppercase">Actions</th>
+                                <tr class="bg-slate-50/50 text-slate-400 text-[10px] uppercase tracking-widest font-bold">
+                                    <th class="px-6 py-4 text-left border-b border-slate-100 uppercase">Énoncé de la question</th>
+                                    <th class="px-6 py-4 text-left border-b border-slate-100 uppercase">Type & Thématique</th>
+                                    <th class="px-6 py-4 text-center border-b border-slate-100 uppercase">Difficulté</th>
+                                    <th class="px-6 py-4 text-center border-b border-slate-100 uppercase">Points</th>
+                                    <th class="px-6 py-4 text-right border-b border-slate-100 uppercase">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-50">
@@ -241,75 +241,69 @@ const cleanLabel = (label) => {
                                     <td colspan="4" class="px-8 py-20 text-center text-slate-300 font-medium italic">Aucune question ne correspond aux critères</td>
                                 </tr>
                                 <tr v-for="q in questions.data" :key="q.id" class="hover:bg-slate-50/80 transition-all group">
-                                    <td class="px-8 py-6 max-w-sm">
+                                    <td class="px-6 py-4 max-w-sm">
                                         <div class="flex flex-col">
-                                            <span class="font-bold text-slate-800 text-base mb-1 line-clamp-1 group-hover:text-indigo-600 transition-colors">{{ q.statement }}</span>
+                                            <span class="font-bold text-slate-800 text-[13px] mb-0.5 line-clamp-1 group-hover:text-indigo-600 transition-colors">{{ q.statement }}</span>
                                             <div class="flex items-center gap-2">
-                                                <span v-if="q.type === 'mcq'" class="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded uppercase tracking-tighter">{{ q.choices.length }} options</span>
-                                                <span v-else class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Question ouverte</span>
+                                                <span v-if="q.type === 'mcq'" class="text-[9px] font-bold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded uppercase tracking-tighter">{{ q.choices.length }} options</span>
+                                                <span v-else class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Question ouverte</span>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-8 py-6">
+                                    <td class="px-6 py-4">
                                         <div class="flex flex-col">
-                                            <div class="flex items-center gap-2 mb-1">
+                                            <div class="flex items-center gap-1.5 mb-1">
                                                 <div v-html="typeIcon[q.type]" :class="{
                                                     'text-indigo-500': q.type === 'mcq',
                                                     'text-fuchsia-500': q.type === 'text',
                                                     'text-amber-500': q.type === 'code'
-                                                }"></div>
-                                                <span class="text-slate-700 font-bold text-xs">{{ typeLabel[q.type] }}</span>
+                                                }" class="[&>svg]:size-3.5"></div>
+                                                <span class="text-slate-700 font-bold text-[11px]">{{ typeLabel[q.type] }}</span>
                                             </div>
                                             <div class="flex flex-wrap gap-1">
                                                 <span v-for="d in q.domains" :key="d.id" class="text-[9px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded uppercase tracking-tighter">
                                                     {{ d.name }}
                                                 </span>
                                             </div>
-                                            <div class="flex flex-wrap gap-1 mt-1">
-                                                <span v-for="t in q.themes" :key="t.id" class="text-[9px] font-medium text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded italic">
-                                                    {{ t.name }}
-                                                </span>
-                                            </div>
                                         </div>
                                     </td>
-                                    <td class="px-8 py-6 text-center">
+                                    <td class="px-6 py-4 text-center">
                                         <span :class="{
                                             'bg-emerald-50 text-emerald-600 border-emerald-100': q.difficulty === 'easy',
                                             'bg-amber-50 text-amber-600 border-amber-100': q.difficulty === 'medium',
                                             'bg-rose-50 text-rose-600 border-rose-100': q.difficulty === 'hard'
-                                        }" class="px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border">
+                                        }" class="px-2 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-wider border">
                                             {{ difficultyLabel[q.difficulty] }}
                                         </span>
                                     </td>
-                                    <td class="px-8 py-6 text-center">
-                                        <div class="flex flex-col items-center gap-1">
-                                            <span class="text-sm font-black text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
+                                    <td class="px-6 py-4 text-center">
+                                        <div class="flex flex-col items-center">
+                                            <span class="text-xs font-black text-slate-700 bg-slate-100 px-2 py-0.5 rounded-lg">
                                                 {{ q.points }}
                                             </span>
-                                            <span class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">points</span>
                                         </div>
                                     </td>
-                                    <td class="px-8 py-6 text-right">
-                                        <div class="flex justify-end gap-2">
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="flex justify-end gap-1.5">
                                             <button @click="openDetails(q)" 
-                                                class="size-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all"
+                                                class="size-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all"
                                                 title="Détails">
-                                                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                                <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                             </button>
                                             <button @click="openPreview(q)" 
-                                                class="size-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all"
+                                                class="size-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all"
                                                 title="Tester">
-                                                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                             </button>
                                             <Link :href="route('admin.questions.edit', q.id)" 
-                                                class="size-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all"
+                                                class="size-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all"
                                                 title="Modifier">
-                                                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                                <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                             </Link>
                                             <button @click="deleteQuestion(q.id)" 
-                                                class="size-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all"
+                                                class="size-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all"
                                                 title="Supprimer">
-                                                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                             </button>
                                         </div>
                                     </td>

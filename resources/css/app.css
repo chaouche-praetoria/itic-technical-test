@@ -11,6 +11,10 @@
         --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     }
 
+    html {
+        font-size: 15px;
+    }
+
     body {
         @apply bg-[#f1f5f9] text-slate-900 antialiased;
         font-feature-settings: "cv02", "cv03", "cv04", "cv11";
@@ -27,13 +31,14 @@
     }
 
     .btn-primary {
-        @apply px-4 py-2 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition-all shadow-sm hover:shadow-indigo-200 active:scale-95;
+        @apply px-3 py-1.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-all shadow-sm hover:shadow-indigo-200 active:scale-95;
     }
 
     .btn-secondary {
-        @apply px-4 py-2 bg-white text-slate-700 border border-slate-200 font-medium rounded-xl hover:bg-slate-50 transition-all active:scale-95;
+        @apply px-3 py-1.5 bg-white text-slate-700 border border-slate-200 font-medium rounded-lg hover:bg-slate-50 transition-all active:scale-95;
     }
 }
+
 
 .gradient-text {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 font-bold;

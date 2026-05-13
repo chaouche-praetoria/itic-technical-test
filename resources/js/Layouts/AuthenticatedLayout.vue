@@ -27,10 +27,10 @@ const can = (permission) => {
     <div>
     <div class="min-h-screen bg-slate-50 font-sans">
         <!-- Sidebar Navigation -->
-        <aside class="fixed inset-y-0 left-0 z-50 hidden w-72 bg-slate-900 shadow-2xl lg:flex lg:flex-col border-r border-white/5 overflow-hidden">
-            <div class="flex h-20 items-center px-8 shrink-0">
+        <aside class="fixed inset-y-0 left-0 z-50 hidden w-64 bg-slate-900 shadow-2xl lg:flex lg:flex-col border-r border-white/5 overflow-hidden">
+            <div class="flex h-16 items-center px-6 shrink-0">
                 <Link :href="route('admin.dashboard')" class="flex items-center gap-3 group">
-                    <ApplicationLogo class="h-8 w-auto text-white group-hover:scale-105 transition-all duration-300" />
+                    <ApplicationLogo class="h-7 w-auto text-white group-hover:scale-105 transition-all duration-300" />
                 </Link>
             </div>
             
@@ -125,26 +125,26 @@ const can = (permission) => {
 
             <div class="p-4 space-y-3 shrink-0 border-t border-white/5 bg-slate-900">
 
-                <div class="flex items-center gap-3 px-4 py-3 bg-slate-800/30 rounded-2xl border border-white/5">
-                    <div class="size-10 rounded-full bg-gradient-to-tr from-slate-700 to-slate-600 flex items-center justify-center text-white font-black text-sm border border-white/10 shadow-inner">
+                <div class="flex items-center gap-3 px-3 py-2 bg-slate-800/30 rounded-xl border border-white/5">
+                    <div class="size-8 rounded-full bg-gradient-to-tr from-slate-700 to-slate-600 flex items-center justify-center text-white font-black text-xs border border-white/10 shadow-inner">
                         {{ $page.props.auth.user.name.charAt(0) }}
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-sm font-bold text-white truncate">{{ $page.props.auth.user.name }}</p>
-                        <p class="text-[10px] font-medium text-slate-500 truncate">{{ $page.props.auth.user.email }}</p>
+                        <p class="text-xs font-bold text-white truncate">{{ $page.props.auth.user.name }}</p>
+                        <p class="text-[9px] font-medium text-slate-500 truncate">{{ $page.props.auth.user.email }}</p>
                     </div>
                 </div>
-                <Link :href="route('logout')" method="post" as="button" class="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold text-slate-400 hover:text-rose-400 hover:bg-rose-400/5 rounded-2xl transition-all group border border-transparent hover:border-rose-400/10">
-                    <svg class="size-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                <Link :href="route('logout')" method="post" as="button" class="w-full flex items-center gap-3 px-3 py-2 text-[11px] font-bold text-slate-400 hover:text-rose-400 hover:bg-rose-400/5 rounded-xl transition-all group border border-transparent hover:border-rose-400/10">
+                    <svg class="size-3.5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                     Déconnexion
                 </Link>
             </div>
         </aside>
 
         <!-- Main Content Area -->
-        <div class="lg:pl-72">
+        <div class="lg:pl-64">
             <!-- Top Header -->
-            <header class="sticky top-0 z-40 h-20 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 px-6 sm:px-8 lg:px-10">
+            <header class="sticky top-0 z-40 h-16 bg-white/70 backdrop-blur-xl border-b border-slate-200/50 px-4 sm:px-6 lg:px-8">
                 <div class="flex h-full items-center justify-between">
                     <div class="flex items-center gap-6 lg:hidden">
                          <button @click="showingNavigationDropdown = !showingNavigationDropdown" class="p-2.5 -ml-2 text-slate-500 rounded-xl hover:bg-slate-100 transition-colors">
@@ -256,7 +256,7 @@ const can = (permission) => {
             </div>
 
             <!-- Main Page Content -->
-            <main class="p-4 sm:p-6 lg:p-8">
+            <main class="p-4 sm:p-5 lg:p-6">
                 <Transition name="page" mode="out-in">
                     <div :key="page.url" class="animate-reveal">
                         <slot />

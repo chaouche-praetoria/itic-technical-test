@@ -47,14 +47,14 @@ onUnmounted(() => clearInterval(interval));
     <Head title="Dashboard Admin" />
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <div>
-                    <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Vue d'ensemble</h2>
-                    <p class="text-sm text-slate-500 font-medium">Bienvenue sur votre tableau de bord d'administration.</p>
+                    <h2 class="text-xl font-bold text-slate-900 tracking-tight">Vue d'ensemble</h2>
+                    <p class="text-xs text-slate-500 font-medium">Bienvenue sur votre tableau de bord d'administration.</p>
                 </div>
                 <button @click="refresh" :disabled="refreshing"
-                    class="bg-white border border-slate-200 text-slate-600 px-5 py-2.5 rounded-xl hover:bg-slate-50 font-bold text-xs shadow-sm transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 w-fit">
-                    <svg :class="['size-4', refreshing && 'animate-spin']" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    class="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-50 font-bold text-[11px] shadow-sm transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 w-fit">
+                    <svg :class="['size-3.5', refreshing && 'animate-spin']" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
                     <span>Mis à jour {{ lastRefreshed.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) }}</span>
@@ -62,97 +62,97 @@ onUnmounted(() => clearInterval(interval));
             </div>
         </template>
 
-        <div class="space-y-8 mt-2">
+        <div class="space-y-6 mt-2">
             <!-- Stats Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <!-- Total Candidates -->
-                <div class="premium-card p-6 flex items-center gap-4">
-                    <div class="size-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                        <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                <div class="premium-card p-4 flex items-center gap-4">
+                    <div class="size-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                        <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                     </div>
                     <div>
-                        <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Candidats</p>
-                        <p class="text-2xl font-bold text-slate-900">{{ stats.total_candidates }}</p>
+                        <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Candidats</p>
+                        <p class="text-xl font-bold text-slate-900">{{ stats.total_candidates }}</p>
                     </div>
                 </div>
 
                 <!-- Total Questions -->
-                <div class="premium-card p-6 flex items-center gap-4">
-                    <div class="size-12 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-600">
-                        <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <div class="premium-card p-4 flex items-center gap-4">
+                    <div class="size-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
+                        <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
                     <div>
-                        <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Questions</p>
-                        <p class="text-2xl font-bold text-slate-900">{{ stats.total_questions }}</p>
+                        <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Questions</p>
+                        <p class="text-xl font-bold text-slate-900">{{ stats.total_questions }}</p>
                     </div>
                 </div>
 
                 <!-- Total Sessions -->
-                <div class="premium-card p-6 flex items-center gap-4">
-                    <div class="size-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
-                        <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                <div class="premium-card p-4 flex items-center gap-4">
+                    <div class="size-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                        <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                     </div>
                     <div>
-                        <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Sessions</p>
-                        <p class="text-2xl font-bold text-slate-900">{{ stats.total_sessions }}</p>
+                        <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Sessions</p>
+                        <p class="text-xl font-bold text-slate-900">{{ stats.total_sessions }}</p>
                     </div>
                 </div>
 
                 <!-- Avg Score -->
-                <div class="premium-card p-6 flex items-center gap-4">
-                    <div class="size-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-                        <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                <div class="premium-card p-4 flex items-center gap-4">
+                    <div class="size-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                        <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                     </div>
                     <div>
-                        <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Score moyen</p>
-                        <p class="text-2xl font-bold text-slate-900">{{ stats.avg_score }}%</p>
+                        <p class="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Score moyen</p>
+                        <p class="text-xl font-bold text-slate-900">{{ stats.avg_score }}%</p>
                     </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Scores by Domain -->
-                <div class="premium-card p-8">
-                    <div class="flex items-center justify-between mb-8">
-                        <h3 class="text-lg font-bold text-slate-900">Performance par domaine</h3>
-                        <div class="size-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
-                            <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <div class="premium-card p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-base font-bold text-slate-900">Performance par domaine</h3>
+                        <div class="size-7 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                         </div>
                     </div>
-                    <div v-if="scoresByDomain.length === 0" class="flex flex-col items-center justify-center py-10 text-slate-400">
-                        <svg class="size-12 mb-3 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                        <p class="text-sm">Aucune donnée disponible</p>
+                    <div v-if="scoresByDomain.length === 0" class="flex flex-col items-center justify-center py-6 text-slate-400">
+                        <svg class="size-10 mb-2 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        <p class="text-xs">Aucune donnée disponible</p>
                     </div>
-                    <div v-for="d in scoresByDomain" :key="d.name" class="mb-6 last:mb-0">
-                        <div class="flex justify-between text-sm mb-2">
+                    <div v-for="d in scoresByDomain" :key="d.name" class="mb-4 last:mb-0">
+                        <div class="flex justify-between text-xs mb-1.5">
                             <span class="font-semibold text-slate-700">{{ d.name }}</span>
-                            <span class="text-slate-500 font-medium">{{ Math.round(d.avg_score) }}% <span class="text-xs ml-1 opacity-50">({{ d.total }} tests)</span></span>
+                            <span class="text-slate-500 font-medium">{{ Math.round(d.avg_score) }}% <span class="text-[10px] ml-1 opacity-50">({{ d.total }} tests)</span></span>
                         </div>
-                        <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                            <div class="bg-indigo-500 h-2.5 rounded-full transition-all duration-1000" :style="{ width: d.avg_score + '%' }"></div>
+                        <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                            <div class="bg-indigo-500 h-2 rounded-full transition-all duration-1000" :style="{ width: d.avg_score + '%' }"></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Scores by Level -->
-                <div class="premium-card p-8">
-                     <div class="flex items-center justify-between mb-8">
-                        <h3 class="text-lg font-bold text-slate-900">Performance par niveau</h3>
-                        <div class="size-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
-                            <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                <div class="premium-card p-6">
+                     <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-base font-bold text-slate-900">Performance par niveau</h3>
+                        <div class="size-7 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
+                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
                         </div>
                     </div>
-                    <div v-if="scoresByLevel.length === 0" class="flex flex-col items-center justify-center py-10 text-slate-400">
-                        <svg class="size-12 mb-3 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                        <p class="text-sm">Aucune donnée disponible</p>
+                    <div v-if="scoresByLevel.length === 0" class="flex flex-col items-center justify-center py-6 text-slate-400">
+                        <svg class="size-10 mb-2 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                        <p class="text-xs">Aucune donnée disponible</p>
                     </div>
-                    <div v-for="l in scoresByLevel" :key="l.name" class="mb-6 last:mb-0">
-                        <div class="flex justify-between text-sm mb-2">
+                    <div v-for="l in scoresByLevel" :key="l.name" class="mb-4 last:mb-0">
+                        <div class="flex justify-between text-xs mb-1.5">
                             <span class="font-semibold text-slate-700">{{ l.name }}</span>
-                            <span class="text-slate-500 font-medium">{{ Math.round(l.avg_score) }}% <span class="text-xs ml-1 opacity-50">({{ l.total }} tests)</span></span>
+                            <span class="text-slate-500 font-medium">{{ Math.round(l.avg_score) }}% <span class="text-[10px] ml-1 opacity-50">({{ l.total }} tests)</span></span>
                         </div>
-                        <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                            <div class="bg-purple-500 h-2.5 rounded-full transition-all duration-1000" :style="{ width: l.avg_score + '%' }"></div>
+                        <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                            <div class="bg-purple-500 h-2 rounded-full transition-all duration-1000" :style="{ width: l.avg_score + '%' }"></div>
                         </div>
                     </div>
                 </div>
@@ -160,23 +160,23 @@ onUnmounted(() => clearInterval(interval));
 
             <!-- Recent Sessions -->
             <div class="premium-card overflow-hidden">
-                <div class="p-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6 border-b border-slate-100 bg-slate-50/50">
+                <div class="p-6 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 border-b border-slate-100 bg-slate-50/50">
                     <div>
-                        <h3 class="text-xl font-bold text-slate-900 tracking-tight">Sessions récentes</h3>
-                        <p class="text-sm text-slate-500 font-medium">Les 10 dernières tentatives de tests.</p>
+                        <h3 class="text-lg font-bold text-slate-900 tracking-tight">Sessions récentes</h3>
+                        <p class="text-xs text-slate-500 font-medium">Les 10 dernières tentatives de tests.</p>
                     </div>
-                    <Link :href="route('admin.candidates.index')" class="text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-5 py-2.5 rounded-xl transition-all active:scale-[0.98] border border-indigo-100/50 w-fit">Tout voir</Link>
+                    <Link :href="route('admin.candidates.index')" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 px-4 py-2 rounded-lg transition-all active:scale-[0.98] border border-indigo-100/50 w-fit">Tout voir</Link>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm border-collapse">
+                    <table class="w-full text-xs border-collapse">
                         <thead>
-                            <tr class="bg-white text-slate-400 text-xs uppercase tracking-widest font-bold">
-                                <th class="px-8 py-5 text-left border-b border-slate-100">Candidat</th>
-                                <th class="px-8 py-5 text-left border-b border-slate-100">Template</th>
-                                <th class="px-8 py-5 text-left border-b border-slate-100 text-center">Statut</th>
-                                <th class="px-8 py-5 text-left border-b border-slate-100 text-center">Score</th>
-                                <th class="px-8 py-5 text-left border-b border-slate-100">Complété le</th>
-                                <th class="px-8 py-5 text-right border-b border-slate-100">Actions</th>
+                            <tr class="bg-white text-slate-400 text-[10px] uppercase tracking-widest font-bold">
+                                <th class="px-6 py-4 text-left border-b border-slate-100">Candidat</th>
+                                <th class="px-6 py-4 text-left border-b border-slate-100">Template</th>
+                                <th class="px-6 py-4 text-left border-b border-slate-100 text-center">Statut</th>
+                                <th class="px-6 py-4 text-left border-b border-slate-100 text-center">Score</th>
+                                <th class="px-6 py-4 text-left border-b border-slate-100">Complété le</th>
+                                <th class="px-6 py-4 text-right border-b border-slate-100">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
@@ -191,18 +191,18 @@ onUnmounted(() => clearInterval(interval));
                                 </td>
                             </tr>
                             <tr v-for="s in recentSessions" :key="s.id" class="hover:bg-slate-50/80 transition-colors group">
-                                <td class="px-8 py-5">
+                                <td class="px-6 py-3.5">
                                     <div class="flex items-center gap-3">
-                                        <div class="size-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 font-bold group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">
+                                        <div class="size-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors text-xs">
                                             {{ s.candidate.charAt(0) }}
                                         </div>
                                         <span class="font-bold text-slate-700">{{ s.candidate }}</span>
                                     </div>
                                 </td>
-                                <td class="px-8 py-5 text-slate-600 font-medium">{{ s.template }}</td>
-                                <td class="px-8 py-5 text-center">
-                                    <span :class="statusClass(s.status)" class="px-3 py-1.5 rounded-full text-[10px] items-center uppercase tracking-wider font-bold inline-flex">
-                                        <span class="size-1.5 rounded-full mr-2" :class="{
+                                <td class="px-6 py-3.5 text-slate-600 font-medium">{{ s.template }}</td>
+                                <td class="px-6 py-3.5 text-center">
+                                    <span :class="statusClass(s.status)" class="px-2 py-1 rounded-full text-[9px] items-center uppercase tracking-wider font-bold inline-flex">
+                                        <span class="size-1 rounded-full mr-1.5" :class="{
                                             'bg-green-500': s.status === 'completed',
                                             'bg-blue-500': s.status === 'in_progress',
                                             'bg-yellow-500': s.status === 'pending',
@@ -212,26 +212,26 @@ onUnmounted(() => clearInterval(interval));
                                         {{ s.status === 'pending_review' ? 'À corriger' : s.status.replace('_', ' ') }}
                                     </span>
                                 </td>
-                                <td class="px-8 py-5 text-center">
+                                <td class="px-6 py-3.5 text-center">
                                     <div v-if="s.score !== null">
-                                        <span class="text-base font-bold text-slate-900">{{ s.score }}%</span>
+                                        <span class="text-sm font-bold text-slate-900">{{ s.score }}%</span>
                                     </div>
                                     <span v-else class="text-slate-300">—</span>
                                 </td>
-                                <td class="px-8 py-5 text-left text-slate-400 font-medium">
+                                <td class="px-6 py-3.5 text-left text-slate-400 font-medium">
                                     {{ s.completed_at || 'En cours...' }}
                                 </td>
-                                <td class="px-8 py-5 text-right">
-                                    <div class="flex justify-end gap-2">
+                                <td class="px-6 py-3.5 text-right">
+                                    <div class="flex justify-end gap-1.5">
                                         <button v-if="s.status === 'pending'" @click="sendEmail(s.id)" title="Envoyer par mail"
-                                            class="size-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-100 transition-colors">
-                                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            class="size-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-100 transition-colors">
+                                            <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                             </svg>
                                         </button>
                                         <Link :href="s.status === 'completed' ? route('admin.sessions.show', s.id) : route('admin.candidates.show', s.candidate_id || '')" 
-                                            class="size-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200 transition-colors">
-                                            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                            class="size-7 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200 transition-colors">
+                                            <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                                         </Link>
                                     </div>
                                 </td>
