@@ -29,7 +29,10 @@ class TestTemplateController extends Controller
         Gate::authorize('manage-templates');
 
         return Inertia::render('Admin/Templates/Form', [
-            'domains' => Domain::with('themes')->where('is_active', true)->get(),
+            'domains' => Domain::with(['themes.questions' => function ($q) {
+                $q->where('questions.is_active', true)
+                  ->select('questions.id', 'questions.academic_level_id', 'questions.type', 'questions.difficulty');
+            }])->where('is_active', true)->get(),
             'levels' => AcademicLevel::orderBy('order')->get(),
         ]);
     }
@@ -72,7 +75,10 @@ class TestTemplateController extends Controller
 
         return Inertia::render('Admin/Templates/Form', [
             'template' => $template->load(['rules.theme', 'academicLevels']),
-            'domains' => Domain::with('themes')->where('is_active', true)->get(),
+            'domains' => Domain::with(['themes.questions' => function ($q) {
+                $q->where('questions.is_active', true)
+                  ->select('questions.id', 'questions.academic_level_id', 'questions.type', 'questions.difficulty');
+            }])->where('is_active', true)->get(),
             'levels' => AcademicLevel::orderBy('order')->get(),
         ]);
     }

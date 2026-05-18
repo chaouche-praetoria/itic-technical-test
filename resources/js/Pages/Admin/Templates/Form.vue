@@ -46,6 +46,30 @@ watch(() => form.domain_id, () => {
     form.rules.forEach(r => r.theme_id = '');
 });
 
+function getAvailableQuestionsCount(theme, rule) {
+    if (!theme || !theme.questions) return 0;
+    
+    let filtered = theme.questions;
+    
+    if (form.academic_level_ids && form.academic_level_ids.length > 0) {
+        filtered = filtered.filter(q => form.academic_level_ids.includes(q.academic_level_id));
+    }
+    
+    if (rule && rule.question_type) {
+        filtered = filtered.filter(q => q.type === rule.question_type);
+    }
+    
+    if (rule && rule.difficulty) {
+        filtered = filtered.filter(q => q.difficulty === rule.difficulty);
+    }
+    
+    return filtered.length;
+}
+
+function getThemeForRule(rule) {
+    return themes.value.find(t => t.id === rule.theme_id);
+}
+
 function addRule() {
     form.rules.push({ theme_id: '', question_type: 'mcq', difficulty: '', count: 5 });
 }
@@ -155,7 +179,9 @@ function submit() {
                                 <label class="block text-xs text-gray-600 mb-1">Thème</label>
                                 <select v-model="rule.theme_id" required class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
                                     <option value="">Thème...</option>
-                                    <option v-for="t in themes" :key="t.id" :value="t.id">{{ t.name }}</option>
+                                    <option v-for="t in themes" :key="t.id" :value="t.id">
+                                        {{ t.name }} ({{ getAvailableQuestionsCount(t, rule) }} question{{ getAvailableQuestionsCount(t, rule) !== 1 ? 's' : '' }} dispo.)
+                                    </option>
                                 </select>
                             </div>
                             <div class="w-28">
@@ -175,9 +201,22 @@ function submit() {
                                     <option value="hard">Difficile</option>
                                 </select>
                             </div>
-                            <div class="w-20">
-                                <label class="block text-xs text-gray-600 mb-1">Nombre</label>
-                                <input v-model.number="rule.count" type="number" min="1" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" />
+                            <div class="w-24">
+                                <label class="block text-xs text-gray-600 mb-1 flex justify-between gap-1 items-center">
+                                    <span>Nombre</span>
+                                    <span v-if="rule.theme_id && getAvailableQuestionsCount(getThemeForRule(rule), rule) < rule.count" 
+                                        class="text-[10px] text-amber-600 font-bold" 
+                                        :title="'Seulement ' + getAvailableQuestionsCount(getThemeForRule(rule), rule) + ' questions disponibles'">
+                                        ⚠️ Max {{ getAvailableQuestionsCount(getThemeForRule(rule), rule) }}
+                                    </span>
+                                </label>
+                                <input v-model.number="rule.count" type="number" min="1" 
+                                    :class="[
+                                        'w-full border rounded-lg px-3 py-2 text-sm transition-all',
+                                        rule.theme_id && getAvailableQuestionsCount(getThemeForRule(rule), rule) < rule.count
+                                            ? 'border-amber-400 bg-amber-50/50 text-amber-900 focus:ring-amber-500 focus:border-amber-500'
+                                            : 'border-gray-300 focus:ring-indigo-500 focus:border-indigo-500'
+                                    ]" />
                             </div>
                             <button v-if="form.rules.length > 1" type="button" @click="removeRule(i)" class="text-red-500 hover:text-red-700 text-xl pb-2">×</button>
                         </div>
