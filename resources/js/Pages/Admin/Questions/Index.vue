@@ -20,6 +20,7 @@ const domainId = ref(props.filters.domain_id || '');
 const themeId = ref(props.filters.theme_id || '');
 const academicLevelId = ref(props.filters.academic_level_id || '');
 const difficulty = ref(props.filters.difficulty || '');
+const perPage = ref(props.filters.per_page || '20');
 const filtering = ref(false);
 const deleteTarget = ref(null);
 const deleting = ref(false);
@@ -71,11 +72,24 @@ function applyFilters() {
             theme_id: themeId.value,
             academic_level_id: academicLevelId.value,
             difficulty: difficulty.value,
+            per_page: perPage.value,
         }, { preserveState: true, replace: true, onFinish: () => { filtering.value = false; } });
     }, 400);
 }
 
-watch([search, type, domainId, themeId, academicLevelId, difficulty], applyFilters);
+watch([search, type, domainId, themeId, academicLevelId, difficulty, perPage], applyFilters);
+
+watch(() => props.filters, (newFilters) => {
+    if (newFilters) {
+        if (search.value !== (newFilters.search || '')) search.value = newFilters.search || '';
+        if (type.value !== (newFilters.type || '')) type.value = newFilters.type || '';
+        if (domainId.value !== (newFilters.domain_id || '')) domainId.value = newFilters.domain_id || '';
+        if (themeId.value !== (newFilters.theme_id || '')) themeId.value = newFilters.theme_id || '';
+        if (academicLevelId.value !== (newFilters.academic_level_id || '')) academicLevelId.value = newFilters.academic_level_id || '';
+        if (difficulty.value !== (newFilters.difficulty || '')) difficulty.value = newFilters.difficulty || '';
+        if (perPage.value !== (newFilters.per_page || '20')) perPage.value = newFilters.per_page || '20';
+    }
+}, { deep: true });
 
 function deleteQuestion(id) {
     deleteTarget.value = id;
@@ -287,7 +301,37 @@ const cleanLabel = (label) => {
                 </div>
 
                 <!-- Table -->
-                <div class="premium-card overflow-hidden">
+                <div class="premium-card overflow-hidden relative">
+                    <!-- Bulk Actions Toolbar (Slides down above the table) -->
+                    <transition
+                        enter-active-class="transition ease-out duration-300 transform"
+                        enter-from-class="-translate-y-full opacity-0"
+                        enter-to-class="translate-y-0 opacity-100"
+                        leave-active-class="transition ease-in duration-200 transform"
+                        leave-from-class="translate-y-0 opacity-100"
+                        leave-to-class="-translate-y-full opacity-0"
+                    >
+                        <div v-if="selectedIds.length > 0" class="bg-slate-900 text-white px-8 py-4 flex items-center justify-between border-b border-slate-800 z-10 transition-all">
+                            <div class="flex items-center gap-3">
+                                <span class="bg-indigo-600 text-white font-black text-[11px] px-2.5 py-0.5 rounded-md">
+                                    {{ selectedIds.length }}
+                                </span>
+                                <span class="text-xs font-bold text-slate-300">question(s) sélectionnée(s)</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button @click="selectedIds = []" class="text-xs font-bold text-slate-400 hover:text-white px-3 py-1.5 rounded-xl hover:bg-slate-800 transition-colors">
+                                    Désélectionner tout
+                                </button>
+                                <button @click="showBulkDeleteModal = true" class="bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold px-4 py-1.5 rounded-xl transition-all flex items-center gap-1.5 shadow-lg shadow-rose-900/20">
+                                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    Supprimer la sélection
+                                </button>
+                            </div>
+                        </div>
+                    </transition>
+
                     <div class="overflow-x-auto">
                         <table class="w-full text-[13px] border-collapse">
                             <thead>
@@ -383,10 +427,21 @@ const cleanLabel = (label) => {
                         </table>
                     </div>
 
-                    <!-- Enhanced Pagination -->
-                    <div v-if="questions.last_page > 1" class="px-8 py-6 bg-slate-50/30 flex items-center justify-between border-t border-slate-100">
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ questions.total }} questions au total</p>
-                        <div class="flex gap-1.5">
+                    <!-- Enhanced Pagination & per_page Selector -->
+                    <div v-if="questions.total > 0" class="px-8 py-6 bg-slate-50/30 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">{{ questions.total }} questions au total</p>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Afficher :</span>
+                                <select v-model="perPage" class="h-8 px-2.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 bg-white focus:border-indigo-500 focus:ring-0 focus:outline-none transition-all cursor-pointer">
+                                    <option value="10">10 par page</option>
+                                    <option value="20">20 par page</option>
+                                    <option value="50">50 par page</option>
+                                    <option value="100">100 par page</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div v-if="questions.last_page > 1" class="flex gap-1.5">
                             <Link v-for="link in questions.links" :key="link.label"
                                 :href="link.url || '#'"
                                 v-html="cleanLabel(link.label)"
@@ -400,35 +455,6 @@ const cleanLabel = (label) => {
                 </div>
             </div>
         </div>
-
-        <!-- Floating Bulk Action Bar -->
-        <transition
-            enter-active-class="transition ease-out duration-300 transform"
-            enter-from-class="translate-y-20 opacity-0"
-            enter-to-class="translate-y-0 opacity-100"
-            leave-active-class="transition ease-in duration-200 transform"
-            leave-from-class="translate-y-0 opacity-100"
-            leave-to-class="translate-y-20 opacity-0"
-        >
-            <div v-if="selectedIds.length > 0" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 z-40 border border-slate-800">
-                <div class="flex items-center gap-3">
-                    <span class="bg-indigo-600 text-white font-black text-xs px-2.5 py-1 rounded-lg">
-                        {{ selectedIds.length }}
-                    </span>
-                    <span class="text-xs font-bold text-slate-300">sélectionnées</span>
-                </div>
-                <div class="h-4 w-px bg-slate-800"></div>
-                <div class="flex gap-2">
-                    <button @click="selectedIds = []" class="text-xs font-bold text-slate-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors">
-                        Désélectionner
-                    </button>
-                    <button @click="showBulkDeleteModal = true" class="bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold px-4 py-1.5 rounded-xl transition-all flex items-center gap-1.5">
-                        <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                        Supprimer la sélection
-                    </button>
-                </div>
-            </div>
-        </transition>
 
     </AuthenticatedLayout>
 

@@ -24,6 +24,8 @@ class QuestionController extends Controller
     {
         Gate::authorize('manage-questions');
 
+        $perPage = in_array($request->per_page, [10, 20, 50, 100]) ? (int) $request->per_page : 20;
+
         $query = Question::with(['domains', 'academicLevel', 'themes', 'choices'])
             ->when($request->search, fn($q) => $q->where('statement', 'like', "%{$request->search}%"))
             ->when($request->type, fn($q) => $q->where('type', $request->type))
@@ -34,11 +36,11 @@ class QuestionController extends Controller
             ->latest();
 
         return Inertia::render('Admin/Questions/Index', [
-            'questions' => $query->paginate(20)->withQueryString(),
+            'questions' => $query->paginate($perPage)->withQueryString(),
             'domains' => Domain::where('is_active', true)->get(),
             'themes' => Theme::orderBy('name')->get(),
             'academicLevels' => AcademicLevel::orderBy('order')->get(),
-            'filters' => $request->only(['search', 'type', 'domain_id', 'theme_id', 'academic_level_id', 'difficulty']),
+            'filters' => $request->only(['search', 'type', 'domain_id', 'theme_id', 'academic_level_id', 'difficulty', 'per_page']),
         ]);
     }
 
@@ -225,7 +227,7 @@ class QuestionController extends Controller
         Gate::authorize('manage-questions');
 
         $question->delete();
-        return redirect()->route('admin.questions.index')->with('success', 'Question supprimée.');
+        return back()->with('success', 'Question supprimée.');
     }
 
     public function test(Request $request)
@@ -286,7 +288,7 @@ class QuestionController extends Controller
 
         Question::whereIn('id', $validated['ids'])->delete();
 
-        return redirect()->route('admin.questions.index')->with('success', count($validated['ids']) . ' questions supprimées.');
+        return back()->with('success', count($validated['ids']) . ' questions supprimées.');
     }
 
     public function downloadTemplate()
