@@ -240,7 +240,9 @@ const cleanLabel = (label) => {
                             <p class="text-xl font-extrabold text-slate-900">{{ stats.success_rate }}%</p>
                         </div>
                     </div>
-                         <!-- Search & Filters Section -->
+                </div>
+
+                <!-- Search & Filters Section -->
                 <div class="premium-card p-4 glass-card flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div class="relative flex-1 max-w-md">
                         <input v-model="search" type="text" placeholder="Rechercher un candidat..."
@@ -273,6 +275,7 @@ const cleanLabel = (label) => {
                                 <option v-for="f in formations" :key="f" :value="f">{{ f }}</option>
                             </select>
                        </div>
+                    </div>
                 </div>
 
                 <!-- Table Section -->
