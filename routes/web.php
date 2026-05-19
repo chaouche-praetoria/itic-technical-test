@@ -65,6 +65,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::get('questions/export', [QuestionController::class, 'export'])->name('questions.export');
     Route::post('questions/import', [QuestionController::class, 'import'])->name('questions.import');
     Route::post('questions/test', [QuestionController::class, 'test'])->name('questions.test');
+    Route::post('questions/bulk-destroy', [QuestionController::class, 'bulkDestroy'])->name('questions.bulk-destroy');
     Route::resource('questions', QuestionController::class)->except(['show']);
 
     // Templates

@@ -28,13 +28,17 @@ class QuestionController extends Controller
             ->when($request->search, fn($q) => $q->where('statement', 'like', "%{$request->search}%"))
             ->when($request->type, fn($q) => $q->where('type', $request->type))
             ->when($request->domain_id, fn($q) => $q->whereHas('domains', fn($dq) => $dq->where('domains.id', $request->domain_id)))
+            ->when($request->theme_id, fn($q) => $q->whereHas('themes', fn($tq) => $tq->where('themes.id', $request->theme_id)))
+            ->when($request->academic_level_id, fn($q) => $q->where('academic_level_id', $request->academic_level_id))
             ->when($request->difficulty, fn($q) => $q->where('difficulty', $request->difficulty))
             ->latest();
 
         return Inertia::render('Admin/Questions/Index', [
             'questions' => $query->paginate(20)->withQueryString(),
             'domains' => Domain::where('is_active', true)->get(),
-            'filters' => $request->only(['search', 'type', 'domain_id', 'difficulty']),
+            'themes' => Theme::orderBy('name')->get(),
+            'academicLevels' => AcademicLevel::orderBy('order')->get(),
+            'filters' => $request->only(['search', 'type', 'domain_id', 'theme_id', 'academic_level_id', 'difficulty']),
         ]);
     }
 
@@ -263,10 +267,26 @@ class QuestionController extends Controller
             ->when($request->search, fn($q) => $q->where('statement', 'like', "%{$request->search}%"))
             ->when($request->type, fn($q) => $q->where('type', $request->type))
             ->when($request->domain_id, fn($q) => $q->whereHas('domains', fn($dq) => $dq->where('domains.id', $request->domain_id)))
+            ->when($request->theme_id, fn($q) => $q->whereHas('themes', fn($tq) => $tq->where('themes.id', $request->theme_id)))
+            ->when($request->academic_level_id, fn($q) => $q->where('academic_level_id', $request->academic_level_id))
             ->when($request->difficulty, fn($q) => $q->where('difficulty', $request->difficulty))
             ->latest();
 
         return Excel::download(new QuestionsExport($query->get()), 'questions_export_' . now()->format('Y-m-d_H-i') . '.xlsx');
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        Gate::authorize('manage-questions');
+
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'exists:questions,id',
+        ]);
+
+        Question::whereIn('id', $validated['ids'])->delete();
+
+        return redirect()->route('admin.questions.index')->with('success', count($validated['ids']) . ' questions supprimées.');
     }
 
     public function downloadTemplate()

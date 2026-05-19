@@ -155,4 +155,114 @@ class QuestionTest extends TestCase
 
         $response->assertForbidden();
     }
+
+    /**
+     * Test filtering questions by theme and academic level.
+     */
+    public function test_admin_can_filter_questions_by_theme_and_academic_level(): void
+    {
+        $theme2 = Theme::create([
+            'domain_id' => $this->domain->id,
+            'name' => 'JS',
+            'slug' => 'js'
+        ]);
+        $level2 = AcademicLevel::create(['name' => 'M1', 'order' => 2]);
+
+        // Create question A
+        $qA = \App\Models\Question::create([
+            'type' => 'text',
+            'academic_level_id' => $this->level->id, // B3
+            'difficulty' => 'easy',
+            'statement' => 'Statement A',
+            'points' => 5,
+        ]);
+        $qA->themes()->attach($this->theme->id); // PHP
+
+        // Create question B
+        $qB = \App\Models\Question::create([
+            'type' => 'text',
+            'academic_level_id' => $level2->id, // M1
+            'difficulty' => 'easy',
+            'statement' => 'Statement B',
+            'points' => 5,
+        ]);
+        $qB->themes()->attach($theme2->id); // JS
+
+        // Filter by theme PHP
+        $response = $this->actingAs($this->admin)->get(route('admin.questions.index', [
+            'theme_id' => $this->theme->id
+        ]));
+        $response->assertOk();
+        $questions = $response->original->getData()['page']['props']['questions']['data'];
+        $this->assertCount(1, $questions);
+        $this->assertEquals('Statement A', $questions[0]['statement']);
+
+        // Filter by level M1
+        $response2 = $this->actingAs($this->admin)->get(route('admin.questions.index', [
+            'academic_level_id' => $level2->id
+        ]));
+        $response2->assertOk();
+        $questions2 = $response2->original->getData()['page']['props']['questions']['data'];
+        $this->assertCount(1, $questions2);
+        $this->assertEquals('Statement B', $questions2[0]['statement']);
+    }
+
+    /**
+     * Test bulk deleting questions.
+     */
+    public function test_admin_can_bulk_delete_questions(): void
+    {
+        $q1 = \App\Models\Question::create([
+            'type' => 'text',
+            'academic_level_id' => $this->level->id,
+            'difficulty' => 'easy',
+            'statement' => 'Statement 1',
+            'points' => 5,
+        ]);
+        $q2 = \App\Models\Question::create([
+            'type' => 'text',
+            'academic_level_id' => $this->level->id,
+            'difficulty' => 'easy',
+            'statement' => 'Statement 2',
+            'points' => 5,
+        ]);
+        $q3 = \App\Models\Question::create([
+            'type' => 'text',
+            'academic_level_id' => $this->level->id,
+            'difficulty' => 'easy',
+            'statement' => 'Statement 3',
+            'points' => 5,
+        ]);
+
+        $response = $this->actingAs($this->admin)->post(route('admin.questions.bulk-destroy'), [
+            'ids' => [$q1->id, $q2->id]
+        ]);
+
+        $response->assertRedirect(route('admin.questions.index'));
+        $this->assertDatabaseMissing('questions', ['id' => $q1->id]);
+        $this->assertDatabaseMissing('questions', ['id' => $q2->id]);
+        $this->assertDatabaseHas('questions', ['id' => $q3->id]);
+    }
+
+    /**
+     * Test non-admin cannot bulk delete questions.
+     */
+    public function test_non_admin_cannot_bulk_delete_questions(): void
+    {
+        $user = User::factory()->create();
+        $q1 = \App\Models\Question::create([
+            'type' => 'text',
+            'academic_level_id' => $this->level->id,
+            'difficulty' => 'easy',
+            'statement' => 'Statement 1',
+            'points' => 5,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.questions.bulk-destroy'), [
+            'ids' => [$q1->id]
+        ]);
+
+        $response->assertForbidden();
+        $this->assertDatabaseHas('questions', ['id' => $q1->id]);
+    }
 }

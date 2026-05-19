@@ -9,12 +9,16 @@ import { LANGUAGE_TEMPLATES } from '@/Constants/questionTemplates';
 const props = defineProps({
     questions: Object,
     domains: Array,
+    themes: Array,
+    academicLevels: Array,
     filters: Object,
 });
 
 const search = ref(props.filters.search || '');
 const type = ref(props.filters.type || '');
 const domainId = ref(props.filters.domain_id || '');
+const themeId = ref(props.filters.theme_id || '');
+const academicLevelId = ref(props.filters.academic_level_id || '');
 const difficulty = ref(props.filters.difficulty || '');
 const filtering = ref(false);
 const deleteTarget = ref(null);
@@ -64,12 +68,14 @@ function applyFilters() {
             search: search.value,
             type: type.value,
             domain_id: domainId.value,
+            theme_id: themeId.value,
+            academic_level_id: academicLevelId.value,
             difficulty: difficulty.value,
         }, { preserveState: true, replace: true, onFinish: () => { filtering.value = false; } });
     }, 400);
 }
 
-watch([search, type, domainId, difficulty], applyFilters);
+watch([search, type, domainId, themeId, academicLevelId, difficulty], applyFilters);
 
 function deleteQuestion(id) {
     deleteTarget.value = id;
@@ -80,6 +86,49 @@ function confirmDelete() {
     router.delete(route('admin.questions.destroy', deleteTarget.value), {
         onSuccess: () => { deleteTarget.value = null; },
         onFinish: () => { deleting.value = false; },
+    });
+}
+
+// Bulk Selection & Deletion State
+const selectedIds = ref([]);
+const showBulkDeleteModal = ref(false);
+const bulkDeleting = ref(false);
+
+const isAllSelected = computed(() => {
+    if (!props.questions.data || props.questions.data.length === 0) return false;
+    return props.questions.data.every(q => selectedIds.value.includes(q.id));
+});
+
+function toggleSelectAll() {
+    if (isAllSelected.value) {
+        // Deselect all on this page
+        const pageIds = props.questions.data.map(q => q.id);
+        selectedIds.value = selectedIds.value.filter(id => !pageIds.includes(id));
+    } else {
+        // Select all on this page
+        const pageIds = props.questions.data.map(q => q.id);
+        const newIds = [...selectedIds.value];
+        pageIds.forEach(id => {
+            if (!newIds.includes(id)) {
+                newIds.push(id);
+            }
+        });
+        selectedIds.value = newIds;
+    }
+}
+
+function confirmBulkDelete() {
+    bulkDeleting.value = true;
+    router.post(route('admin.questions.bulk-destroy'), {
+        ids: selectedIds.value
+    }, {
+        onSuccess: () => {
+            selectedIds.value = [];
+            showBulkDeleteModal.value = false;
+        },
+        onFinish: () => {
+            bulkDeleting.value = false;
+        }
     });
 }
 
@@ -164,7 +213,7 @@ const cleanLabel = (label) => {
                     <p class="text-xs text-slate-500 font-medium">Gérez votre bibliothèque de questions interactives.</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <a :href="route('admin.questions.export', { search, type, domain_id: domainId, difficulty })"
+                    <a :href="route('admin.questions.export', { search, type, domain_id: domainId, theme_id: themeId, academic_level_id: academicLevelId, difficulty })"
                         class="bg-white text-slate-900 border border-slate-200 px-4 py-2 rounded-lg hover:bg-slate-50 font-bold text-xs shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2">
                         <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                         Exporter
@@ -186,8 +235,8 @@ const cleanLabel = (label) => {
         <div class="py-6 animate-reveal">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
                 <!-- Advanced Filters -->
-                <div class="premium-card p-4 glass-card grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-                    <div class="md:col-span-1">
+                <div class="premium-card p-4 glass-card grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 items-end">
+                    <div>
                         <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Recherche</label>
                         <div class="relative">
                             <input v-model="search" type="text" placeholder="Énoncé..." 
@@ -213,6 +262,20 @@ const cleanLabel = (label) => {
                         </select>
                     </div>
                     <div>
+                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Thème</label>
+                        <select v-model="themeId" class="w-full bg-slate-50 border-none rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium text-slate-700">
+                            <option value="">Tous les thèmes</option>
+                            <option v-for="t in themes" :key="t.id" :value="t.id">{{ t.name }}</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Niveau</label>
+                        <select v-model="academicLevelId" class="w-full bg-slate-50 border-none rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium text-slate-700">
+                            <option value="">Tous les niveaux</option>
+                            <option v-for="l in academicLevels" :key="l.id" :value="l.id">{{ l.name }}</option>
+                        </select>
+                    </div>
+                    <div>
                         <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Difficulté</label>
                         <select v-model="difficulty" class="w-full bg-slate-50 border-none rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium text-slate-700">
                             <option value="">Toutes les difficultés</option>
@@ -229,6 +292,10 @@ const cleanLabel = (label) => {
                         <table class="w-full text-[13px] border-collapse">
                             <thead>
                                 <tr class="bg-slate-50/50 text-slate-400 text-[10px] uppercase tracking-widest font-bold">
+                                    <th class="px-6 py-4 text-center border-b border-slate-100 w-12">
+                                        <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll"
+                                            class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 size-4 cursor-pointer" />
+                                    </th>
                                     <th class="px-6 py-4 text-left border-b border-slate-100 uppercase">Énoncé de la question</th>
                                     <th class="px-6 py-4 text-left border-b border-slate-100 uppercase">Type & Thématique</th>
                                     <th class="px-6 py-4 text-center border-b border-slate-100 uppercase">Difficulté</th>
@@ -238,9 +305,13 @@ const cleanLabel = (label) => {
                             </thead>
                             <tbody class="divide-y divide-slate-50">
                                 <tr v-if="questions.data.length === 0">
-                                    <td colspan="4" class="px-8 py-20 text-center text-slate-300 font-medium italic">Aucune question ne correspond aux critères</td>
+                                    <td colspan="6" class="px-8 py-20 text-center text-slate-300 font-medium italic">Aucune question ne correspond aux critères</td>
                                 </tr>
-                                <tr v-for="q in questions.data" :key="q.id" class="hover:bg-slate-50/80 transition-all group">
+                                <tr v-for="q in questions.data" :key="q.id" :class="selectedIds.includes(q.id) ? 'bg-indigo-50/20' : ''" class="hover:bg-slate-50/80 transition-all group">
+                                    <td class="px-6 py-4 text-center w-12">
+                                        <input type="checkbox" v-model="selectedIds" :value="q.id"
+                                            class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 size-4 cursor-pointer" />
+                                    </td>
                                     <td class="px-6 py-4 max-w-sm">
                                         <div class="flex flex-col">
                                             <span class="font-bold text-slate-800 text-[13px] mb-0.5 line-clamp-1 group-hover:text-indigo-600 transition-colors">{{ q.statement }}</span>
@@ -330,6 +401,35 @@ const cleanLabel = (label) => {
             </div>
         </div>
 
+        <!-- Floating Bulk Action Bar -->
+        <transition
+            enter-active-class="transition ease-out duration-300 transform"
+            enter-from-class="translate-y-20 opacity-0"
+            enter-to-class="translate-y-0 opacity-100"
+            leave-active-class="transition ease-in duration-200 transform"
+            leave-from-class="translate-y-0 opacity-100"
+            leave-to-class="translate-y-20 opacity-0"
+        >
+            <div v-if="selectedIds.length > 0" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 z-40 border border-slate-800">
+                <div class="flex items-center gap-3">
+                    <span class="bg-indigo-600 text-white font-black text-xs px-2.5 py-1 rounded-lg">
+                        {{ selectedIds.length }}
+                    </span>
+                    <span class="text-xs font-bold text-slate-300">sélectionnées</span>
+                </div>
+                <div class="h-4 w-px bg-slate-800"></div>
+                <div class="flex gap-2">
+                    <button @click="selectedIds = []" class="text-xs font-bold text-slate-400 hover:text-white px-3 py-1.5 rounded-lg transition-colors">
+                        Désélectionner
+                    </button>
+                    <button @click="showBulkDeleteModal = true" class="bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold px-4 py-1.5 rounded-xl transition-all flex items-center gap-1.5">
+                        <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        Supprimer la sélection
+                    </button>
+                </div>
+            </div>
+        </transition>
+
     </AuthenticatedLayout>
 
     <Teleport to="body">
@@ -349,6 +449,28 @@ const cleanLabel = (label) => {
                     <button @click="confirmDelete" :disabled="deleting"
                         class="flex-1 px-6 py-4 text-sm font-bold text-white bg-rose-600 rounded-2xl hover:bg-rose-700 transition-all shadow-xl shadow-rose-200 disabled:opacity-50 active:scale-[0.98]">
                         <span v-if="!deleting">Supprimer</span>
+                        <svg v-else class="size-4 animate-spin mx-auto" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk Delete Confirmation Modal -->
+        <div v-if="showBulkDeleteModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl animate-reveal border border-slate-100 text-center">
+                <div class="size-16 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-6">
+                    <svg class="size-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900 mb-2">Supprimer {{ selectedIds.length }} questions ?</h3>
+                <p class="text-sm text-slate-500 font-medium mb-8">Cette action est irréversible. Toutes ces questions seront définitivement retirées de tous les tests associés.</p>
+                <div class="flex gap-4">
+                    <button @click="showBulkDeleteModal = false"
+                        class="flex-1 px-6 py-4 text-sm font-bold text-slate-600 bg-slate-100 rounded-2xl hover:bg-slate-200 transition-all active:scale-[0.98]">
+                        Garder
+                    </button>
+                    <button @click="confirmBulkDelete" :disabled="bulkDeleting"
+                        class="flex-1 px-6 py-4 text-sm font-bold text-white bg-rose-600 rounded-2xl hover:bg-rose-700 transition-all shadow-xl shadow-rose-200 disabled:opacity-50 active:scale-[0.98]">
+                        <span v-if="!bulkDeleting">Supprimer ({{ selectedIds.length }})</span>
                         <svg v-else class="size-4 animate-spin mx-auto" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
                     </button>
                 </div>
