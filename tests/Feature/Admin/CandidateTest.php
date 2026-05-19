@@ -90,4 +90,44 @@ class CandidateTest extends TestCase
             'added_by' => 'excel', // preserved
         ]);
     }
+
+    /**
+     * Test HubSpot sync updates added_by if different.
+     */
+    public function test_hubspot_sync_updates_added_by_if_different(): void
+    {
+        $candidate = Candidate::create([
+            'first_name' => 'Jane',
+            'last_name' => 'Doe',
+            'email' => 'jane.doe@example.com',
+            'phone' => '0600000000',
+            'added_by' => 'excel',
+        ]);
+
+        $mockHubspot = $this->createMock(\App\Services\HubSpotService::class);
+        $mockHubspot->expects($this->once())
+            ->method('getContact')
+            ->with('jane.doe@example.com')
+            ->willReturn([
+                'id' => '12345',
+                'properties' => [
+                    'firstname' => 'Jane',
+                    'lastname' => 'Doe',
+                    'phone' => '0600000000',
+                    'formation_souhaitee' => 'Dev Web',
+                ]
+            ]);
+
+        $this->instance(\App\Services\HubSpotService::class, $mockHubspot);
+
+        $response = $this->actingAs($this->admin)->post(route('admin.candidates.sync-specific', $candidate->id));
+
+        $response->assertRedirect();
+        
+        $this->assertDatabaseHas('candidates', [
+            'id' => $candidate->id,
+            'email' => 'jane.doe@example.com',
+            'added_by' => 'hubspot',
+        ]);
+    }
 }

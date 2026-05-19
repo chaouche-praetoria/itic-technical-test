@@ -367,7 +367,7 @@ class CandidateController extends Controller
 
         $props = $data['properties'];
 
-        $candidate->update([
+        $updateData = [
             'hubspot_id' => $data['id'],
             'first_name' => $props['firstname'] ?? $candidate->first_name,
             'last_name' => $props['lastname'] ?? $candidate->last_name,
@@ -379,7 +379,13 @@ class CandidateController extends Controller
             'date_test_technique' => $props['date_test_technique'] ?? $candidate->date_test_technique,
             'orientation_proposee' => $props['orientation_proposee'] ?? $candidate->orientation_proposee,
             'lien_test_technique' => $props['lien_test_technique'] ?? $candidate->lien_test_technique,
-        ]);
+        ];
+
+        if ($candidate->added_by !== 'hubspot') {
+            $updateData['added_by'] = 'hubspot';
+        }
+
+        $candidate->update($updateData);
 
         return back()->with('success', 'Données rafraîchies depuis HubSpot pour ' . $candidate->full_name);
     }
@@ -425,6 +431,9 @@ class CandidateController extends Controller
 
             /** @var \App\Models\Candidate $candidate */
             if ($candidate) {
+                if ($candidate->added_by !== 'hubspot') {
+                    $candidateData['added_by'] = 'hubspot';
+                }
                 $candidate->update($candidateData);
                 $updatedCount++;
             } else {
