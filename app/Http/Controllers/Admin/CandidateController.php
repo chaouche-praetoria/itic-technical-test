@@ -32,12 +32,17 @@ class CandidateController extends Controller
         Gate::authorize('manage-candidates');
 
         $candidate->delete();
-        return redirect()->route('admin.candidates.index')->with('success', 'Dossier candidat supprimé.');
+        return back()->with('success', 'Dossier candidat supprimé.');
     }
 
     public function index(Request $request)
     {
         Gate::authorize('manage-candidates');
+
+        $perPage = $request->input('per_page', 20);
+        if (!in_array($perPage, [10, 20, 50, 100])) {
+            $perPage = 20;
+        }
 
         $candidates = Candidate::withCount('testSessions')
             ->when($request->search, fn($q) => $q->where(function ($q) use ($request) {
@@ -46,12 +51,41 @@ class CandidateController extends Controller
                     ->orWhere('email', 'like', "%{$request->search}%");
             }))
             ->latest()
-            ->paginate(20)
+            ->paginate($perPage)
             ->withQueryString();
+
+        // Calculate statistics
+        $totalCandidates = Candidate::count();
+        $completedSessions = TestSession::where('status', 'completed')->count();
+        
+        $avgScore = round(TestSession::where('status', 'completed')
+            ->whereNotNull('score')
+            ->avg('score') ?? 0, 1);
+
+        $passedCount = TestSession::where('status', 'completed')
+            ->whereNotNull('score')
+            ->where('score', '>=', 70)
+            ->count();
+            
+        $completedCountWithScore = TestSession::where('status', 'completed')
+            ->whereNotNull('score')
+            ->count();
+            
+        $successRate = $completedCountWithScore > 0 
+            ? round(($passedCount / $completedCountWithScore) * 100, 1) 
+            : 0;
+
+        $stats = [
+            'total_candidates' => $totalCandidates,
+            'completed_sessions' => $completedSessions,
+            'avg_score' => $avgScore,
+            'success_rate' => $successRate,
+        ];
 
         return Inertia::render('Admin/Candidates/Index', [
             'candidates' => $candidates,
-            'filters' => $request->only('search'),
+            'filters' => array_merge($request->only('search'), ['per_page' => $perPage]),
+            'stats' => $stats,
         ]);
     }
 

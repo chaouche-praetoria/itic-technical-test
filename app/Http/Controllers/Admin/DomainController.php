@@ -118,10 +118,6 @@ class DomainController extends Controller
     {
         Gate::authorize('manage-domains');
 
-        if ($domain->questions()->exists()) {
-            return back()->with('error', 'Impossible de supprimer ce domaine car il contient encore des questions.');
-        }
-
         $domain->delete();
         return back()->with('success', 'Domaine supprimé avec succès.');
     }
