@@ -66,6 +66,18 @@ const formatPhone = (phone) => {
     return p;
 };
 
+const sourceClass = (source) => ({
+    manual: 'bg-slate-50 text-slate-600 border-slate-200/60',
+    excel: 'bg-emerald-50 text-emerald-600 border-emerald-200/60',
+    hubspot: 'bg-orange-50 text-orange-600 border-orange-200/60',
+}[source] || 'bg-slate-50 text-slate-600 border-slate-200/60');
+
+const sourceLabel = (source) => ({
+    manual: 'Manuel',
+    excel: 'Excel',
+    hubspot: 'HubSpot',
+}[source] || 'Manuel');
+
 const syncingHubSpot = ref(false);
 function syncCandidateToHubSpot() {
     syncingHubSpot.value = true;
@@ -115,7 +127,12 @@ function deleteCandidate() {
                         {{ candidate.first_name[0] }}{{ candidate.last_name[0] }}
                     </div>
                     <div>
-                        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">{{ candidate.first_name }} {{ candidate.last_name }}</h2>
+                        <div class="flex items-center gap-3">
+                            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">{{ candidate.first_name }} {{ candidate.last_name }}</h2>
+                            <span :class="sourceClass(candidate.added_by)" class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border">
+                                {{ sourceLabel(candidate.added_by) }}
+                            </span>
+                        </div>
                         <div class="flex items-center gap-3 mt-1">
                             <span class="text-sm text-slate-500 font-medium flex items-center gap-1">
                                 <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
@@ -244,6 +261,14 @@ function deleteCandidate() {
                                        class="text-indigo-600 hover:text-indigo-800">
                                         <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                                     </a>
+                                </div>
+                            </div>
+                            <div class="space-y-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Origine</span>
+                                <div class="flex items-center mt-0.5">
+                                    <span :class="sourceClass(candidate.added_by)" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border">
+                                        {{ sourceLabel(candidate.added_by) }}
+                                    </span>
                                 </div>
                             </div>
                         </div>

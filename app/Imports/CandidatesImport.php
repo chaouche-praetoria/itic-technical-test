@@ -12,15 +12,20 @@ class CandidatesImport implements ToModel, WithHeadingRow, WithValidation, Skips
 {
     public function model(array $row)
     {
-        return Candidate::updateOrCreate(
-            ['email' => $row['email']],
-            [
-                'first_name' => $row['prenom'] ?? $row['first_name'] ?? '',
-                'last_name' => $row['nom'] ?? $row['last_name'] ?? '',
-                'phone' => $row['telephone'] ?? $row['phone'] ?? null,
-                'formation_souhaitee' => $row['formation'] ?? $row['formation_souhaitee'] ?? null,
-            ]
-        );
+        $candidate = Candidate::firstOrNew(['email' => $row['email']]);
+
+        $candidate->fill([
+            'first_name' => $row['prenom'] ?? $row['first_name'] ?? '',
+            'last_name' => $row['nom'] ?? $row['last_name'] ?? '',
+            'phone' => $row['telephone'] ?? $row['phone'] ?? null,
+            'formation_souhaitee' => $row['formation'] ?? $row['formation_souhaitee'] ?? null,
+        ]);
+
+        if (!$candidate->exists) {
+            $candidate->added_by = 'excel';
+        }
+
+        return $candidate;
     }
 
     public function rules(): array

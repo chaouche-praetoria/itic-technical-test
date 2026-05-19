@@ -69,6 +69,18 @@ const formatPhone = (phone) => {
     return p;
 };
 
+const sourceClass = (source) => ({
+    manual: 'bg-slate-50 text-slate-600 border-slate-200/60',
+    excel: 'bg-emerald-50 text-emerald-600 border-emerald-200/60',
+    hubspot: 'bg-orange-50 text-orange-600 border-orange-200/60',
+}[source] || 'bg-slate-50 text-slate-600 border-slate-200/60');
+
+const sourceLabel = (source) => ({
+    manual: 'Manuel',
+    excel: 'Excel',
+    hubspot: 'HubSpot',
+}[source] || 'Manuel');
+
 function deleteCandidate(candidate) {
     if (confirm(`Êtes-vous sûr de vouloir supprimer le dossier de ${candidate.first_name} ${candidate.last_name} ?`)) {
         router.delete(route('admin.candidates.destroy', candidate.id));
@@ -131,6 +143,7 @@ function deleteCandidate(candidate) {
                                 <tr class="bg-slate-50/50 text-slate-400 text-[10px] uppercase tracking-widest font-bold">
                                     <th class="px-6 py-4 text-left border-b border-slate-100 uppercase">Candidat</th>
                                     <th class="px-6 py-4 text-left border-b border-slate-100 uppercase">Contact</th>
+                                    <th class="px-6 py-4 text-center border-b border-slate-100 uppercase">Origine</th>
                                     <th class="px-6 py-4 text-center border-b border-slate-100 uppercase">Sessions</th>
                                     <th class="px-6 py-4 text-center border-b border-slate-100 uppercase">Note</th>
                                     <th class="px-6 py-4 text-left border-b border-slate-100 uppercase">Inscrit le</th>
@@ -139,7 +152,7 @@ function deleteCandidate(candidate) {
                             </thead>
                             <tbody class="divide-y divide-slate-50">
                                 <tr v-if="candidates.data.length === 0">
-                                    <td colspan="5" class="px-8 py-20 text-center text-slate-300 font-medium italic">Aucun candidat trouvé</td>
+                                    <td colspan="7" class="px-8 py-20 text-center text-slate-300 font-medium italic">Aucun candidat trouvé</td>
                                 </tr>
                                 <tr v-for="c in candidates.data" :key="c.id" class="hover:bg-slate-50/80 transition-all group">
                                     <td class="px-6 py-4">
@@ -161,6 +174,11 @@ function deleteCandidate(candidate) {
                                             </a>
                                             <span v-else class="text-slate-300">—</span>
                                         </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <span :class="sourceClass(c.added_by)" class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border">
+                                            {{ sourceLabel(c.added_by) }}
+                                        </span>
                                     </td>
                                     <td class="px-6 py-4 text-center">
                                         <div class="inline-flex size-8 rounded-lg bg-slate-50 text-slate-500 items-center justify-center font-bold border border-slate-100 text-xs">

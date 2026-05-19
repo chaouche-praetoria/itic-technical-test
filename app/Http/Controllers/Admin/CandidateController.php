@@ -94,6 +94,7 @@ class CandidateController extends Controller
             'phone' => 'nullable|string|max:20',
         ]);
 
+        $validated['added_by'] = 'manual';
         $candidate = Candidate::create($validated);
         return redirect()->route('admin.candidates.show', $candidate)->with('success', 'Candidat créé.');
     }
@@ -393,6 +394,7 @@ class CandidateController extends Controller
                 $candidate->update($candidateData);
                 $updatedCount++;
             } else {
+                $candidateData['added_by'] = 'hubspot';
                 Candidate::create($candidateData);
                 $createdCount++;
             }

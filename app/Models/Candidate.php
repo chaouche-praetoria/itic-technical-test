@@ -17,7 +17,8 @@ class Candidate extends Model
         'formation_souhaitee_pour_ypareo',
         'score_test_technique',
         'resultat_test_technique',
-        'date_test_technique'
+        'date_test_technique',
+        'added_by'
     ];
 
     public function getFullNameAttribute(): string
