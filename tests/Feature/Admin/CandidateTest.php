@@ -130,4 +130,82 @@ class CandidateTest extends TestCase
             'added_by' => 'hubspot',
         ]);
     }
+
+    public function test_bulk_destroy_deletes_candidates(): void
+    {
+        $candidate1 = Candidate::create([
+            'first_name' => 'First1',
+            'last_name' => 'Last1',
+            'email' => 'first1@example.com',
+            'added_by' => 'manual',
+        ]);
+        $candidate2 = Candidate::create([
+            'first_name' => 'First2',
+            'last_name' => 'Last2',
+            'email' => 'first2@example.com',
+            'added_by' => 'manual',
+        ]);
+        $candidate3 = Candidate::create([
+            'first_name' => 'First3',
+            'last_name' => 'Last3',
+            'email' => 'first3@example.com',
+            'added_by' => 'manual',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post(route('admin.candidates.bulk-destroy'), [
+            'ids' => [$candidate1->id, $candidate2->id]
+        ]);
+
+        $response->assertRedirect();
+        
+        $this->assertDatabaseMissing('candidates', ['id' => $candidate1->id]);
+        $this->assertDatabaseMissing('candidates', ['id' => $candidate2->id]);
+        $this->assertDatabaseHas('candidates', ['id' => $candidate3->id]);
+    }
+
+    public function test_bulk_generate_link_generates_and_dispatches(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+
+        $domain = \App\Models\Domain::create(['name' => 'Test Domain']);
+        $template = \App\Models\TestTemplate::create([
+            'name' => 'Template A',
+            'domain_id' => $domain->id,
+            'is_active' => true,
+        ]);
+
+        $candidate1 = Candidate::create([
+            'first_name' => 'C1',
+            'last_name' => 'L1',
+            'email' => 'c1@example.com',
+            'added_by' => 'manual',
+        ]);
+        $candidate2 = Candidate::create([
+            'first_name' => 'C2',
+            'last_name' => 'L2',
+            'email' => 'c2@example.com',
+            'added_by' => 'manual',
+        ]);
+
+        $mockHubspot = $this->createMock(\App\Services\HubSpotService::class);
+        $mockHubspot->expects($this->exactly(2))
+            ->method('updateContact')
+            ->willReturn(true);
+        $this->instance(\App\Services\HubSpotService::class, $mockHubspot);
+
+        $response = $this->actingAs($this->admin)->post(route('admin.candidates.bulk-generate-link'), [
+            'ids' => [$candidate1->id, $candidate2->id],
+            'test_template_id' => $template->id,
+            'send_email' => true,
+            'sync_hubspot' => true,
+        ]);
+
+        $response->assertRedirect();
+        
+        // Assert session created
+        $this->assertCount(2, \App\Models\TestSession::all());
+
+        // Assert mail was sent
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\TestInvitationMail::class, 2);
+    }
 }

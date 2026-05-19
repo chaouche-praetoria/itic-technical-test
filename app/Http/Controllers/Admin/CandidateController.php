@@ -50,6 +50,8 @@ class CandidateController extends Controller
                     ->orWhere('last_name', 'like', "%{$request->search}%")
                     ->orWhere('email', 'like', "%{$request->search}%");
             }))
+            ->when($request->added_by, fn($q) => $q->where('added_by', $request->added_by))
+            ->when($request->formation_souhaitee, fn($q) => $q->where('formation_souhaitee', $request->formation_souhaitee))
             ->latest()
             ->paginate($perPage)
             ->withQueryString();
@@ -82,10 +84,23 @@ class CandidateController extends Controller
             'success_rate' => $successRate,
         ];
 
+        $formations = Candidate::whereNotNull('formation_souhaitee')
+            ->where('formation_souhaitee', '<>', '')
+            ->distinct()
+            ->orderBy('formation_souhaitee')
+            ->pluck('formation_souhaitee');
+
+        $templates = TestTemplate::where('is_active', true)->get(['id', 'name']);
+
         return Inertia::render('Admin/Candidates/Index', [
             'candidates' => $candidates,
-            'filters' => array_merge($request->only('search'), ['per_page' => $perPage]),
+            'filters' => array_merge(
+                $request->only('search', 'added_by', 'formation_souhaitee'),
+                ['per_page' => $perPage]
+            ),
             'stats' => $stats,
+            'formations' => $formations,
+            'templates' => $templates,
         ]);
     }
 
@@ -461,5 +476,64 @@ class CandidateController extends Controller
             Log::error('Import error: ' . $e->getMessage());
             return back()->with('error', 'Erreur lors de l\'importation : ' . $e->getMessage());
         }
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        Gate::authorize('manage-candidates');
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:candidates,id',
+        ]);
+
+        Candidate::whereIn('id', $request->ids)->delete();
+
+        return back()->with('success', 'Sélection de candidats supprimée.');
+    }
+
+    public function bulkGenerateLink(Request $request)
+    {
+        Gate::authorize('manage-candidates');
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:candidates,id',
+            'test_template_id' => 'required|exists:test_templates,id',
+            'send_email' => 'boolean',
+            'sync_hubspot' => 'boolean'
+        ]);
+
+        $template = TestTemplate::findOrFail($request->test_template_id);
+        $candidates = Candidate::whereIn('id', $request->ids)->get();
+
+        $successCount = 0;
+        foreach ($candidates as $candidate) {
+            try {
+                $session = $this->generator->generateSession($candidate, $template);
+
+                if ($request->sync_hubspot) {
+                    $this->hubspot->updateContact($candidate->email, [
+                        'resultat_test_technique' => '',
+                        'score_test_technique' => '',
+                        'date_test_technique' => '',
+                        'orientation_proposee' => '',
+                        'lien_test_technique' => route('test.start', $session->token),
+                    ]);
+                }
+
+                if ($request->send_email) {
+                    $session->load(['candidate', 'template.domain']);
+                    Mail::to($candidate->email)->send(new \App\Mail\TestInvitationMail($session));
+                }
+
+                $this->webhook->dispatch($session, 'test.link_generated');
+                $successCount++;
+            } catch (\Exception $e) {
+                Log::error("Failed to generate bulk session for candidate {$candidate->id}: " . $e->getMessage());
+            }
+        }
+
+        return back()->with('success', "Liens générés pour {$successCount} candidats avec succès.");
     }
 }

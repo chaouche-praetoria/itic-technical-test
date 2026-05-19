@@ -3,16 +3,34 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 
-const props = defineProps({ candidates: Object, filters: Object, stats: Object });
+const props = defineProps({
+    candidates: Object,
+    filters: Object,
+    stats: Object,
+    formations: Array,
+    templates: Array
+});
 
 const search = ref(props.filters.search || '');
 const perPage = ref(props.filters.per_page || 20);
+const addedBy = ref(props.filters.added_by || '');
+const formationSouhaitee = ref(props.filters.formation_souhaitee || '');
+
+const selectedIds = ref([]);
 const showModal = ref(false);
 const showImportModal = ref(false);
+const showBulkSendModal = ref(false);
 const searching = ref(false);
 const syncing = ref(false);
+
 const form = useForm({ first_name: '', last_name: '', email: '', phone: '' });
 const importForm = useForm({ file: null });
+const bulkSendForm = useForm({
+    ids: [],
+    test_template_id: '',
+    send_email: true,
+    sync_hubspot: true,
+});
 
 function syncHubSpot() {
     syncing.value = true;
@@ -28,20 +46,63 @@ function applyFilters() {
     searchTimer = setTimeout(() => {
         router.get(
             route('admin.candidates.index'),
-            { search: search.value, per_page: perPage.value },
+            {
+                search: search.value,
+                per_page: perPage.value,
+                added_by: addedBy.value,
+                formation_souhaitee: formationSouhaitee.value
+            },
             { preserveState: true, replace: true, onFinish: () => { searching.value = false; } }
         );
     }, 400);
 }
 
-watch([search, perPage], applyFilters);
+watch([search, perPage, addedBy, formationSouhaitee], applyFilters);
 
 watch(() => props.filters, (newFilters) => {
     if (newFilters) {
         if (search.value !== (newFilters.search || '')) search.value = newFilters.search || '';
         if (perPage.value !== (newFilters.per_page || 20)) perPage.value = newFilters.per_page || 20;
+        if (addedBy.value !== (newFilters.added_by || '')) addedBy.value = newFilters.added_by || '';
+        if (formationSouhaitee.value !== (newFilters.formation_souhaitee || '')) formationSouhaitee.value = newFilters.formation_souhaitee || '';
     }
 }, { deep: true });
+
+function toggleAll() {
+    if (selectedIds.value.length === props.candidates.data.length) {
+        selectedIds.value = [];
+    } else {
+        selectedIds.value = props.candidates.data.map(c => c.id);
+    }
+}
+
+function bulkDelete() {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer les ${selectedIds.value.length} candidats sélectionnés ?`)) {
+        router.post(route('admin.candidates.bulk-destroy'), {
+            ids: selectedIds.value
+        }, {
+            onSuccess: () => {
+                selectedIds.value = [];
+            }
+        });
+    }
+}
+
+function openBulkSend() {
+    bulkSendForm.test_template_id = '';
+    showBulkSendModal.value = true;
+}
+
+function submitBulkSend() {
+    bulkSendForm.ids = selectedIds.value;
+    bulkSendForm.post(route('admin.candidates.bulk-generate-link'), {
+        onSuccess: () => {
+            showBulkSendModal.value = false;
+            selectedIds.value = [];
+            bulkSendForm.reset();
+        }
+    });
+}
 
 function submit() {
     form.post(route('admin.candidates.store'), {
@@ -179,11 +240,9 @@ const cleanLabel = (label) => {
                             <p class="text-xl font-extrabold text-slate-900">{{ stats.success_rate }}%</p>
                         </div>
                     </div>
-                </div>
-
-                <!-- Search Section -->
-                <div class="premium-card p-4 glass-card">
-                    <div class="relative max-w-md">
+                         <!-- Search & Filters Section -->
+                <div class="premium-card p-4 glass-card flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="relative flex-1 max-w-md">
                         <input v-model="search" type="text" placeholder="Rechercher un candidat..."
                             class="w-full bg-slate-50 border-none rounded-lg px-4 py-2 text-xs focus:ring-2 focus:ring-indigo-500/20 transition-all pl-10 font-medium text-slate-700" />
                         <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
@@ -194,6 +253,26 @@ const cleanLabel = (label) => {
                             <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                         </button>
                     </div>
+                    <div class="flex items-center gap-3">
+                        <!-- Origin Filter -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider hidden sm:inline">Origine :</span>
+                            <select v-model="addedBy" class="h-9 px-3 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 bg-white focus:border-indigo-500 focus:ring-0 focus:outline-none transition-all cursor-pointer shadow-sm">
+                                <option value="">Toutes les origines</option>
+                                <option value="manual">Manuel</option>
+                                <option value="excel">Excel</option>
+                                <option value="hubspot">HubSpot</option>
+                            </select>
+                        </div>
+
+                        <!-- Formation Filter -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider hidden sm:inline">Formation :</span>
+                            <select v-model="formationSouhaitee" class="h-9 px-3 max-w-[200px] rounded-lg border border-slate-200 text-xs font-bold text-slate-600 bg-white focus:border-indigo-500 focus:ring-0 focus:outline-none transition-all cursor-pointer shadow-sm">
+                                <option value="">Toutes les formations</option>
+                                <option v-for="f in formations" :key="f" :value="f">{{ f }}</option>
+                            </select>
+                       </div>
                 </div>
 
                 <!-- Table Section -->
@@ -202,6 +281,12 @@ const cleanLabel = (label) => {
                         <table class="w-full text-[13px] border-collapse">
                             <thead>
                                 <tr class="bg-slate-50/50 text-slate-400 text-[10px] uppercase tracking-widest font-bold">
+                                    <th class="pl-6 py-4 text-left border-b border-slate-100 w-10">
+                                        <input type="checkbox"
+                                            :checked="selectedIds.length === candidates.data.length && candidates.data.length > 0"
+                                            @change="toggleAll"
+                                            class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20 cursor-pointer transition-all" />
+                                    </th>
                                     <th class="px-6 py-4 text-left border-b border-slate-100 uppercase">Candidat</th>
                                     <th class="px-6 py-4 text-left border-b border-slate-100 uppercase">Contact</th>
                                     <th class="px-6 py-4 text-center border-b border-slate-100 uppercase">Origine</th>
@@ -213,9 +298,15 @@ const cleanLabel = (label) => {
                             </thead>
                             <tbody class="divide-y divide-slate-50">
                                 <tr v-if="candidates.data.length === 0">
-                                    <td colspan="7" class="px-8 py-20 text-center text-slate-300 font-medium italic">Aucun candidat trouvé</td>
+                                    <td colspan="8" class="px-8 py-20 text-center text-slate-300 font-medium italic">Aucun candidat trouvé</td>
                                 </tr>
-                                <tr v-for="c in candidates.data" :key="c.id" class="hover:bg-slate-50/80 transition-all group">
+                                <tr v-for="c in candidates.data" :key="c.id" :class="[selectedIds.includes(c.id) ? 'bg-indigo-50/30' : '', 'hover:bg-slate-50/80 transition-all group']">
+                                    <td class="pl-6 py-4 w-10">
+                                        <input type="checkbox"
+                                            :value="c.id"
+                                            v-model="selectedIds"
+                                            class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20 cursor-pointer transition-all" />
+                                    </td>
                                     <td class="px-6 py-4">
                                         <div class="flex items-center gap-3">
                                             <div class="size-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-all text-xs">
@@ -405,5 +496,92 @@ const cleanLabel = (label) => {
                 </form>
             </div>
         </div>
+
+        <!-- Bulk Send Modal -->
+        <div v-if="showBulkSendModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl animate-reveal border border-slate-100">
+                <div class="mb-6">
+                    <h3 class="text-2xl font-bold text-slate-900 mb-1">Inviter la sélection</h3>
+                    <p class="text-sm text-slate-500 font-medium">Générez et envoyez un test technique pour les {{ selectedIds.length }} candidats sélectionnés.</p>
+                </div>
+                <form @submit.prevent="submitBulkSend" class="space-y-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Modèle de test</label>
+                        <select v-model="bulkSendForm.test_template_id" required
+                            class="w-full bg-slate-50 border-none rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium">
+                            <option value="">Sélectionnez un modèle de test</option>
+                            <option v-for="t in templates" :key="t.id" :value="t.id">{{ t.name }}</option>
+                        </select>
+                        <p v-if="bulkSendForm.errors.test_template_id" class="text-rose-500 text-xs mt-2 ml-1 font-bold">{{ bulkSendForm.errors.test_template_id }}</p>
+                    </div>
+
+                    <div class="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" v-model="bulkSendForm.send_email"
+                                class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20 cursor-pointer transition-all" />
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-slate-700">Envoyer l'invitation par email</span>
+                                <span class="text-[10px] text-slate-400 font-medium">Chaque candidat recevra un email personnalisé contenant son lien d'accès.</span>
+                            </div>
+                        </label>
+
+                        <div class="h-px bg-slate-200/60 my-2"></div>
+
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" v-model="bulkSendForm.sync_hubspot"
+                                class="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20 cursor-pointer transition-all" />
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-slate-700">Synchroniser avec HubSpot</span>
+                                <span class="text-[10px] text-slate-400 font-medium">Mettre à jour le contact HubSpot avec le lien du test généré.</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="flex gap-4 pt-4">
+                        <button type="button" @click="showBulkSendModal = false"
+                            class="flex-1 px-6 py-4 text-sm font-bold text-slate-600 bg-slate-100 rounded-2xl hover:bg-slate-200 transition-all active:scale-[0.98]">
+                            Annuler
+                        </button>
+                        <button type="submit" :disabled="bulkSendForm.processing || !bulkSendForm.test_template_id"
+                            class="flex-1 px-6 py-4 text-sm font-bold text-white bg-slate-900 rounded-2xl hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 disabled:opacity-50 active:scale-[0.98]">
+                            {{ bulkSendForm.processing ? 'Envoi...' : 'Envoyer les tests' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sliding Bulk Actions Toolbar -->
+        <transition
+            enter-active-class="transform ease-out duration-300 transition"
+            enter-from-class="translate-y-12 opacity-0"
+            enter-to-class="translate-y-0 opacity-100"
+            leave-active-class="transform ease-in duration-200 transition"
+            leave-from-class="translate-y-0 opacity-100"
+            leave-to-class="translate-y-12 opacity-0"
+        >
+            <div v-if="selectedIds.length > 0" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white rounded-2xl px-6 py-4 flex items-center gap-6 shadow-2xl border border-slate-800 backdrop-blur-md">
+                <div class="flex items-center gap-2">
+                    <span class="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-[11px] font-black animate-pulse">
+                        {{ selectedIds.length }}
+                    </span>
+                    <span class="text-xs font-bold text-slate-300">sélectionné(s)</span>
+                </div>
+                <div class="h-4 w-px bg-slate-800"></div>
+                <div class="flex items-center gap-2">
+                    <button @click="openBulkSend" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2 px-4 rounded-xl transition-all shadow-lg shadow-indigo-600/30 flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98]">
+                        <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                        Envoyer un test
+                    </button>
+                    <button @click="bulkDelete" class="bg-rose-600/10 hover:bg-rose-600 text-rose-400 hover:text-white font-bold text-xs py-2 px-4 rounded-xl transition-all flex items-center gap-2">
+                        <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        Supprimer
+                    </button>
+                    <button @click="selectedIds = []" class="text-slate-400 hover:text-white font-bold text-xs py-2 px-3 rounded-xl transition-all">
+                        Annuler
+                    </button>
+                </div>
+            </div>
+        </transition>
     </Teleport>
 </template>

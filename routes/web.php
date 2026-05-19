@@ -72,6 +72,8 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::resource('templates', TestTemplateController::class)->except(['show']);
 
     // Candidates
+    Route::post('/candidates/bulk-destroy', [CandidateController::class, 'bulkDestroy'])->name('candidates.bulk-destroy');
+    Route::post('/candidates/bulk-generate-link', [CandidateController::class, 'bulkGenerateLink'])->name('candidates.bulk-generate-link');
     Route::get('/candidates', [CandidateController::class, 'index'])->name('candidates.index');
     Route::post('/candidates/refresh-all', [CandidateController::class, 'syncFromHubSpot'])->name('candidates.sync-hubspot');
     Route::post('/candidates/import', [CandidateController::class, 'import'])->name('candidates.import');
