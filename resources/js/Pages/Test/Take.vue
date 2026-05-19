@@ -22,6 +22,7 @@ const executionResult = ref(null);
 const tabWarnings = ref(0);
 const copyPasteWarnings = ref(0);
 const showFocusModal = ref(false);
+const showSubmitModal = ref(false);
 
 const currentQuestion = computed(() => props.questions[currentIndex.value] || null);
 const progress = computed(() => {
@@ -280,9 +281,7 @@ async function submitTest() {
 }
 
 function confirmSubmit() {
-    if (confirm('Êtes-vous sûr de vouloir soumettre votre test ? Cette action est irréversible.')) {
-        submitTest();
-    }
+    showSubmitModal.value = true;
 }
 
 const answeredCount = computed(() => Object.keys(answers.value).length);
@@ -595,6 +594,31 @@ const answeredCount = computed(() => Object.keys(answers.value).length);
                 <button @click="showFocusModal = false" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl shadow-slate-200">
                     Revenir au test
                 </button>
+            </div>
+        </div>
+
+        <!-- Custom Submit Confirmation Modal -->
+        <div v-if="showSubmitModal" class="fixed inset-0 z-[100] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-6 text-center animate-reveal">
+            <div class="bg-white rounded-[2.5rem] p-12 max-w-lg shadow-2xl w-full">
+                <div class="size-20 bg-indigo-50 rounded-2xl flex items-center justify-center mx-auto mb-8 text-indigo-600">
+                    <svg class="size-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900 mb-4">Soumission du test</h2>
+                <p class="text-slate-600 font-medium leading-relaxed mb-8">
+                    Êtes-vous sûr de vouloir soumettre votre test ? <br>
+                    <span class="text-rose-600 font-semibold">Cette action est définitive et irréversible.</span>
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button @click="showSubmitModal = false" :disabled="submitting" class="flex-1 bg-slate-100 text-slate-700 py-4 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-[0.98] disabled:opacity-50">
+                        Annuler
+                    </button>
+                    <button @click="submitTest" :disabled="submitting" class="flex-1 bg-rose-600 text-white py-4 rounded-2xl font-bold text-sm uppercase tracking-widest hover:bg-rose-700 transition-all shadow-xl shadow-rose-200 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50">
+                        <div v-if="submitting" class="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0"></div>
+                        {{ submitting ? 'Soumission...' : 'Oui, soumettre' }}
+                    </button>
+                </div>
             </div>
         </div>
     </div>

@@ -23,32 +23,19 @@ const grade = () => {
     <Head title="Test terminé" />
     <div class="min-h-screen bg-gradient-to-br from-indigo-50 to-white flex items-center justify-center px-4">
         <div class="bg-white rounded-2xl shadow-lg p-10 max-w-md w-full text-center">
-            <div class="text-6xl mb-4">🎉</div>
+            <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6 text-green-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
             <h1 class="text-2xl font-bold text-gray-800 mb-2">Test terminé !</h1>
-            <p class="text-gray-500 mb-8">Merci {{ candidate }}, votre test a été soumis avec succès.</p>
+            <p class="text-gray-600 mb-6">Merci <span class="font-semibold text-gray-800">{{ candidate }}</span>, votre test technique a été soumis avec succès.</p>
 
-            <div class="bg-indigo-50 rounded-xl p-6 mb-6">
-                <div class="text-5xl font-bold mb-1" :class="grade().color">{{ score }}%</div>
-                <div class="text-sm font-medium" :class="grade().color">{{ grade().label }}</div>
+            <div class="border-t border-gray-100 pt-6">
+                <p class="text-gray-500 leading-relaxed">
+                    Le service concerné a bien reçu vos réponses et reviendra vers vous rapidement pour la suite de votre candidature.
+                </p>
             </div>
-
-            <div class="grid grid-cols-2 gap-4 text-sm mb-4">
-                <div class="bg-gray-50 rounded-lg p-3">
-                    <div class="font-bold text-gray-800">{{ correct_answers }}/{{ total_questions }}</div>
-                    <div class="text-gray-500 text-xs">Correctes</div>
-                </div>
-                <div class="bg-gray-50 rounded-lg p-3">
-                    <div class="font-bold text-gray-800">{{ Math.round(duration_seconds / 60) }}min</div>
-                    <div class="text-gray-500 text-xs">Durée</div>
-                </div>
-            </div>
-
-            <div v-if="points_total" class="bg-indigo-50 rounded-xl p-4 mb-6 text-center">
-                <div class="text-3xl font-bold text-indigo-700">{{ points_earned }} / {{ points_total }}</div>
-                <div class="text-sm text-indigo-500 mt-1">points obtenus</div>
-            </div>
-
-            <p class="text-sm text-gray-500">Vos résultats ont été transmis à l'équipe de recrutement. Vous serez contacté prochainement.</p>
         </div>
     </div>
 </template>
