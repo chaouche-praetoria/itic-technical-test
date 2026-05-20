@@ -6,6 +6,7 @@ import { ref } from 'vue';
 const props = defineProps({ candidate: Object, sessions: Array, templates: Array, hubspot_portal_id: String });
 
 const showLinkModal = ref(false);
+const showHubspotDropdown = ref(false);
 const generatedLink = ref('');
 const linkForm = useForm({ 
     test_template_id: '',
@@ -121,63 +122,96 @@ function deleteCandidate() {
     <Head :title="`Candidat: ${candidate.first_name} ${candidate.last_name}`" />
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
-                <div class="flex items-center gap-4">
-                    <div class="size-14 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-bold text-xl shadow-xl shadow-slate-200">
-                        {{ candidate.first_name[0] }}{{ candidate.last_name[0] }}
-                    </div>
-                    <div>
-                        <div class="flex items-center gap-3">
-                            <h2 class="text-2xl font-bold text-slate-900 tracking-tight">{{ candidate.first_name }} {{ candidate.last_name }}</h2>
-                            <span :class="sourceClass(candidate.added_by)" class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 w-full">
+                <!-- Breadcrumbs & Candidate Info -->
+                <div class="flex items-center gap-3.5 min-w-0">
+                    <Link :href="route('admin.candidates.index')" 
+                        class="group flex items-center justify-center size-9 rounded-xl bg-white border border-slate-200/80 text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-all shrink-0 shadow-sm">
+                        <svg class="size-4 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                        </svg>
+                    </Link>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h2 class="text-lg font-black text-slate-900 tracking-tight truncate">{{ candidate.first_name }} {{ candidate.last_name }}</h2>
+                            <span :class="sourceClass(candidate.added_by)" class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider border shrink-0">
                                 {{ sourceLabel(candidate.added_by) }}
-                            </span>
-                        </div>
-                        <div class="flex items-center gap-3 mt-1">
-                            <span class="text-sm text-slate-500 font-medium flex items-center gap-1">
-                                <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                                {{ candidate.email }}
                             </span>
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center gap-3">
-                    <!-- synchronization individuelles (Pull) -->
-                    <button @click="syncCandidateFromHubSpot" 
-                        :disabled="syncingFromHubSpot"
-                        title="Récupérer les dernières infos de HubSpot"
-                        class="bg-white text-emerald-600 border border-emerald-100 p-2.5 rounded-xl hover:bg-emerald-50 font-bold text-sm shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center disabled:opacity-50">
-                        <svg :class="{ 'animate-spin': syncingFromHubSpot }" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                            <path v-if="!syncingFromHubSpot" stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
-                            <path v-else stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2 A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                    </button>
-                    <!-- synchronisation individuelles (Push) -->
-                    <button @click="syncCandidateToHubSpot" 
-                        :disabled="syncingHubSpot"
-                        title="Envoyer les scores vers HubSpot"
-                        class="bg-white text-indigo-600 border border-indigo-100 px-5 py-2.5 rounded-xl hover:bg-indigo-50 font-bold text-sm shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 w-fit disabled:opacity-50">
-                        <svg :class="{ 'animate-spin': syncingHubSpot }" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                        Mise à jour HubSpot
-                    </button>
-                    <a v-if="candidate.hubspot_id" 
-                        :href="`https://app.hubspot.com/contacts/${hubspot_portal_id}/record/0-1/${candidate.hubspot_id}`" 
-                        target="_blank"
-                        title="Ouvrir le profil HubSpot"
-                        class="bg-white text-orange-600 border border-orange-100 px-5 py-2.5 rounded-xl hover:bg-orange-50 font-bold text-sm shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 w-fit">
-                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                        </svg>
-                        Profil HubSpot
-                    </a>
+                
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-2 shrink-0">
+                    <!-- HubSpot Actions Dropdown -->
+                    <div class="relative">
+                        <!-- Dropdown Trigger -->
+                        <button @click="showHubspotDropdown = !showHubspotDropdown" 
+                            class="bg-white text-orange-600 border border-orange-100 px-4 py-2 rounded-xl hover:bg-orange-50/50 font-bold text-xs shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 h-9">
+                            <span class="size-2 rounded-full shrink-0" :class="candidate.hubspot_id ? 'bg-orange-500 animate-pulse' : 'bg-slate-300'"></span>
+                            <span class="font-bold">HubSpot</span>
+                            <svg class="size-3 text-orange-400 transition-transform duration-200" :class="{ 'rotate-180': showHubspotDropdown }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                            </svg>
+                        </button>
+                        
+                        <!-- Dropdown Overlay -->
+                        <div v-if="showHubspotDropdown" class="fixed inset-0 z-40" @click="showHubspotDropdown = false"></div>
+                        
+                        <!-- Dropdown Content -->
+                        <div v-if="showHubspotDropdown" 
+                            class="absolute right-0 mt-2 w-56 rounded-2xl bg-white border border-slate-100 p-1.5 shadow-xl z-50 animate-reveal">
+                            <!-- Pull (Get from HS) -->
+                            <button @click="syncCandidateFromHubSpot(); showHubspotDropdown = false" 
+                                :disabled="syncingFromHubSpot"
+                                class="w-full text-left px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 font-bold text-xs flex items-center gap-2.5 transition-colors disabled:opacity-50">
+                                <svg :class="{ 'animate-spin': syncingFromHubSpot }" class="size-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path v-if="!syncingFromHubSpot" stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                    <path v-else stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                </svg>
+                                <span class="font-bold text-slate-700">Importer les infos</span>
+                            </button>
+                            <!-- Push (Send to HS) -->
+                            <button @click="syncCandidateToHubSpot(); showHubspotDropdown = false" 
+                                :disabled="syncingHubSpot"
+                                class="w-full text-left px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 font-bold text-xs flex items-center gap-2.5 transition-colors disabled:opacity-50">
+                                <svg :class="{ 'animate-spin': syncingHubSpot }" class="size-4 text-indigo-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path v-if="!syncingHubSpot" stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                                    <path v-else stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                </svg>
+                                <span class="font-bold text-slate-700">Exporter les scores</span>
+                            </button>
+                            <!-- Divider if link exists -->
+                            <div v-if="candidate.hubspot_id" class="h-px bg-slate-100 my-1"></div>
+                            <!-- external link -->
+                            <a v-if="candidate.hubspot_id" 
+                                :href="`https://app.hubspot.com/contacts/${hubspot_portal_id}/record/0-1/${candidate.hubspot_id}`" 
+                                target="_blank"
+                                @click="showHubspotDropdown = false"
+                                class="w-full text-left px-3 py-2.5 rounded-xl text-slate-700 hover:bg-slate-50 font-bold text-xs flex items-center gap-2.5 transition-colors">
+                                <svg class="size-4 text-orange-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                </svg>
+                                <span class="font-bold text-slate-700">Profil HubSpot</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Nouveau Test Button -->
                     <button @click="showLinkModal = true" 
-                        class="bg-slate-900 text-white px-5 py-2.5 rounded-xl hover:bg-slate-800 font-bold text-sm shadow-xl shadow-slate-200 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 w-fit">
-                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                        class="bg-slate-900 text-white px-4 py-2 rounded-xl hover:bg-slate-800 font-bold text-xs shadow-md transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 h-9">
+                        <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                        </svg>
                         Nouveau test
                     </button>
+
+                    <!-- Delete Button -->
                     <button @click="deleteCandidate" 
-                        class="bg-rose-50 text-rose-600 border border-rose-100 px-4 py-2.5 rounded-xl hover:bg-rose-100 font-bold text-sm transition-all flex items-center justify-center gap-2">
-                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        class="bg-rose-50 text-rose-600 border border-rose-100 px-3.5 py-2 rounded-xl hover:bg-rose-100 font-bold text-xs transition-all flex items-center justify-center gap-1.5 h-9">
+                        <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
                         Supprimer
                     </button>
                 </div>
