@@ -208,4 +208,68 @@ class CandidateTest extends TestCase
         // Assert mail was sent
         \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\TestInvitationMail::class, 2);
     }
+
+    public function test_can_filter_candidates_by_test_session_presence(): void
+    {
+        $domain = \App\Models\Domain::create(['name' => 'Tech']);
+        $template = \App\Models\TestTemplate::create([
+            'name' => 'Backend Test',
+            'domain_id' => $domain->id,
+            'is_active' => true,
+        ]);
+
+        $candidate1 = Candidate::create([
+            'first_name' => 'Has',
+            'last_name' => 'Session',
+            'email' => 'has.session@example.com',
+            'added_by' => 'manual',
+        ]);
+
+        $candidate2 = Candidate::create([
+            'first_name' => 'No',
+            'last_name' => 'Session',
+            'email' => 'no.session@example.com',
+            'added_by' => 'manual',
+        ]);
+
+        // Generate a session for candidate 1
+        \App\Models\TestSession::create([
+            'candidate_id' => $candidate1->id,
+            'test_template_id' => $template->id,
+            'token' => \Illuminate\Support\Str::random(40),
+            'status' => 'pending',
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        // 1. Filter with has_sessions = yes
+        $response = $this->actingAs($this->admin)->get(route('admin.candidates.index', [
+            'has_sessions' => 'yes'
+        ]));
+
+        $response->assertOk();
+        $inertiaData = $response->original->getData()['page']['props'];
+        $candidates = $inertiaData['candidates']['data'];
+        
+        $candidateIds = collect($candidates)->pluck('id')->all();
+        $this->assertContains($candidate1->id, $candidateIds);
+        $this->assertNotContains($candidate2->id, $candidateIds);
+
+        // 2. Filter with has_sessions = no
+        $response = $this->actingAs($this->admin)->get(route('admin.candidates.index', [
+            'has_sessions' => 'no'
+        ]));
+
+        $response->assertOk();
+        $inertiaData = $response->original->getData()['page']['props'];
+        $candidates = $inertiaData['candidates']['data'];
+        
+        $candidateIds = collect($candidates)->pluck('id')->all();
+        $this->assertContains($candidate2->id, $candidateIds);
+        $this->assertNotContains($candidate1->id, $candidateIds);
+
+        // 3. Assert correct stats are returned
+        $stats = $inertiaData['stats'];
+        $this->assertEquals(1, $stats['candidates_with_sessions']);
+        $this->assertEquals(1, $stats['candidates_without_sessions']);
+    }
 }

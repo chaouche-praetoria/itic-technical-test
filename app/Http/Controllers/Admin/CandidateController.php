@@ -52,6 +52,13 @@ class CandidateController extends Controller
             }))
             ->when($request->added_by, fn($q) => $q->where('added_by', $request->added_by))
             ->when($request->formation_souhaitee, fn($q) => $q->where('formation_souhaitee', $request->formation_souhaitee))
+            ->when($request->has_sessions, function ($q) use ($request) {
+                if ($request->has_sessions === 'yes') {
+                    $q->has('testSessions');
+                } elseif ($request->has_sessions === 'no') {
+                    $q->doesntHave('testSessions');
+                }
+            })
             ->latest()
             ->paginate($perPage)
             ->withQueryString();
@@ -77,11 +84,16 @@ class CandidateController extends Controller
             ? round(($passedCount / $completedCountWithScore) * 100, 1) 
             : 0;
 
+        $candidatesWithSessions = Candidate::has('testSessions')->count();
+        $candidatesWithoutSessions = Candidate::doesntHave('testSessions')->count();
+
         $stats = [
             'total_candidates' => $totalCandidates,
             'completed_sessions' => $completedSessions,
             'avg_score' => $avgScore,
             'success_rate' => $successRate,
+            'candidates_with_sessions' => $candidatesWithSessions,
+            'candidates_without_sessions' => $candidatesWithoutSessions,
         ];
 
         $formations = Candidate::whereNotNull('formation_souhaitee')
@@ -95,7 +107,7 @@ class CandidateController extends Controller
         return Inertia::render('Admin/Candidates/Index', [
             'candidates' => $candidates,
             'filters' => array_merge(
-                $request->only('search', 'added_by', 'formation_souhaitee'),
+                $request->only('search', 'added_by', 'formation_souhaitee', 'has_sessions'),
                 ['per_page' => $perPage]
             ),
             'stats' => $stats,

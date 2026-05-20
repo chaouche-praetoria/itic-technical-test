@@ -15,6 +15,7 @@ const search = ref(props.filters.search || '');
 const perPage = ref(props.filters.per_page || 20);
 const addedBy = ref(props.filters.added_by || '');
 const formationSouhaitee = ref(props.filters.formation_souhaitee || '');
+const hasSessions = ref(props.filters.has_sessions || '');
 
 const selectedIds = ref([]);
 const showModal = ref(false);
@@ -50,14 +51,15 @@ function applyFilters() {
                 search: search.value,
                 per_page: perPage.value,
                 added_by: addedBy.value,
-                formation_souhaitee: formationSouhaitee.value
+                formation_souhaitee: formationSouhaitee.value,
+                has_sessions: hasSessions.value
             },
             { preserveState: true, replace: true, onFinish: () => { searching.value = false; } }
         );
     }, 400);
 }
 
-watch([search, perPage, addedBy, formationSouhaitee], applyFilters);
+watch([search, perPage, addedBy, formationSouhaitee, hasSessions], applyFilters);
 
 watch(() => props.filters, (newFilters) => {
     if (newFilters) {
@@ -65,6 +67,7 @@ watch(() => props.filters, (newFilters) => {
         if (perPage.value !== (newFilters.per_page || 20)) perPage.value = newFilters.per_page || 20;
         if (addedBy.value !== (newFilters.added_by || '')) addedBy.value = newFilters.added_by || '';
         if (formationSouhaitee.value !== (newFilters.formation_souhaitee || '')) formationSouhaitee.value = newFilters.formation_souhaitee || '';
+        if (hasSessions.value !== (newFilters.has_sessions || '')) hasSessions.value = newFilters.has_sessions || '';
     }
 }, { deep: true });
 
@@ -202,9 +205,17 @@ const cleanLabel = (label) => {
                         <div class="size-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
                             <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                         </div>
-                        <div>
+                        <div class="flex-1">
                             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Candidats</p>
                             <p class="text-xl font-extrabold text-slate-900">{{ stats.total_candidates }}</p>
+                            <div class="flex items-center gap-1.5 mt-1 text-[9px] font-extrabold tracking-wider uppercase">
+                                <span class="text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+                                    {{ stats.candidates_with_sessions }} avec test
+                                </span>
+                                <span class="text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
+                                    {{ stats.candidates_without_sessions }} sans test
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -275,6 +286,16 @@ const cleanLabel = (label) => {
                                 <option v-for="f in formations" :key="f" :value="f">{{ f }}</option>
                             </select>
                        </div>
+
+                        <!-- Sessions Filter -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider hidden sm:inline">Sessions :</span>
+                            <select v-model="hasSessions" class="h-9 px-3 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 bg-white focus:border-indigo-500 focus:ring-0 focus:outline-none transition-all cursor-pointer shadow-sm">
+                                <option value="">Toutes</option>
+                                <option value="yes">Avec session(s)</option>
+                                <option value="no">Sans session</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
