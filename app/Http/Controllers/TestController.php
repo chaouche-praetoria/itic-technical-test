@@ -212,16 +212,27 @@ class TestController extends Controller
             'duration_seconds' => now()->diffInSeconds($session->started_at),
         ]);
 
-        if ($status === 'completed' && $session->candidate && $session->candidate->email) {
+        if ($session->candidate && $session->candidate->email) {
             $scoreStr = number_format($session->score, 2);
-            $resultLabel = $session->score >= 70 ? 'admis' : 'Echec - A requalifier';
+            $resultLabel = $status === 'completed'
+                ? ($session->score >= 70 ? 'admis' : 'Echec - A requalifier')
+                : 'En cours de correction';
             
-            $this->hubspot->updateContact($session->candidate->email, [
+            if ($session->candidate->added_by === 'hubspot') {
+                $this->hubspot->updateContact($session->candidate->email, [
+                    'score_test_technique' => $scoreStr,
+                    'resultat_test_technique' => $resultLabel,
+                    'date_test_technique' => now()->format('Y-m-d'),
+                    'orientation_proposee' => $this->scoring->getProposedOrientation($session),
+                    'lien_test_technique' => route('test.start', $session->token),
+                ]);
+            }
+
+            // Update candidate locally
+            $session->candidate->update([
                 'score_test_technique' => $scoreStr,
                 'resultat_test_technique' => $resultLabel,
                 'date_test_technique' => now()->format('Y-m-d'),
-                'orientation_proposee' => $this->scoring->getProposedOrientation($session),
-                'lien_test_technique' => route('test.start', $session->token),
             ]);
         }
 

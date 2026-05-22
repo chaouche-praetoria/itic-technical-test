@@ -296,13 +296,15 @@ class CandidateController extends Controller
             $scoreStr = number_format($session->score, 2);
             $resultLabel = $session->score >= 70 ? 'admis' : 'Echec - A requalifier';
             
-            $this->hubspot->updateContact($session->candidate->email, [
-                'score_test_technique' => $scoreStr,
-                'resultat_test_technique' => $resultLabel,
-                'date_test_technique' => now()->format('Y-m-d'),
-                'orientation_proposee' => $this->scoring->getProposedOrientation($session),
-                'lien_test_technique' => route('test.start', $session->token),
-            ]);
+            if ($session->candidate->added_by === 'hubspot') {
+                $this->hubspot->updateContact($session->candidate->email, [
+                    'score_test_technique' => $scoreStr,
+                    'resultat_test_technique' => $resultLabel,
+                    'date_test_technique' => now()->format('Y-m-d'),
+                    'orientation_proposee' => $this->scoring->getProposedOrientation($session),
+                    'lien_test_technique' => route('test.start', $session->token),
+                ]);
+            }
 
             // Update candidate locally
             $session->candidate->update([
@@ -320,6 +322,29 @@ class CandidateController extends Controller
         Gate::authorize('grade-sessions');
 
         $this->scoring->calculateSessionScores($session, true); // Force recalculate
+
+        // If the session is already completed, sync the recalculated score
+        if ($session->status === 'completed' && $session->candidate && $session->candidate->email) {
+            $scoreStr = number_format($session->score, 2);
+            $resultLabel = $session->score >= 70 ? 'admis' : 'Echec - A requalifier';
+            
+            if ($session->candidate->added_by === 'hubspot') {
+                $this->hubspot->updateContact($session->candidate->email, [
+                    'score_test_technique' => $scoreStr,
+                    'resultat_test_technique' => $resultLabel,
+                    'date_test_technique' => $session->completed_at ? $session->completed_at->format('Y-m-d') : now()->format('Y-m-d'),
+                    'orientation_proposee' => $this->scoring->getProposedOrientation($session),
+                    'lien_test_technique' => route('test.start', $session->token),
+                ]);
+            }
+
+            // Update candidate locally
+            $session->candidate->update([
+                'score_test_technique' => $scoreStr,
+                'resultat_test_technique' => $resultLabel,
+                'date_test_technique' => $session->completed_at ? $session->completed_at->format('Y-m-d') : now()->format('Y-m-d'),
+            ]);
+        }
 
         return back()->with('success', 'Score recalculé avec succès (incluant les QCM).');
     }
