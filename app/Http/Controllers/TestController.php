@@ -8,6 +8,7 @@ use App\Models\TestSessionAnswer;
 use App\Services\Judge0Service;
 use App\Services\WebhookService;
 use Illuminate\Http\Request;
+use App\Jobs\SyncCandidateToHubSpot;
 use Inertia\Inertia;
 
 class TestController extends Controller
@@ -219,7 +220,7 @@ class TestController extends Controller
                 : 'En cours de correction';
             
             if ($session->candidate->added_by === 'hubspot') {
-                $this->hubspot->updateContact($session->candidate->email, [
+                SyncCandidateToHubSpot::dispatch($session->candidate->email, [
                     'score_test_technique' => $scoreStr,
                     'resultat_test_technique' => $resultLabel,
                     'date_test_technique' => now()->format('Y-m-d'),
