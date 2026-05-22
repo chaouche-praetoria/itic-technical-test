@@ -111,15 +111,15 @@ class TestScoringService
 
         // Success (>= 70): No downgrade
         if ($session->score >= 70) {
-            return $primaryLevel->name;
+            return $primaryLevel->slug;
         }
 
         // Failure (< 70): Dynamic downgrade logic
         if ($primaryLevel->fallbackLevel) {
-            return $primaryLevel->fallbackLevel->name;
+            return $primaryLevel->fallbackLevel->slug;
         }
 
         // Default to primary level name if no fallback is defined
-        return $primaryLevel->name;
+        return $primaryLevel->slug;
     }
 }
