@@ -272,4 +272,162 @@ class CandidateTest extends TestCase
         $this->assertEquals(1, $stats['candidates_with_sessions']);
         $this->assertEquals(1, $stats['candidates_without_sessions']);
     }
+
+    public function test_can_filter_candidates_by_test_completed_status(): void
+    {
+        $domain = \App\Models\Domain::create(['name' => 'Tech']);
+        $template = \App\Models\TestTemplate::create([
+            'name' => 'Backend Test',
+            'domain_id' => $domain->id,
+            'is_active' => true,
+        ]);
+
+        $candidate1 = Candidate::create([
+            'first_name' => 'Done',
+            'last_name' => 'Test',
+            'email' => 'done.test@example.com',
+            'added_by' => 'manual',
+        ]);
+
+        $candidate2 = Candidate::create([
+            'first_name' => 'NotDone',
+            'last_name' => 'Test',
+            'email' => 'notdone.test@example.com',
+            'added_by' => 'manual',
+        ]);
+
+        // Completed session for candidate 1
+        \App\Models\TestSession::create([
+            'candidate_id' => $candidate1->id,
+            'test_template_id' => $template->id,
+            'token' => \Illuminate\Support\Str::random(40),
+            'status' => 'completed',
+            'score' => 85,
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        // Pending session for candidate 2 (not yet completed)
+        \App\Models\TestSession::create([
+            'candidate_id' => $candidate2->id,
+            'test_template_id' => $template->id,
+            'token' => \Illuminate\Support\Str::random(40),
+            'status' => 'pending',
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        // 1. Filter with test_completed = yes
+        $response = $this->actingAs($this->admin)->get(route('admin.candidates.index', [
+            'test_completed' => 'yes'
+        ]));
+
+        $response->assertOk();
+        $inertiaData = $response->original->getData()['page']['props'];
+        $candidates = $inertiaData['candidates']['data'];
+        
+        $candidateIds = collect($candidates)->pluck('id')->all();
+        $this->assertContains($candidate1->id, $candidateIds);
+        $this->assertNotContains($candidate2->id, $candidateIds);
+
+        // 2. Filter with test_completed = no
+        $response = $this->actingAs($this->admin)->get(route('admin.candidates.index', [
+            'test_completed' => 'no'
+        ]));
+
+        $response->assertOk();
+        $inertiaData = $response->original->getData()['page']['props'];
+        $candidates = $inertiaData['candidates']['data'];
+        
+        $candidateIds = collect($candidates)->pluck('id')->all();
+        $this->assertContains($candidate2->id, $candidateIds);
+        $this->assertNotContains($candidate1->id, $candidateIds);
+    }
+
+    public function test_bulk_sync_to_hubspot_updates_candidates_on_hubspot(): void
+    {
+        $domain = \App\Models\Domain::create(['name' => 'Tech']);
+        $template = \App\Models\TestTemplate::create([
+            'name' => 'Backend Test',
+            'domain_id' => $domain->id,
+            'is_active' => true,
+        ]);
+
+        $candidate1 = Candidate::create([
+            'first_name' => 'Hub1',
+            'last_name' => 'Smith',
+            'email' => 'hub1@example.com',
+            'added_by' => 'hubspot',
+        ]);
+
+        $candidate2 = Candidate::create([
+            'first_name' => 'Hub2',
+            'last_name' => 'Jones',
+            'email' => 'hub2@example.com',
+            'added_by' => 'hubspot',
+        ]);
+
+        // Non-HubSpot candidate (should be ignored by bulk sync)
+        $candidate3 = Candidate::create([
+            'first_name' => 'Manual',
+            'last_name' => 'Doe',
+            'email' => 'manual@example.com',
+            'added_by' => 'manual',
+        ]);
+
+        // Completed graded session for candidate 1
+        $session1 = \App\Models\TestSession::create([
+            'candidate_id' => $candidate1->id,
+            'test_template_id' => $template->id,
+            'token' => \Illuminate\Support\Str::random(40),
+            'status' => 'completed',
+            'score' => 85.5,
+            'completed_at' => now(),
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        // Pending session (ungraded/uncompleted) for candidate 2
+        $session2 = \App\Models\TestSession::create([
+            'candidate_id' => $candidate2->id,
+            'test_template_id' => $template->id,
+            'token' => \Illuminate\Support\Str::random(40),
+            'status' => 'pending',
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        $mockHubspot = $this->createMock(\App\Services\HubSpotService::class);
+        
+        // Expect exact property payloads to be synced
+        $mockHubspot->expects($this->exactly(2))
+            ->method('updateContact')
+            ->willReturnCallback(function ($email, $properties) use ($candidate1, $candidate2, $session1, $session2) {
+                if ($email === $candidate1->email) {
+                    $this->assertEquals('85.50', $properties['score_test_technique']);
+                    $this->assertEquals('admis', $properties['resultat_test_technique']);
+                    $this->assertEquals(route('test.start', $session1->token), $properties['lien_test_technique']);
+                    return true;
+                }
+                if ($email === $candidate2->email) {
+                    $this->assertEquals('', $properties['score_test_technique']);
+                    $this->assertEquals('', $properties['resultat_test_technique']);
+                    $this->assertEquals(route('test.start', $session2->token), $properties['lien_test_technique']);
+                    return true;
+                }
+                $this->fail("Unexpected email synced: " . $email);
+            });
+
+        $this->instance(\App\Services\HubSpotService::class, $mockHubspot);
+
+        $response = $this->actingAs($this->admin)->post(route('admin.candidates.bulk-sync-hubspot'), [
+            'ids' => [$candidate1->id, $candidate2->id, $candidate3->id]
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        // Check local database updates for candidate 1
+        $this->assertDatabaseHas('candidates', [
+            'id' => $candidate1->id,
+            'score_test_technique' => '85.50',
+            'resultat_test_technique' => 'admis',
+        ]);
+    }
 }

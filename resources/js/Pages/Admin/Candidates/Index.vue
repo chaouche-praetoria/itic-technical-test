@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 
 const props = defineProps({
     candidates: Object,
@@ -16,6 +16,7 @@ const perPage = ref(props.filters.per_page || 20);
 const addedBy = ref(props.filters.added_by || '');
 const formationSouhaitee = ref(props.filters.formation_souhaitee || '');
 const hasSessions = ref(props.filters.has_sessions || '');
+const testCompleted = ref(props.filters.test_completed || '');
 
 const selectedIds = ref([]);
 const showModal = ref(false);
@@ -52,14 +53,15 @@ function applyFilters() {
                 per_page: perPage.value,
                 added_by: addedBy.value,
                 formation_souhaitee: formationSouhaitee.value,
-                has_sessions: hasSessions.value
+                has_sessions: hasSessions.value,
+                test_completed: testCompleted.value
             },
             { preserveState: true, replace: true, onFinish: () => { searching.value = false; } }
         );
     }, 400);
 }
 
-watch([search, perPage, addedBy, formationSouhaitee, hasSessions], applyFilters);
+watch([search, perPage, addedBy, formationSouhaitee, hasSessions, testCompleted], applyFilters);
 
 watch(() => props.filters, (newFilters) => {
     if (newFilters) {
@@ -68,6 +70,7 @@ watch(() => props.filters, (newFilters) => {
         if (addedBy.value !== (newFilters.added_by || '')) addedBy.value = newFilters.added_by || '';
         if (formationSouhaitee.value !== (newFilters.formation_souhaitee || '')) formationSouhaitee.value = newFilters.formation_souhaitee || '';
         if (hasSessions.value !== (newFilters.has_sessions || '')) hasSessions.value = newFilters.has_sessions || '';
+        if (testCompleted.value !== (newFilters.test_completed || '')) testCompleted.value = newFilters.test_completed || '';
     }
 }, { deep: true });
 
@@ -164,6 +167,37 @@ function deleteCandidate(candidate) {
 const cleanLabel = (label) => {
     return label.replace('&laquo; Previous', 'Précédent').replace('Next &raquo;', 'Suivant');
 };
+
+const bulkSyncing = ref(false);
+const hasHubSpotSelected = computed(() => {
+    return selectedIds.value.some(id => {
+        const candidate = props.candidates.data.find(c => c.id === id);
+        return candidate && candidate.added_by === 'hubspot';
+    });
+});
+
+function bulkSyncHubSpot() {
+    const hubspotIds = selectedIds.value.filter(id => {
+        const candidate = props.candidates.data.find(c => c.id === id);
+        return candidate && candidate.added_by === 'hubspot';
+    });
+    
+    if (hubspotIds.length === 0) return;
+    
+    if (confirm(`Êtes-vous sûr de vouloir synchroniser les ${hubspotIds.length} candidat(s) HubSpot sélectionnés vers HubSpot ?`)) {
+        bulkSyncing.value = true;
+        router.post(route('admin.candidates.bulk-sync-hubspot'), {
+            ids: hubspotIds
+        }, {
+            onSuccess: () => {
+                selectedIds.value = [];
+            },
+            onFinish: () => {
+                bulkSyncing.value = false;
+            }
+        });
+    }
+}
 </script>
 
 <template>
@@ -294,6 +328,16 @@ const cleanLabel = (label) => {
                                 <option value="">Toutes</option>
                                 <option value="yes">Avec session(s)</option>
                                 <option value="no">Sans session</option>
+                            </select>
+                        </div>
+
+                        <!-- Test Completed Filter -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider hidden sm:inline">Test effectué :</span>
+                            <select v-model="testCompleted" class="h-9 px-3 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 bg-white focus:border-indigo-500 focus:ring-0 focus:outline-none transition-all cursor-pointer shadow-sm">
+                                <option value="">Tous</option>
+                                <option value="yes">Oui</option>
+                                <option value="no">Non</option>
                             </select>
                         </div>
                     </div>
@@ -593,6 +637,11 @@ const cleanLabel = (label) => {
                 </div>
                 <div class="h-4 w-px bg-slate-800"></div>
                 <div class="flex items-center gap-2">
+                    <button v-if="hasHubSpotSelected" @click="bulkSyncHubSpot" :disabled="bulkSyncing" class="bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs py-2 px-4 rounded-xl transition-all shadow-lg shadow-orange-600/30 flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98]">
+                        <svg v-if="bulkSyncing" class="size-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+                        <svg v-else class="size-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Sync HubSpot
+                    </button>
                     <button @click="openBulkSend" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2 px-4 rounded-xl transition-all shadow-lg shadow-indigo-600/30 flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98]">
                         <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                         Envoyer un test

@@ -59,6 +59,17 @@ class CandidateController extends Controller
                     $q->doesntHave('testSessions');
                 }
             })
+            ->when($request->test_completed, function ($q) use ($request) {
+                if ($request->test_completed === 'yes') {
+                    $q->whereHas('testSessions', function ($sq) {
+                        $sq->whereIn('status', ['completed', 'pending_review']);
+                    });
+                } elseif ($request->test_completed === 'no') {
+                    $q->whereDoesntHave('testSessions', function ($sq) {
+                        $sq->whereIn('status', ['completed', 'pending_review']);
+                    });
+                }
+            })
             ->latest()
             ->paginate($perPage)
             ->withQueryString();
@@ -107,7 +118,7 @@ class CandidateController extends Controller
         return Inertia::render('Admin/Candidates/Index', [
             'candidates' => $candidates,
             'filters' => array_merge(
-                $request->only('search', 'added_by', 'formation_souhaitee', 'has_sessions'),
+                $request->only('search', 'added_by', 'formation_souhaitee', 'has_sessions', 'test_completed'),
                 ['per_page' => $perPage]
             ),
             'stats' => $stats,
@@ -572,5 +583,91 @@ class CandidateController extends Controller
         }
 
         return back()->with('success', "Liens générés pour {$successCount} candidats avec succès.");
+    }
+
+    public function bulkSyncToHubSpot(Request $request)
+    {
+        Gate::authorize('manage-candidates');
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:candidates,id',
+        ]);
+
+        $candidates = Candidate::whereIn('id', $request->ids)
+            ->where('added_by', 'hubspot')
+            ->get();
+
+        if ($candidates->isEmpty()) {
+            return back()->with('error', 'Aucun candidat issu de HubSpot n\'a été sélectionné.');
+        }
+
+        $successCount = 0;
+        $failedCount = 0;
+
+        foreach ($candidates as $candidate) {
+            if (!$candidate->email) {
+                $failedCount++;
+                continue;
+            }
+
+            $session = $candidate->testSessions()
+                ->latest()
+                ->first();
+
+            $properties = [];
+
+            if ($session) {
+                if (in_array($session->status, ['completed', 'pending_review'])) {
+                    $scoreStr = $session->score !== null ? number_format($session->score, 2) : '';
+                    $resultLabel = $session->status === 'completed'
+                        ? ($session->score >= 70 ? 'admis' : 'Echec - A requalifier')
+                        : 'En cours de correction';
+
+                    $properties = [
+                        'score_test_technique' => $scoreStr,
+                        'resultat_test_technique' => $resultLabel,
+                        'date_test_technique' => $session->completed_at ? $session->completed_at->format('Y-m-d') : now()->format('Y-m-d'),
+                        'orientation_proposee' => $this->scoring->getProposedOrientation($session),
+                        'lien_test_technique' => route('test.start', $session->token),
+                    ];
+
+                    $candidate->update([
+                        'score_test_technique' => $scoreStr,
+                        'resultat_test_technique' => $resultLabel,
+                        'date_test_technique' => $session->completed_at ? $session->completed_at->format('Y-m-d') : now()->format('Y-m-d'),
+                    ]);
+                } else {
+                    $properties = [
+                        'resultat_test_technique' => '',
+                        'score_test_technique' => '',
+                        'date_test_technique' => '',
+                        'orientation_proposee' => '',
+                        'lien_test_technique' => route('test.start', $session->token),
+                    ];
+                }
+            } else {
+                continue;
+            }
+
+            $success = $this->hubspot->updateContact($candidate->email, $properties);
+
+            if ($success) {
+                $successCount++;
+            } else {
+                $failedCount++;
+            }
+        }
+
+        $message = "Synchronisation HubSpot terminée : {$successCount} candidat(s) synchronisé(s) avec succès.";
+        if ($failedCount > 0) {
+            $message .= " {$failedCount} échec(s).";
+        }
+
+        if ($successCount > 0) {
+            return back()->with('success', $message);
+        }
+
+        return back()->with('error', 'Erreur lors de la synchronisation en masse vers HubSpot.');
     }
 }
