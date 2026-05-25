@@ -27,6 +27,11 @@ class CandidateTest extends TestCase
 
         $this->admin = User::factory()->create();
         $this->admin->assignRole('admin');
+
+        // Dynamically define the gate for testing
+        \Illuminate\Support\Facades\Gate::define('manage-candidates', function ($user) {
+            return $user->hasPermission('manage-candidates');
+        });
     }
 
     /**
@@ -120,7 +125,7 @@ class CandidateTest extends TestCase
 
         $this->instance(\App\Services\HubSpotService::class, $mockHubspot);
 
-        $response = $this->actingAs($this->admin)->post(route('admin.candidates.sync-specific', $candidate->id));
+        $response = $this->actingAs($this->admin)->post(route('admin.candidates.pull-data', $candidate->id));
 
         $response->assertRedirect();
         
@@ -167,12 +172,14 @@ class CandidateTest extends TestCase
     {
         \Illuminate\Support\Facades\Mail::fake();
 
-        $domain = \App\Models\Domain::create(['name' => 'Test Domain']);
+        $domain = \App\Models\Domain::create(['name' => 'Test Domain', 'slug' => 'test-domain']);
         $template = \App\Models\TestTemplate::create([
             'name' => 'Template A',
             'domain_id' => $domain->id,
+            'duration_minutes' => 60,
             'is_active' => true,
         ]);
+        $template->refresh();
 
         $candidate1 = Candidate::create([
             'first_name' => 'C1',
@@ -200,23 +207,27 @@ class CandidateTest extends TestCase
             'sync_hubspot' => true,
         ]);
 
+        $response->assertSessionHasNoErrors();
         $response->assertRedirect();
+        $response->assertSessionHas('success', 'Liens générés pour 2 candidats avec succès.');
         
         // Assert session created
         $this->assertCount(2, \App\Models\TestSession::all());
 
-        // Assert mail was sent
-        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\TestInvitationMail::class, 2);
+        // Assert mail was queued (since it is a ShouldQueue mailable)
+        \Illuminate\Support\Facades\Mail::assertQueued(\App\Mail\TestInvitationMail::class, 2);
     }
 
     public function test_can_filter_candidates_by_test_session_presence(): void
     {
-        $domain = \App\Models\Domain::create(['name' => 'Tech']);
+        $domain = \App\Models\Domain::create(['name' => 'Tech', 'slug' => 'tech']);
         $template = \App\Models\TestTemplate::create([
             'name' => 'Backend Test',
             'domain_id' => $domain->id,
+            'duration_minutes' => 60,
             'is_active' => true,
         ]);
+        $template->refresh();
 
         $candidate1 = Candidate::create([
             'first_name' => 'Has',
@@ -275,12 +286,14 @@ class CandidateTest extends TestCase
 
     public function test_can_filter_candidates_by_test_completed_status(): void
     {
-        $domain = \App\Models\Domain::create(['name' => 'Tech']);
+        $domain = \App\Models\Domain::create(['name' => 'Tech', 'slug' => 'tech-filter']);
         $template = \App\Models\TestTemplate::create([
             'name' => 'Backend Test',
             'domain_id' => $domain->id,
+            'duration_minutes' => 60,
             'is_active' => true,
         ]);
+        $template->refresh();
 
         $candidate1 = Candidate::create([
             'first_name' => 'Done',
@@ -344,12 +357,14 @@ class CandidateTest extends TestCase
 
     public function test_bulk_sync_to_hubspot_updates_candidates_on_hubspot(): void
     {
-        $domain = \App\Models\Domain::create(['name' => 'Tech']);
+        $domain = \App\Models\Domain::create(['name' => 'Tech', 'slug' => 'tech-bulk']);
         $template = \App\Models\TestTemplate::create([
             'name' => 'Backend Test',
             'domain_id' => $domain->id,
+            'duration_minutes' => 60,
             'is_active' => true,
         ]);
+        $template->refresh();
 
         $candidate1 = Candidate::create([
             'first_name' => 'Hub1',

@@ -18,17 +18,21 @@ class CandidateSubmitTest extends TestCase
 
     private $domain;
     private $template;
+    private $academicLevel;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->domain = Domain::create(['name' => 'Programming']);
+        $this->academicLevel = \App\Models\AcademicLevel::create(['name' => 'Bac+2', 'slug' => 'bac-2']);
+        $this->domain = Domain::create(['name' => 'Programming', 'slug' => 'programming']);
         $this->template = TestTemplate::create([
             'name' => 'Laravel PHP Test',
             'domain_id' => $this->domain->id,
+            'duration_minutes' => 60,
             'is_active' => true,
         ]);
+        $this->template->refresh();
     }
 
     /**
@@ -46,6 +50,7 @@ class CandidateSubmitTest extends TestCase
         // 1. Create an MCQ question
         $question = Question::create([
             'theme_id' => null,
+            'academic_level_id' => $this->academicLevel->id,
             'type' => 'mcq',
             'statement' => 'What is Laravel?',
             'difficulty' => 'easy',
@@ -130,6 +135,7 @@ class CandidateSubmitTest extends TestCase
         // 1. Create a text question
         $question = Question::create([
             'theme_id' => null,
+            'academic_level_id' => $this->academicLevel->id,
             'type' => 'text',
             'statement' => 'Describe dependency injection in your own words.',
             'difficulty' => 'medium',
@@ -209,6 +215,7 @@ class CandidateSubmitTest extends TestCase
         // 1. Create an MCQ question
         $question = Question::create([
             'theme_id' => null,
+            'academic_level_id' => $this->academicLevel->id,
             'type' => 'mcq',
             'statement' => 'What is Laravel?',
             'difficulty' => 'easy',
