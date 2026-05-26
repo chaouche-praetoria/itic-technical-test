@@ -139,39 +139,42 @@ watch(() => props.domains, () => {
 
         <div class="py-10 animate-reveal">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div v-if="filteredDomains.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div v-if="filteredDomains.length > 0" class="space-y-8">
                     <div v-for="domain in filteredDomains" :key="domain.id" 
-                        class="premium-card p-0 flex flex-col group hover:shadow-2xl transition-all duration-500 border border-slate-100 overflow-hidden bg-white">
+                        class="premium-card p-0 flex flex-col lg:flex-row group hover:shadow-2xl transition-all duration-500 border border-slate-100 overflow-hidden bg-white rounded-3xl">
                         
-                        <!-- Card Header with Accent Color -->
-                        <div class="h-2 w-full transition-all group-hover:h-3" :style="{ backgroundColor: domain.color }"></div>
+                        <!-- Card Header Accent Color (Responsive: horizontal on mobile, vertical on desktop) -->
+                        <div class="h-2.5 lg:h-auto lg:w-2.5 w-full transition-all group-hover:h-3.5 lg:group-hover:h-auto lg:group-hover:w-3.5 shrink-0" :style="{ backgroundColor: domain.color }"></div>
                         
-                        <div class="p-8 flex-1 flex flex-col">
-                            <div class="flex items-start justify-between mb-6">
-                                <div class="flex flex-col gap-1">
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="font-black text-xl text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight">{{ domain.name }}</h3>
-                                        <span v-if="!domain.is_active" class="px-2 py-0.5 rounded-full bg-slate-100 text-[8px] font-black text-slate-400 uppercase tracking-tighter border border-slate-200">Inactif</span>
+                        <!-- Left Panel: Domain Info & Stats -->
+                        <div class="p-8 flex flex-col justify-between lg:w-[360px] xl:w-[400px] shrink-0 lg:border-r border-slate-100">
+                            <div class="space-y-4">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex flex-col gap-1.5">
+                                        <div class="flex items-center gap-2">
+                                            <h3 class="font-black text-xl text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight">{{ domain.name }}</h3>
+                                            <span v-if="!domain.is_active" class="px-2 py-0.5 rounded-full bg-slate-100 text-[8px] font-black text-slate-400 uppercase tracking-tighter border border-slate-200">Inactif</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="size-1.5 rounded-full" :style="{ backgroundColor: domain.color }"></span>
+                                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Spécialité</span>
+                                        </div>
                                     </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="size-1.5 rounded-full" :style="{ backgroundColor: domain.color }"></span>
-                                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Spécialité</span>
+                                    <div class="flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity shrink-0">
+                                        <button @click="openEdit(domain)" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all" title="Modifier">
+                                            <svg class="size-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                        </button>
+                                        <button @click="deleteDomain(domain)" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="Supprimer">
+                                            <svg class="size-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
                                     </div>
                                 </div>
-                                <div class="flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                                    <button @click="openEdit(domain)" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all" title="Modifier">
-                                        <svg class="size-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                    </button>
-                                    <button @click="deleteDomain(domain)" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="Supprimer">
-                                        <svg class="size-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                    </button>
-                                </div>
+                                
+                                <p class="text-sm text-slate-500 font-medium leading-relaxed italic line-clamp-3">{{ domain.description || 'Précisez les objectifs de ce domaine.' }}</p>
                             </div>
                             
-                            <p class="text-sm text-slate-500 mb-8 font-medium leading-relaxed line-clamp-2 italic">{{ domain.description || 'Précisez les objectifs de ce domaine.' }}</p>
-                            
                             <!-- Stats Badges -->
-                            <div class="flex items-center gap-3 mb-8">
+                            <div class="flex items-center gap-3 mt-8">
                                 <div class="bg-slate-50 rounded-2xl px-4 py-3 border border-slate-100 flex-1 group/stat hover:bg-white hover:border-indigo-100 transition-all">
                                     <div class="text-sm font-black text-slate-900">{{ domain.themes_count }}</div>
                                     <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Thèmes</div>
@@ -181,64 +184,72 @@ watch(() => props.domains, () => {
                                     <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Questions</div>
                                 </div>
                             </div>
-    
-                            <div class="mt-auto pt-8 border-t border-slate-50 space-y-4">
-                                <div class="flex items-center justify-between">
+                        </div>
+                        
+                        <!-- Right Panel: Themes / Lexique Métier -->
+                        <div class="p-8 flex-1 flex flex-col bg-slate-50/10 lg:bg-white font-sans">
+                            <div class="flex items-center justify-between mb-6">
+                                <div class="flex items-center gap-2.5">
                                     <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Lexique métier</h4>
-                                    <button @click="openTheme(domain)" 
-                                        class="size-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
-                                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                                    </button>
+                                    <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-[9px] font-bold text-slate-500 border border-slate-200/60">
+                                        {{ domain.themes.length }} sous-thème(s)
+                                    </span>
                                 </div>
-                                <div class="grid grid-cols-1 gap-3">
-                                    <div v-for="theme in domain.themes" :key="theme.id"
-                                        class="group/theme relative bg-slate-50/50 hover:bg-white p-4 rounded-2xl border border-slate-100 hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300">
+                                <button @click="openTheme(domain)" 
+                                    class="size-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm">
+                                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                                </button>
+                            </div>
+                            
+                            <div v-if="domain.themes.length > 0" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                                <div v-for="theme in domain.themes" :key="theme.id"
+                                    class="group/theme relative bg-slate-50/50 hover:bg-white p-4 rounded-2xl border border-slate-100 hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300 flex flex-col justify-between">
+                                    
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center gap-2 min-w-0">
+                                            <div class="size-1.5 rounded-full bg-indigo-500 shadow-sm shadow-indigo-500/50 shrink-0"></div>
+                                            <span class="font-bold text-slate-900 text-xs truncate" :title="theme.name">{{ theme.name }}</span>
+                                        </div>
                                         
-                                        <div class="flex items-center justify-between mb-3">
-                                            <div class="flex items-center gap-2">
-                                                <div class="size-1.5 rounded-full bg-indigo-500 shadow-sm shadow-indigo-500/50"></div>
-                                                <span class="font-bold text-slate-900 text-xs">{{ theme.name }}</span>
-                                            </div>
-                                            
-                                            <div class="flex items-center gap-1 opacity-0 group-hover/theme:opacity-100 transition-all scale-95 group-hover/theme:scale-100">
-                                                <button @click="openEditTheme(theme)" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">
-                                                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
-                                                </button>
-                                                <button @click="detachTheme(domain, theme)" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all">
-                                                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                                                </button>
-                                                <button @click="deleteThemeGlobally(theme)" class="p-1.5 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all">
-                                                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-                                            <div v-for="level in levels" :key="level.id" 
-                                                class="flex flex-col min-w-[45px] transition-opacity"
-                                                :class="getLevelCount(theme.id, level.id) > 0 ? 'opacity-100' : 'opacity-30'">
-                                                <span class="text-[7px] font-black text-slate-400 uppercase tracking-tighter">{{ level.name.split(' ')[0] }}</span>
-                                                <div class="flex items-center gap-1">
-                                                    <span class="text-[10px] font-black" :class="getLevelCount(theme.id, level.id) > 0 ? 'text-slate-900' : 'text-slate-300'">
-                                                        {{ getLevelCount(theme.id, level.id) }}
-                                                    </span>
-                                                    <div v-if="getLevelCount(theme.id, level.id) > 0" class="size-1 rounded-full bg-emerald-500"></div>
-                                                </div>
-                                            </div>
-                                            <div class="ml-auto pl-4 border-l border-slate-100 flex flex-col items-end">
-                                                <span class="text-[7px] font-black text-slate-400 uppercase tracking-tighter">Total</span>
-                                                <span class="text-xs font-black text-indigo-600">{{ theme.questions_count }}</span>
-                                            </div>
+                                        <div class="flex items-center gap-1 opacity-0 group-hover/theme:opacity-100 transition-all scale-95 group-hover/theme:scale-100 shrink-0">
+                                            <button @click="openEditTheme(theme)" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">
+                                                <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+                                            </button>
+                                            <button @click="detachTheme(domain, theme)" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all">
+                                                <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                            </button>
+                                            <button @click="deleteThemeGlobally(theme)" class="p-1.5 text-slate-400 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all">
+                                                <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                            </button>
                                         </div>
                                     </div>
-                                    <div v-if="domain.themes.length === 0" 
-                                        class="w-full py-10 flex flex-col items-center justify-center border-2 border-dashed border-slate-100 rounded-[32px] gap-3 bg-slate-50/30">
-                                        <div class="size-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-200">
-                                            <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                                    
+                                    <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar mt-2">
+                                        <div v-for="level in levels" :key="level.id" 
+                                            class="flex flex-col min-w-[42px] transition-opacity shrink-0"
+                                            :class="getLevelCount(theme.id, level.id) > 0 ? 'opacity-100' : 'opacity-30'">
+                                            <span class="text-[7px] font-black text-slate-400 uppercase tracking-tighter">{{ level.name.split(' ')[0] }}</span>
+                                            <div class="flex items-center gap-1">
+                                                <span class="text-[10px] font-black" :class="getLevelCount(theme.id, level.id) > 0 ? 'text-slate-900' : 'text-slate-300'">
+                                                    {{ getLevelCount(theme.id, level.id) }}
+                                                </span>
+                                                <div v-if="getLevelCount(theme.id, level.id) > 0" class="size-1 rounded-full bg-emerald-500"></div>
+                                            </div>
                                         </div>
-                                        <p class="text-[10px] text-slate-300 font-black uppercase tracking-[0.2em]">Aucun sous-thème actif</p>
+                                        <div class="ml-auto pl-3 border-l border-slate-100 flex flex-col items-end shrink-0">
+                                            <span class="text-[7px] font-black text-slate-400 uppercase tracking-tighter">Total</span>
+                                            <span class="text-xs font-black text-indigo-600">{{ theme.questions_count }}</span>
+                                        </div>
                                     </div>
                                 </div>
+                            </div>
+                            
+                            <div v-else 
+                                class="w-full py-12 flex flex-col items-center justify-center border-2 border-dashed border-slate-100 rounded-[32px] gap-3 bg-slate-50/30">
+                                <div class="size-10 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-200 shadow-sm">
+                                    <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                                </div>
+                                <p class="text-[10px] text-slate-300 font-black uppercase tracking-[0.2em]">Aucun sous-thème actif</p>
                             </div>
                         </div>
                     </div>
