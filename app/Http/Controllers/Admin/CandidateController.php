@@ -711,4 +711,15 @@ class CandidateController extends Controller
 
         return back()->with('error', 'Erreur lors de la synchronisation en masse vers HubSpot.');
     }
+
+    public function destroySession(TestSession $session)
+    {
+        if (!auth()->user()->isSuperAdmin()) {
+            abort(403, 'Seul un Super Administrateur peut supprimer un test.');
+        }
+
+        $session->delete();
+
+        return back()->with('success', 'Session de test supprimée avec succès.');
+    }
 }

@@ -116,6 +116,12 @@ function deleteCandidate() {
         router.delete(route('admin.candidates.destroy', props.candidate.id));
     }
 }
+
+function deleteSession(session) {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer définitivement cette session de test (${session.template}) ? Cette action est irréversible.`)) {
+        router.delete(route('admin.sessions.destroy', session.id));
+    }
+}
 </script>
 
 <template>
@@ -393,9 +399,9 @@ function deleteCandidate() {
                                         </div>
                                     </td>
                                     <td class="px-8 py-6 text-right">
-                                        <div class="flex justify-end gap-2">
+                                        <div class="flex justify-end gap-2 items-center">
                                             <Link v-if="s.status === 'completed'" :href="route('admin.sessions.show', s.id)" 
-                                                class="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all">
+                                                class="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all shadow-sm">
                                                 Détails de l'examen
                                             </Link>
                                             <template v-if="s.status === 'pending'">
@@ -416,6 +422,14 @@ function deleteCandidate() {
                                                     <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                                                 </a>
                                             </template>
+
+                                            <!-- Delete Session (Super Admin Only) -->
+                                            <button v-if="$page.props.auth.user.is_super_admin"
+                                                @click="deleteSession(s)"
+                                                title="Supprimer la session de test"
+                                                class="size-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-all shadow-sm">
+                                                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>

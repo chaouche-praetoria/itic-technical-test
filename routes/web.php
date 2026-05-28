@@ -88,6 +88,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::post('/sessions/{session}/grade', [CandidateController::class, 'gradeAnswer'])->name('sessions.grade');
     Route::post('/sessions/{session}/finalize', [CandidateController::class, 'finalizeSession'])->name('sessions.finalize');
     Route::post('/sessions/{session}/recalculate', [CandidateController::class, 'recalculateScore'])->name('sessions.recalculate');
+    Route::delete('/sessions/{session}', [CandidateController::class, 'destroySession'])->name('sessions.destroy');
 });
 
 require __DIR__.'/auth.php';
