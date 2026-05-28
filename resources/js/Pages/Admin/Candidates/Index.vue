@@ -429,7 +429,7 @@ const displayedLinks = computed(() => {
                                             class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20 cursor-pointer transition-all" />
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="flex items-center gap-3">
+                                        <Link :href="route('admin.candidates.show', c.id)" class="flex items-center gap-3 w-fit hover:opacity-80 transition-all">
                                             <div class="size-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-all text-xs">
                                                 {{ c.first_name.charAt(0) }}{{ c.last_name.charAt(0) }}
                                             </div>
@@ -437,7 +437,7 @@ const displayedLinks = computed(() => {
                                                 <span class="font-bold text-slate-800 text-[13px] mb-0 group-hover:text-indigo-600 transition-colors">{{ c.first_name }} {{ c.last_name }}</span>
                                                 <span class="text-[10px] text-slate-400 font-medium">{{ c.email }}</span>
                                             </div>
-                                        </div>
+                                        </Link>
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex flex-col text-slate-600 font-medium text-xs">
@@ -472,10 +472,6 @@ const displayedLinks = computed(() => {
                                     </td>
                                     <td class="px-6 py-4 text-right">
                                         <div class="flex items-center justify-end gap-1.5">
-                                            <Link :href="route('admin.candidates.show', c.id)" 
-                                                class="inline-flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-[11px] font-bold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
-                                                Détails
-                                            </Link>
                                             <button @click="deleteCandidate(c)" 
                                                 class="p-1.5 text-slate-400 hover:text-rose-600 transition-all hover:bg-rose-50 rounded-lg"
                                                 title="Supprimer">
