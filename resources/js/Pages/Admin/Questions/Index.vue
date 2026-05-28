@@ -225,22 +225,40 @@ const displayedLinks = computed(() => {
 
     const prevLink = links[0];
     const nextLink = links[links.length - 1];
-    const pageLinks = links.slice(1, -1);
 
     const range = 1;
     const result = [];
+
+    // Helper to get url for a page number
+    const getPageUrl = (p) => {
+        const existing = links.find(l => l.label == String(p));
+        if (existing && existing.url) return existing.url;
+        const anyLink = links.find(l => l.url);
+        if (anyLink && anyLink.url) {
+            return anyLink.url.replace(/page=\d+/, `page=${p}`);
+        }
+        return '#';
+    };
 
     // Always add Prev
     result.push(prevLink);
 
     // Always add Page 1
-    result.push(pageLinks[0]);
+    result.push({
+        label: '1',
+        url: getPageUrl(1),
+        active: current === 1
+    });
 
     // Ellipsis after Page 1
     if (current > range + 3) {
         result.push({ label: '...', url: null, active: false });
     } else if (current === range + 3) {
-        result.push(pageLinks[1]);
+        result.push({
+            label: '2',
+            url: getPageUrl(2),
+            active: current === 2
+        });
     }
 
     // Middle pages
@@ -248,19 +266,31 @@ const displayedLinks = computed(() => {
     const end = Math.min(last - 1, current + range);
 
     for (let i = start; i <= end; i++) {
-        result.push(pageLinks[i - 1]);
+        result.push({
+            label: String(i),
+            url: getPageUrl(i),
+            active: current === i
+        });
     }
 
     // Ellipsis before Last Page
     if (current === last - range - 2) {
-        result.push(pageLinks[last - 2]);
+        result.push({
+            label: String(last - 1),
+            url: getPageUrl(last - 1),
+            active: current === last - 1
+        });
     } else if (current < last - range - 2) {
         result.push({ label: '...', url: null, active: false });
     }
 
     // Always add Last page (if last > 1)
     if (last > 1) {
-        result.push(pageLinks[last - 1]);
+        result.push({
+            label: String(last),
+            url: getPageUrl(last),
+            active: current === last
+        });
     }
 
     // Always add Next
