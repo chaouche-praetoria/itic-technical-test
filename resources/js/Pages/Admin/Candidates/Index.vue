@@ -198,6 +198,59 @@ function bulkSyncHubSpot() {
         });
     }
 }
+
+const displayedLinks = computed(() => {
+    const links = props.candidates.links;
+    if (!links || links.length <= 7) return links;
+
+    const current = props.candidates.current_page;
+    const last = props.candidates.last_page;
+
+    const prevLink = links[0];
+    const nextLink = links[links.length - 1];
+    const pageLinks = links.slice(1, -1);
+
+    const range = 1;
+    const result = [];
+
+    // Always add Prev
+    result.push(prevLink);
+
+    // Always add Page 1
+    result.push(pageLinks[0]);
+
+    // Ellipsis after Page 1
+    if (current > range + 3) {
+        result.push({ label: '...', url: null, active: false });
+    } else if (current === range + 3) {
+        result.push(pageLinks[1]);
+    }
+
+    // Middle pages
+    const start = Math.max(2, current - range);
+    const end = Math.min(last - 1, current + range);
+
+    for (let i = start; i <= end; i++) {
+        result.push(pageLinks[i - 1]);
+    }
+
+    // Ellipsis before Last Page
+    if (current === last - range - 2) {
+        result.push(pageLinks[last - 2]);
+    } else if (current < last - range - 2) {
+        result.push({ label: '...', url: null, active: false });
+    }
+
+    // Always add Last page (if last > 1)
+    if (last > 1) {
+        result.push(pageLinks[last - 1]);
+    }
+
+    // Always add Next
+    result.push(nextLink);
+
+    return result;
+});
 </script>
 
 <template>
@@ -450,13 +503,13 @@ function bulkSyncHubSpot() {
                             </div>
                         </div>
                         <div v-if="candidates.last_page > 1" class="flex gap-1.5">
-                            <Link v-for="link in candidates.links" :key="link.label"
+                            <Link v-for="link in displayedLinks" :key="link.label"
                                 :href="link.url || '#'"
                                 v-html="cleanLabel(link.label)"
                                 :class="[
                                     'h-8 min-w-[2rem] px-2 flex items-center justify-center text-xs font-bold rounded-lg transition-all',
                                     link.active ? 'bg-slate-900 text-white shadow-lg shadow-slate-200' : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300',
-                                    !link.url ? 'opacity-30 pointer-events-none' : ''
+                                    !link.url ? 'opacity-30 pointer-events-none border-none text-slate-300' : ''
                                 ]" />
                         </div>
                     </div>
