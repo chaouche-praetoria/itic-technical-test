@@ -64,7 +64,7 @@ class HubSpotService
                 "orientation_proposee",
                 "lien_test_technique"
             ],
-            "limit" => 100
+            "limit" => 200
         ];
         try {
             $response = Http::withToken($this->accessToken)
