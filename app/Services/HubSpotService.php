@@ -49,37 +49,56 @@ class HubSpotService
             ];
         }
 
-        $payload = [
-            "filterGroups" => $filterGroups,
-            "properties" => [
-                "email",
-                "firstname",
-                "lastname",
-                "phone",
-                "formation_souhaitee",
-                "formation_souhaitee_pour_ypareo",
-                "score_test_technique",
-                "resultat_test_technique",
-                "date_test_technique",
-                "orientation_proposee",
-                "lien_test_technique"
-            ],
-            "limit" => 200
-        ];
-        try {
-            $response = Http::withToken($this->accessToken)
-                ->post("{$this->baseUrl}/search", $payload);
+        $allResults = [];
+        $after = null;
 
-            if ($response->successful()) {
-                return $response->json();
+        do {
+            $payload = [
+                "filterGroups" => $filterGroups,
+                "properties" => [
+                    "email",
+                    "firstname",
+                    "lastname",
+                    "phone",
+                    "formation_souhaitee",
+                    "formation_souhaitee_pour_ypareo",
+                    "score_test_technique",
+                    "resultat_test_technique",
+                    "date_test_technique",
+                    "orientation_proposee",
+                    "lien_test_technique"
+                ],
+                "limit" => 200
+            ];
+
+            if ($after) {
+                $payload["after"] = $after;
             }
 
-            Log::error("HubSpot API Search Error: " . $response->body());
-            return null;
-        } catch (\Exception $e) {
-            Log::error("HubSpot Service Exception: " . $e->getMessage());
-            return null;
-        }
+            try {
+                Log::info("HubSpot: Searching contacts, page limit 200" . ($after ? " (after: {$after})" : ""));
+                $response = Http::withToken($this->accessToken)
+                    ->post("{$this->baseUrl}/search", $payload);
+
+                if (!$response->successful()) {
+                    Log::error("HubSpot API Search Error: " . $response->body());
+                    return empty($allResults) ? null : ['results' => $allResults];
+                }
+
+                $data = $response->json();
+                if (isset($data['results']) && is_array($data['results'])) {
+                    $allResults = array_merge($allResults, $data['results']);
+                }
+
+                $after = $data['paging']['next']['after'] ?? null;
+            } catch (\Exception $e) {
+                Log::error("HubSpot Service Exception during search: " . $e->getMessage());
+                return empty($allResults) ? null : ['results' => $allResults];
+            }
+        } while ($after);
+
+        Log::info("HubSpot Search Completed: " . count($allResults) . " candidates retrieved in total.");
+        return ['results' => $allResults];
     }
 
     /**
