@@ -30,4 +30,32 @@ class Candidate extends Model
     {
         return $this->hasMany(TestSession::class);
     }
+
+    public function latestSession(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(TestSession::class)->latestOfMany();
+    }
+
+    public function updateScoreFromSessions(): void
+    {
+        $session = $this->testSessions()
+            ->whereIn('status', ['completed', 'pending_review'])
+            ->whereNotNull('score')
+            ->latest()
+            ->first();
+
+        if ($session) {
+            $scoreStr = number_format($session->score, 2);
+            $resultLabel = $session->status === 'completed'
+                ? ($session->score >= 70 ? 'admis' : 'Echec - A requalifier')
+                : 'En cours de correction';
+
+            $this->update([
+                'score_test_technique' => $scoreStr,
+                'resultat_test_technique' => $resultLabel,
+                'date_test_technique' => $session->completed_at ? $session->completed_at->format('Y-m-d') : now()->format('Y-m-d'),
+            ]);
+        }
+    }
 }
+

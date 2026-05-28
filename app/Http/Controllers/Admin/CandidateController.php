@@ -39,12 +39,23 @@ class CandidateController extends Controller
     {
         Gate::authorize('manage-candidates');
 
+        // Self-heal: auto-restore scores for candidates who have completed sessions but no local score set
+        $wipedCandidates = Candidate::whereNull('score_test_technique')
+            ->whereHas('testSessions', function ($q) {
+                $q->whereIn('status', ['completed', 'pending_review'])->whereNotNull('score');
+            })->get();
+
+        foreach ($wipedCandidates as $c) {
+            $c->updateScoreFromSessions();
+        }
+
         $perPage = $request->input('per_page', 20);
         if (!in_array($perPage, [10, 20, 50, 100])) {
             $perPage = 20;
         }
 
         $candidates = Candidate::withCount('testSessions')
+            ->with('latestSession')
             ->when($request->search, fn($q) => $q->where(function ($q) use ($request) {
                 $q->where('first_name', 'like', "%{$request->search}%")
                     ->orWhere('last_name', 'like', "%{$request->search}%")
@@ -130,6 +141,9 @@ class CandidateController extends Controller
     public function show(Candidate $candidate)
     {
         Gate::authorize('manage-candidates');
+
+        $candidate->updateScoreFromSessions();
+        $candidate->load('latestSession');
 
         $sessions = $candidate->testSessions()
             ->with('template.domain')
@@ -432,16 +446,16 @@ class CandidateController extends Controller
 
         $updateData = [
             'hubspot_id' => $data['id'],
-            'first_name' => $props['firstname'] ?? $candidate->first_name,
-            'last_name' => $props['lastname'] ?? $candidate->last_name,
-            'phone' => $props['phone'] ?? $candidate->phone,
-            'formation_souhaitee' => $props['formation_souhaitee'] ?? $candidate->formation_souhaitee,
-            'formation_souhaitee_pour_ypareo' => $props['formation_souhaitee_pour_ypareo'] ?? $candidate->formation_souhaitee_pour_ypareo,
-            'score_test_technique' => $props['score_test_technique'] ?? $candidate->score_test_technique,
-            'resultat_test_technique' => $props['resultat_test_technique'] ?? $candidate->resultat_test_technique,
-            'date_test_technique' => $props['date_test_technique'] ?? $candidate->date_test_technique,
-            'orientation_proposee' => $props['orientation_proposee'] ?? $candidate->orientation_proposee,
-            'lien_test_technique' => $props['lien_test_technique'] ?? $candidate->lien_test_technique,
+            'first_name' => !blank($props['firstname'] ?? null) ? $props['firstname'] : $candidate->first_name,
+            'last_name' => !blank($props['lastname'] ?? null) ? $props['lastname'] : $candidate->last_name,
+            'phone' => !blank($props['phone'] ?? null) ? $props['phone'] : $candidate->phone,
+            'formation_souhaitee' => !blank($props['formation_souhaitee'] ?? null) ? $props['formation_souhaitee'] : $candidate->formation_souhaitee,
+            'formation_souhaitee_pour_ypareo' => !blank($props['formation_souhaitee_pour_ypareo'] ?? null) ? $props['formation_souhaitee_pour_ypareo'] : $candidate->formation_souhaitee_pour_ypareo,
+            'score_test_technique' => !blank($props['score_test_technique'] ?? null) ? $props['score_test_technique'] : $candidate->score_test_technique,
+            'resultat_test_technique' => !blank($props['resultat_test_technique'] ?? null) ? $props['resultat_test_technique'] : $candidate->resultat_test_technique,
+            'date_test_technique' => !blank($props['date_test_technique'] ?? null) ? $props['date_test_technique'] : $candidate->date_test_technique,
+            'orientation_proposee' => !blank($props['orientation_proposee'] ?? null) ? $props['orientation_proposee'] : $candidate->orientation_proposee,
+            'lien_test_technique' => !blank($props['lien_test_technique'] ?? null) ? $props['lien_test_technique'] : $candidate->lien_test_technique,
         ];
 
         if ($candidate->added_by !== 'hubspot') {
@@ -449,6 +463,7 @@ class CandidateController extends Controller
         }
 
         $candidate->update($updateData);
+        $candidate->updateScoreFromSessions();
 
         return back()->with('success', 'Données rafraîchies depuis HubSpot pour ' . $candidate->full_name);
     }
@@ -479,17 +494,17 @@ class CandidateController extends Controller
 
             $candidateData = [
                 'hubspot_id' => $hubspotId,
-                'first_name' => $props['firstname'] ?? 'Inconnu',
-                'last_name' => $props['lastname'] ?? 'Inconnu',
+                'first_name' => !blank($props['firstname'] ?? null) ? $props['firstname'] : ($candidate ? $candidate->first_name : 'Inconnu'),
+                'last_name' => !blank($props['lastname'] ?? null) ? $props['lastname'] : ($candidate ? $candidate->last_name : 'Inconnu'),
                 'email' => $email,
-                'phone' => $props['phone'] ?? null,
-                'formation_souhaitee' => $props['formation_souhaitee'] ?? null,
-                'formation_souhaitee_pour_ypareo' => $props['formation_souhaitee_pour_ypareo'] ?? null,
-                'score_test_technique' => $props['score_test_technique'] ?? null,
-                'resultat_test_technique' => $props['resultat_test_technique'] ?? null,
-                'date_test_technique' => $props['date_test_technique'] ?? null,
-                'orientation_proposee' => $props['orientation_proposee'] ?? null,
-                'lien_test_technique' => $props['lien_test_technique'] ?? null,
+                'phone' => !blank($props['phone'] ?? null) ? $props['phone'] : ($candidate ? $candidate->phone : null),
+                'formation_souhaitee' => !blank($props['formation_souhaitee'] ?? null) ? $props['formation_souhaitee'] : ($candidate ? $candidate->formation_souhaitee : null),
+                'formation_souhaitee_pour_ypareo' => !blank($props['formation_souhaitee_pour_ypareo'] ?? null) ? $props['formation_souhaitee_pour_ypareo'] : ($candidate ? $candidate->formation_souhaitee_pour_ypareo : null),
+                'score_test_technique' => !blank($props['score_test_technique'] ?? null) ? $props['score_test_technique'] : ($candidate ? $candidate->score_test_technique : null),
+                'resultat_test_technique' => !blank($props['resultat_test_technique'] ?? null) ? $props['resultat_test_technique'] : ($candidate ? $candidate->resultat_test_technique : null),
+                'date_test_technique' => !blank($props['date_test_technique'] ?? null) ? $props['date_test_technique'] : ($candidate ? $candidate->date_test_technique : null),
+                'orientation_proposee' => !blank($props['orientation_proposee'] ?? null) ? $props['orientation_proposee'] : ($candidate ? $candidate->orientation_proposee : null),
+                'lien_test_technique' => !blank($props['lien_test_technique'] ?? null) ? $props['lien_test_technique'] : ($candidate ? $candidate->lien_test_technique : null),
             ];
 
             /** @var \App\Models\Candidate $candidate */
@@ -498,10 +513,12 @@ class CandidateController extends Controller
                     $candidateData['added_by'] = 'hubspot';
                 }
                 $candidate->update($candidateData);
+                $candidate->updateScoreFromSessions();
                 $updatedCount++;
             } else {
                 $candidateData['added_by'] = 'hubspot';
-                Candidate::create($candidateData);
+                $newCandidate = Candidate::create($candidateData);
+                $newCandidate->updateScoreFromSessions();
                 $createdCount++;
             }
         }

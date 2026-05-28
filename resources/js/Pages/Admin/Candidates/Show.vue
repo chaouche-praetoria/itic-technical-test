@@ -272,6 +272,7 @@ function deleteCandidate() {
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Score test technique</span>
                                 <div class="flex items-center gap-2">
                                     <span v-if="candidate.score_test_technique" class="text-sm font-black text-indigo-600 px-2 py-0.5 bg-indigo-50 rounded-md">{{ candidate.score_test_technique }}%</span>
+                                    <span v-else-if="candidate.latest_session && candidate.latest_session.score !== null" class="text-sm font-black text-indigo-600 px-2 py-0.5 bg-indigo-50 rounded-md">{{ candidate.latest_session.score }}%</span>
                                     <span v-else class="text-sm font-medium text-slate-400">En attente</span>
                                 </div>
                             </div>

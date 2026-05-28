@@ -409,6 +409,9 @@ function bulkSyncHubSpot() {
                                         <div v-if="c.score_test_technique" class="inline-flex px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 font-black text-[11px]">
                                             {{ c.score_test_technique }}%
                                         </div>
+                                        <div v-else-if="c.latest_session && c.latest_session.score !== null" class="inline-flex px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 font-black text-[11px]">
+                                            {{ c.latest_session.score }}%
+                                        </div>
                                         <span v-else class="text-slate-300 font-bold">—</span>
                                     </td>
                                     <td class="px-6 py-4 text-slate-400 font-medium text-[10px]">
