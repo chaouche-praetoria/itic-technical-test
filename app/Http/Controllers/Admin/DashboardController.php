@@ -28,12 +28,12 @@ class DashboardController extends Controller
             ->latest()
             ->limit(10)
             ->get()
-            ->map(fn($s) => [
+            ->map(fn(TestSession $s) => [
                 'id' => $s->id,
                 'candidate_id' => $s->candidate_id,
                 'candidate' => $s->candidate->full_name,
                 'template' => $s->template->name,
-                'status' => $s->status,
+                'status' => $s->isExpired() ? 'expired' : $s->status,
                 'score' => $s->score,
                 'completed_at' => $s->completed_at?->toDateTimeString(),
             ]);

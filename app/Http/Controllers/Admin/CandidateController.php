@@ -74,15 +74,21 @@ class CandidateController extends Controller
                 if ($request->test_completed === 'yes') {
                     $q->where(function ($query) {
                         $query->whereNotNull('score_test_technique')
-                            ->orWhereHas('testSessions', function ($sq) {
-                                $sq->whereIn('status', ['completed', 'pending_review']);
-                            });
+                            ->where('score_test_technique', '<>', '')
+                            ->where('score_test_technique', '<>', '—');
+                    })
+                    ->whereHas('latestSession', function ($sq) {
+                        $sq->whereIn('status', ['completed', 'pending_review']);
                     });
                 } elseif ($request->test_completed === 'no') {
-                    $q->whereNull('score_test_technique')
-                        ->whereDoesntHave('testSessions', function ($sq) {
-                            $sq->whereIn('status', ['completed', 'pending_review']);
-                        });
+                    $q->where(function ($query) {
+                        $query->whereNull('score_test_technique')
+                            ->orWhere('score_test_technique', '=', '')
+                            ->orWhere('score_test_technique', '=', '—')
+                            ->orWhereHas('latestSession', function ($sq) {
+                                $sq->where('status', 'pending');
+                            });
+                    });
                 }
             })
             ->latest()
@@ -153,11 +159,11 @@ class CandidateController extends Controller
             ->with('template.domain')
             ->latest()
             ->get()
-            ->map(fn($s) => [
+            ->map(fn(TestSession $s) => [
                 'id' => $s->id,
                 'template' => $s->template->name,
                 'domain' => $s->template->domain->name,
-                'status' => $s->status,
+                'status' => $s->isExpired() ? 'expired' : $s->status,
                 'score' => $s->score,
                 'started_at' => $s->started_at?->toDateTimeString(),
                 'completed_at' => $s->completed_at?->toDateTimeString(),
@@ -202,6 +208,13 @@ class CandidateController extends Controller
         $template = TestTemplate::findOrFail($request->test_template_id);
 
         $session = $this->generator->generateSession($candidate, $template);
+
+        // Reset local candidate's technical test fields
+        $candidate->update([
+            'score_test_technique' => null,
+            'resultat_test_technique' => null,
+            'date_test_technique' => null,
+        ]);
 
         $successMessage = "Lien généré: " . route('test.start', $session->token);
 
@@ -580,6 +593,13 @@ class CandidateController extends Controller
         foreach ($candidates as $candidate) {
             try {
                 $session = $this->generator->generateSession($candidate, $template);
+                
+                // Reset local candidate's technical test fields
+                $candidate->update([
+                    'score_test_technique' => null,
+                    'resultat_test_technique' => null,
+                    'date_test_technique' => null,
+                ]);
 
                 if ($request->sync_hubspot) {
                     $this->hubspot->updateContact($candidate->email, [
