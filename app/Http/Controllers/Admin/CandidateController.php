@@ -72,13 +72,17 @@ class CandidateController extends Controller
             })
             ->when($request->test_completed, function ($q) use ($request) {
                 if ($request->test_completed === 'yes') {
-                    $q->whereHas('testSessions', function ($sq) {
-                        $sq->whereIn('status', ['completed', 'pending_review']);
+                    $q->where(function ($query) {
+                        $query->whereNotNull('score_test_technique')
+                            ->orWhereHas('testSessions', function ($sq) {
+                                $sq->whereIn('status', ['completed', 'pending_review']);
+                            });
                     });
                 } elseif ($request->test_completed === 'no') {
-                    $q->whereDoesntHave('testSessions', function ($sq) {
-                        $sq->whereIn('status', ['completed', 'pending_review']);
-                    });
+                    $q->whereNull('score_test_technique')
+                        ->whereDoesntHave('testSessions', function ($sq) {
+                            $sq->whereIn('status', ['completed', 'pending_review']);
+                        });
                 }
             })
             ->latest()
