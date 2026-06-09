@@ -109,7 +109,9 @@ class CandidateTest extends TestCase
             'added_by' => 'excel',
         ]);
 
-        $mockHubspot = $this->createMock(\App\Services\HubSpotService::class);
+        $mockHubspot = $this->getMockBuilder(\App\Services\HubSpotService::class)
+            ->onlyMethods(['getContact', 'updateContact'])
+            ->getMock();
         $mockHubspot->expects($this->once())
             ->method('getContact')
             ->with('jane.doe@example.com')

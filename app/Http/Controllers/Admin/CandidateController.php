@@ -459,30 +459,13 @@ class CandidateController extends Controller
             return back()->with('error', 'Impossible de récupérer les données depuis HubSpot pour ce candidat.');
         }
 
-        $props = $data['properties'];
-
-        $updateData = [
-            'hubspot_id' => $data['id'],
-            'first_name' => !blank($props['firstname'] ?? null) ? $props['firstname'] : $candidate->first_name,
-            'last_name' => !blank($props['lastname'] ?? null) ? $props['lastname'] : $candidate->last_name,
-            'phone' => !blank($props['phone'] ?? null) ? $props['phone'] : $candidate->phone,
-            'formation_souhaitee' => !blank($props['formation_souhaitee'] ?? null) ? $props['formation_souhaitee'] : $candidate->formation_souhaitee,
-            'formation_souhaitee_pour_ypareo' => !blank($props['formation_souhaitee_pour_ypareo'] ?? null) ? $props['formation_souhaitee_pour_ypareo'] : $candidate->formation_souhaitee_pour_ypareo,
-            'score_test_technique' => !blank($props['score_test_technique'] ?? null) ? $props['score_test_technique'] : $candidate->score_test_technique,
-            'resultat_test_technique' => !blank($props['resultat_test_technique'] ?? null) ? $props['resultat_test_technique'] : $candidate->resultat_test_technique,
-            'date_test_technique' => !blank($props['date_test_technique'] ?? null) ? $props['date_test_technique'] : $candidate->date_test_technique,
-            'orientation_proposee' => !blank($props['orientation_proposee'] ?? null) ? $props['orientation_proposee'] : $candidate->orientation_proposee,
-            'lien_test_technique' => !blank($props['lien_test_technique'] ?? null) ? $props['lien_test_technique'] : $candidate->lien_test_technique,
-        ];
-
-        if ($candidate->added_by !== 'hubspot') {
-            $updateData['added_by'] = 'hubspot';
+        try {
+            $this->hubspot->syncSingleContact($data, $candidate->email);
+            return back()->with('success', 'Données rafraîchies depuis HubSpot pour ' . $candidate->full_name);
+        } catch (\Exception $e) {
+            Log::error("Specific HubSpot sync failed for {$candidate->email}: " . $e->getMessage());
+            return back()->with('error', 'Erreur lors du rafraîchissement des données depuis HubSpot.');
         }
-
-        $candidate->update($updateData);
-        $candidate->updateScoreFromSessions();
-
-        return back()->with('success', 'Données rafraîchies depuis HubSpot pour ' . $candidate->full_name);
     }
 
     public function syncFromHubSpot()

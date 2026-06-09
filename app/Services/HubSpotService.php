@@ -205,42 +205,18 @@ class HubSpotService
         $updatedCount = 0;
 
         foreach ($data['results'] as $result) {
-            $props = $result['properties'];
-            $hubspotId = $result['id'];
-            $email = $props['email'] ?? null;
-
+            $email = $result['properties']['email'] ?? null;
             if (!$email) continue;
 
-            $candidate = Candidate::where('hubspot_id', $hubspotId)
+            $candidateExists = Candidate::where('hubspot_id', $result['id'])
                 ->orWhere('email', $email)
-                ->first();
+                ->exists();
 
-            $candidateData = [
-                'hubspot_id' => $hubspotId,
-                'first_name' => !blank($props['firstname'] ?? null) ? $props['firstname'] : ($candidate ? $candidate->first_name : 'Inconnu'),
-                'last_name' => !blank($props['lastname'] ?? null) ? $props['lastname'] : ($candidate ? $candidate->last_name : 'Inconnu'),
-                'email' => $email,
-                'phone' => !blank($props['phone'] ?? null) ? $props['phone'] : ($candidate ? $candidate->phone : null),
-                'formation_souhaitee' => !blank($props['formation_souhaitee'] ?? null) ? $props['formation_souhaitee'] : ($candidate ? $candidate->formation_souhaitee : null),
-                'formation_souhaitee_pour_ypareo' => !blank($props['formation_souhaitee_pour_ypareo'] ?? null) ? $props['formation_souhaitee_pour_ypareo'] : ($candidate ? $candidate->formation_souhaitee_pour_ypareo : null),
-                'score_test_technique' => !blank($props['score_test_technique'] ?? null) ? $props['score_test_technique'] : ($candidate ? $candidate->score_test_technique : null),
-                'resultat_test_technique' => !blank($props['resultat_test_technique'] ?? null) ? $props['resultat_test_technique'] : ($candidate ? $candidate->resultat_test_technique : null),
-                'date_test_technique' => !blank($props['date_test_technique'] ?? null) ? $props['date_test_technique'] : ($candidate ? $candidate->date_test_technique : null),
-                'orientation_proposee' => !blank($props['orientation_proposee'] ?? null) ? $props['orientation_proposee'] : ($candidate ? $candidate->orientation_proposee : null),
-                'lien_test_technique' => !blank($props['lien_test_technique'] ?? null) ? $props['lien_test_technique'] : ($candidate ? $candidate->lien_test_technique : null),
-            ];
+            $this->syncSingleContact($result);
 
-            if ($candidate) {
-                if ($candidate->added_by !== 'hubspot') {
-                    $candidateData['added_by'] = 'hubspot';
-                }
-                $candidate->update($candidateData);
-                $candidate->updateScoreFromSessions();
+            if ($candidateExists) {
                 $updatedCount++;
             } else {
-                $candidateData['added_by'] = 'hubspot';
-                $newCandidate = Candidate::create($candidateData);
-                $newCandidate->updateScoreFromSessions();
                 $createdCount++;
             }
         }
@@ -249,5 +225,90 @@ class HubSpotService
             'created' => $createdCount,
             'updated' => $updatedCount
         ];
+    }
+
+    /**
+     * Process a single HubSpot contact result and sync it to the local candidates table.
+     * If a matching test template is found for their Ypareo code and they don't have
+     * any test session yet, automatically generate a session and push the link back to HubSpot.
+     * 
+     * @param array $result HubSpot API contact structure (with 'id' and 'properties')
+     * @param string|null $fallbackEmail Optional email to fallback to if not in HubSpot payload
+     * @return Candidate
+     */
+    public function syncSingleContact(array $result, ?string $fallbackEmail = null): Candidate
+    {
+        $props = $result['properties'];
+        $hubspotId = $result['id'];
+        $email = $props['email'] ?? $fallbackEmail;
+
+        if (!$email) {
+            throw new \InvalidArgumentException("HubSpot contact has no email.");
+        }
+
+        $candidate = Candidate::where('hubspot_id', $hubspotId)
+            ->orWhere('email', $email)
+            ->first();
+
+        $candidateData = [
+            'hubspot_id' => $hubspotId,
+            'first_name' => !blank($props['firstname'] ?? null) ? $props['firstname'] : ($candidate ? $candidate->first_name : 'Inconnu'),
+            'last_name' => !blank($props['lastname'] ?? null) ? $props['lastname'] : ($candidate ? $candidate->last_name : 'Inconnu'),
+            'email' => $email,
+            'phone' => !blank($props['phone'] ?? null) ? $props['phone'] : ($candidate ? $candidate->phone : null),
+            'formation_souhaitee' => !blank($props['formation_souhaitee'] ?? null) ? $props['formation_souhaitee'] : ($candidate ? $candidate->formation_souhaitee : null),
+            'formation_souhaitee_pour_ypareo' => !blank($props['formation_souhaitee_pour_ypareo'] ?? null) ? $props['formation_souhaitee_pour_ypareo'] : ($candidate ? $candidate->formation_souhaitee_pour_ypareo : null),
+            'score_test_technique' => !blank($props['score_test_technique'] ?? null) ? $props['score_test_technique'] : ($candidate ? $candidate->score_test_technique : null),
+            'resultat_test_technique' => !blank($props['resultat_test_technique'] ?? null) ? $props['resultat_test_technique'] : ($candidate ? $candidate->resultat_test_technique : null),
+            'date_test_technique' => !blank($props['date_test_technique'] ?? null) ? $props['date_test_technique'] : ($candidate ? $candidate->date_test_technique : null),
+            'orientation_proposee' => !blank($props['orientation_proposee'] ?? null) ? $props['orientation_proposee'] : ($candidate ? $candidate->orientation_proposee : null),
+        ];
+
+        if ($candidate) {
+            if ($candidate->added_by !== 'hubspot') {
+                $candidateData['added_by'] = 'hubspot';
+            }
+            $candidate->update($candidateData);
+            $candidate->updateScoreFromSessions();
+        } else {
+            $candidateData['added_by'] = 'hubspot';
+            $candidate = Candidate::create($candidateData);
+            $candidate->updateScoreFromSessions();
+        }
+
+        // Automatic test session generation
+        $ypareoCode = $candidate->formation_souhaitee_pour_ypareo;
+        if (!blank($ypareoCode)) {
+            $template = \App\Models\TestTemplate::findByYpareoCode($ypareoCode);
+            if ($template) {
+                // Check if candidate already has a test session
+                $hasSession = $candidate->testSessions()->exists();
+                if (!$hasSession) {
+                    Log::info("Auto-generating test session for HubSpot candidate: {$candidate->email} with template {$template->name}");
+                    
+                    /** @var \App\Services\TestGeneratorService $generator */
+                    $generator = app(\App\Services\TestGeneratorService::class);
+                    $session = $generator->generateSession($candidate, $template);
+                    
+                    // Reset local candidate's technical test fields
+                    $candidate->update([
+                        'score_test_technique' => null,
+                        'resultat_test_technique' => null,
+                        'date_test_technique' => null,
+                    ]);
+
+                    // Sync the link back to HubSpot immediately
+                    $this->updateContact($candidate->email, [
+                        'resultat_test_technique' => '',
+                        'score_test_technique' => '',
+                        'date_test_technique' => '',
+                        'orientation_proposee' => '',
+                        'lien_test_technique' => route('test.start', $session->token),
+                    ]);
+                }
+            }
+        }
+
+        return $candidate;
     }
 }
