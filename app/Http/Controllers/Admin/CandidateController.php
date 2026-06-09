@@ -489,58 +489,13 @@ class CandidateController extends Controller
     {
         Gate::authorize('manage-candidates');
 
-        $data = $this->hubspot->searchCandidates();
-
-        if (!$data || !isset($data['results'])) {
+        try {
+            $stats = $this->hubspot->syncContactsIntoDatabase();
+            return back()->with('success', "Sync terminée : {$stats['created']} importés, {$stats['updated']} mis à jour.");
+        } catch (\Exception $e) {
+            Log::error("Manual HubSpot sync failed: " . $e->getMessage());
             return back()->with('error', 'Impossible de récupérer les candidats depuis HubSpot.');
         }
-
-        $createdCount = 0;
-        $updatedCount = 0;
-
-        foreach ($data['results'] as $result) {
-            $props = $result['properties'];
-            $hubspotId = $result['id'];
-            $email = $props['email'] ?? null;
-
-            if (!$email) continue;
-
-            $candidate = Candidate::where('hubspot_id', $hubspotId)
-                ->orWhere('email', $email)
-                ->first();
-
-            $candidateData = [
-                'hubspot_id' => $hubspotId,
-                'first_name' => !blank($props['firstname'] ?? null) ? $props['firstname'] : ($candidate ? $candidate->first_name : 'Inconnu'),
-                'last_name' => !blank($props['lastname'] ?? null) ? $props['lastname'] : ($candidate ? $candidate->last_name : 'Inconnu'),
-                'email' => $email,
-                'phone' => !blank($props['phone'] ?? null) ? $props['phone'] : ($candidate ? $candidate->phone : null),
-                'formation_souhaitee' => !blank($props['formation_souhaitee'] ?? null) ? $props['formation_souhaitee'] : ($candidate ? $candidate->formation_souhaitee : null),
-                'formation_souhaitee_pour_ypareo' => !blank($props['formation_souhaitee_pour_ypareo'] ?? null) ? $props['formation_souhaitee_pour_ypareo'] : ($candidate ? $candidate->formation_souhaitee_pour_ypareo : null),
-                'score_test_technique' => !blank($props['score_test_technique'] ?? null) ? $props['score_test_technique'] : ($candidate ? $candidate->score_test_technique : null),
-                'resultat_test_technique' => !blank($props['resultat_test_technique'] ?? null) ? $props['resultat_test_technique'] : ($candidate ? $candidate->resultat_test_technique : null),
-                'date_test_technique' => !blank($props['date_test_technique'] ?? null) ? $props['date_test_technique'] : ($candidate ? $candidate->date_test_technique : null),
-                'orientation_proposee' => !blank($props['orientation_proposee'] ?? null) ? $props['orientation_proposee'] : ($candidate ? $candidate->orientation_proposee : null),
-                'lien_test_technique' => !blank($props['lien_test_technique'] ?? null) ? $props['lien_test_technique'] : ($candidate ? $candidate->lien_test_technique : null),
-            ];
-
-            /** @var \App\Models\Candidate $candidate */
-            if ($candidate) {
-                if ($candidate->added_by !== 'hubspot') {
-                    $candidateData['added_by'] = 'hubspot';
-                }
-                $candidate->update($candidateData);
-                $candidate->updateScoreFromSessions();
-                $updatedCount++;
-            } else {
-                $candidateData['added_by'] = 'hubspot';
-                $newCandidate = Candidate::create($candidateData);
-                $newCandidate->updateScoreFromSessions();
-                $createdCount++;
-            }
-        }
-
-        return back()->with('success', "Sync terminée : {$createdCount} importés, {$updatedCount} mis à jour.");
     }
 
     public function import(Request $request)
