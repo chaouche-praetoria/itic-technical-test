@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Candidate;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -148,6 +149,39 @@ class HubSpotService
     }
 
     /**
+     * Get the mapping of Ypareo codes to their human-readable labels
+     * for the "formation_souhaitee_pour_ypareo" HubSpot property.
+     *
+     * @return array<string, string> Map of [ypareo_code => label]
+     */
+    private function getFormationLabels(): array
+    {
+        return Cache::remember(
+            'hubspot_formation_labels',
+            now()->addHours(24),
+            function () {
+
+                $response = Http::withToken($this->accessToken)
+                    ->get(
+                        'https://api.hubapi.com/crm/v3/properties/contacts/formation_souhaitee_pour_ypareo'
+                    );
+
+                if (!$response->successful()) {
+                    Log::error(
+                        'Impossible de récupérer les labels HubSpot formation_souhaitee_pour_ypareo'
+                    );
+
+                    return [];
+                }
+
+                return collect($response->json('options'))
+                    ->pluck('label', 'value')
+                    ->toArray();
+            }
+        );
+    }
+
+    /**
      * Update a contact's properties in HubSpot.
      * 
      * @param string $email
@@ -250,14 +284,31 @@ class HubSpotService
             ->orWhere('email', $email)
             ->first();
 
+        $formationCode = $props['formation_souhaitee_pour_ypareo'] ?? null;
+
+        $formationLabels = $this->getFormationLabels();
+
+        $formationLabel = $formationCode
+            ? ($formationLabels[$formationCode] ?? null)
+            : null;
+
         $candidateData = [
             'hubspot_id' => $hubspotId,
             'first_name' => !blank($props['firstname'] ?? null) ? $props['firstname'] : ($candidate ? $candidate->first_name : 'Inconnu'),
             'last_name' => !blank($props['lastname'] ?? null) ? $props['lastname'] : ($candidate ? $candidate->last_name : 'Inconnu'),
             'email' => $email,
             'phone' => !blank($props['phone'] ?? null) ? $props['phone'] : ($candidate ? $candidate->phone : null),
-            'formation_souhaitee' => !blank($props['formation_souhaitee'] ?? null) ? $props['formation_souhaitee'] : ($candidate ? $candidate->formation_souhaitee : null),
-            'formation_souhaitee_pour_ypareo' => !blank($props['formation_souhaitee_pour_ypareo'] ?? null) ? $props['formation_souhaitee_pour_ypareo'] : ($candidate ? $candidate->formation_souhaitee_pour_ypareo : null),
+            // formation_souhaitee is corrected with the Ypareo label (source of truth)
+            // when available, since the raw HubSpot value does not update if the
+            // candidate later changes their desired program.
+            'formation_souhaitee' => !blank($formationLabel)
+                ? $formationLabel
+                : (!blank($props['formation_souhaitee'] ?? null)
+                    ? $props['formation_souhaitee']
+                    : ($candidate ? $candidate->formation_souhaitee : null)),
+            'formation_souhaitee_pour_ypareo' => !blank($formationCode)
+                ? $formationCode
+                : ($candidate ? $candidate->formation_souhaitee_pour_ypareo : null),
             'score_test_technique' => !blank($props['score_test_technique'] ?? null) ? $props['score_test_technique'] : ($candidate ? $candidate->score_test_technique : null),
             'resultat_test_technique' => !blank($props['resultat_test_technique'] ?? null) ? $props['resultat_test_technique'] : ($candidate ? $candidate->resultat_test_technique : null),
             'date_test_technique' => !blank($props['date_test_technique'] ?? null) ? $props['date_test_technique'] : ($candidate ? $candidate->date_test_technique : null),
