@@ -131,7 +131,7 @@ jobs:
                 echo "--- [LARAVEL] Seeding Roles"
                 docker compose -p itic-technical-test exec -T app php artisan db:seed --class=RoleSeeder --force
                 echo "--- [LARAVEL] Linking Storage"
-                docker compose -p itic-technical-test exec -T app php artisan storage:link || true
+                docker compose -p itic-technical-test exec -T app php artisan storage:link --force || true
                 docker compose -p itic-technical-test exec -T app php artisan optimize:clear
             fi
 

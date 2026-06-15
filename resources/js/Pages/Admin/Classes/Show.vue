@@ -17,10 +17,37 @@ onMounted(async () => {
     qrDataUrl.value = await QRCode.toDataURL(props.joinUrl, { width: 240, margin: 1 });
 });
 
-function copyLink() {
-    navigator.clipboard.writeText(props.joinUrl);
-    copied.value = true;
-    setTimeout(() => (copied.value = false), 1500);
+async function copyToClipboard(text) {
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            return true;
+        }
+    } catch (e) { /* fall through to legacy */ }
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return ok;
+    } catch (e) {
+        return false;
+    }
+}
+
+async function copyLink() {
+    const ok = await copyToClipboard(props.joinUrl);
+    if (ok) {
+        copied.value = true;
+        setTimeout(() => (copied.value = false), 1500);
+    } else {
+        window.prompt('Copiez le lien d\'invitation :', props.joinUrl);
+    }
 }
 
 const inviteForm = useForm({ emails: [] });

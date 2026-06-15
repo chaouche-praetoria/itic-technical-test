@@ -63,6 +63,7 @@ services:
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - app_public:/var/www/public:ro
+      - app_storage:/var/www/storage/app:ro
       - nginx_logs:/var/log/nginx
     depends_on:
       - app

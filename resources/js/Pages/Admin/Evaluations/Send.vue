@@ -11,17 +11,52 @@ const form = useForm({ student_ids: [] });
 const copiedId = ref(null);
 const linkLoadingId = ref(null);
 
+async function copyToClipboard(text) {
+    // Modern API only works in secure contexts (https or localhost).
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            return true;
+        }
+    } catch (e) { /* fall through to legacy */ }
+
+    try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return ok;
+    } catch (e) {
+        return false;
+    }
+}
+
 async function copyLink(student) {
     linkLoadingId.value = student.id;
+    let url;
     try {
         const res = await axios.post(route('admin.evaluations.student-link', [props.evaluation.id, student.id]));
-        await navigator.clipboard.writeText(res.data.url);
+        url = res.data.url;
+    } catch (e) {
+        console.error('student-link generation failed', e);
+        alert('Impossible de générer le lien (' + (e.response?.status ?? 'réseau') + ').');
+        linkLoadingId.value = null;
+        return;
+    }
+    linkLoadingId.value = null;
+
+    const copied = await copyToClipboard(url);
+    if (copied) {
         copiedId.value = student.id;
         setTimeout(() => { if (copiedId.value === student.id) copiedId.value = null; }, 1800);
-    } catch (e) {
-        alert('Impossible de générer le lien.');
-    } finally {
-        linkLoadingId.value = null;
+    } else {
+        // Last resort: let the user copy manually.
+        window.prompt('Copiez le lien de l\'évaluation :', url);
     }
 }
 
