@@ -1,11 +1,15 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, useForm, Link } from '@inertiajs/vue3';
+import { Head, useForm, Link, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
 const props = defineProps({ evaluation: Object, classes: Array });
 
 const isEdit = !!props.evaluation;
+
+function togglePublish() {
+    router.post(route('admin.evaluations.publish', props.evaluation.id), {}, { preserveScroll: true });
+}
 
 function mapQuestion(q) {
     return {
@@ -66,6 +70,29 @@ function submit() {
 
         <div class="py-6 animate-reveal">
             <form @submit.prevent="submit" class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 space-y-6">
+
+                <!-- Status / publish -->
+                <div v-if="isEdit" class="premium-card p-5 flex items-center justify-between gap-4"
+                    :class="evaluation.is_published ? 'border-l-4 border-emerald-400' : 'border-l-4 border-slate-300'">
+                    <div>
+                        <p class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Statut</p>
+                        <p class="font-bold" :class="evaluation.is_published ? 'text-emerald-600' : 'text-slate-600'">
+                            {{ evaluation.is_published ? 'Publiée — visible par les étudiants' : 'Brouillon — non visible' }}
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <Link v-if="evaluation.is_published" :href="route('admin.evaluations.send', evaluation.id)"
+                            class="px-5 py-2.5 rounded-lg font-bold text-xs bg-indigo-600 text-white hover:bg-indigo-500 transition-all">
+                            Envoyer aux étudiants
+                        </Link>
+                        <button type="button" @click="togglePublish"
+                            :class="evaluation.is_published ? 'bg-slate-100 text-slate-700 hover:bg-slate-200' : 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-xl shadow-emerald-200'"
+                            class="px-5 py-2.5 rounded-lg font-bold text-xs transition-all">
+                            {{ evaluation.is_published ? 'Dépublier' : 'Publier' }}
+                        </button>
+                    </div>
+                </div>
+                <p v-else class="text-[11px] text-slate-400 italic">L'évaluation sera créée en brouillon. Vous pourrez la publier après l'avoir enregistrée.</p>
 
                 <!-- General -->
                 <div class="premium-card p-8 space-y-5">

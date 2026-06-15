@@ -95,6 +95,9 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
     // Evaluations
     Route::post('/evaluations/{evaluation}/publish', [EvaluationController::class, 'publish'])->name('evaluations.publish');
+    Route::get('/evaluations/{evaluation}/send', [EvaluationController::class, 'sendForm'])->name('evaluations.send');
+    Route::post('/evaluations/{evaluation}/send', [EvaluationController::class, 'send'])->name('evaluations.send.store');
+    Route::post('/evaluations/{evaluation}/students/{student}/link', [EvaluationController::class, 'studentLink'])->name('evaluations.student-link');
     Route::get('/evaluations/{evaluation}/attempts', [EvaluationController::class, 'attempts'])->name('evaluations.attempts');
     Route::post('/attempts/{attempt}/grade', [EvaluationController::class, 'grade'])->name('attempts.grade');
     Route::resource('evaluations', EvaluationController::class);

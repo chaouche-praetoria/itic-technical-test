@@ -73,6 +73,7 @@ function deleteEvaluation(id) {
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex items-center justify-end gap-2">
+                                            <Link v-if="ev.is_published" :href="route('admin.evaluations.send', ev.id)" class="text-xs font-bold text-emerald-600 hover:text-emerald-800">Envoyer</Link>
                                             <Link :href="route('admin.evaluations.attempts', ev.id)" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">Copies</Link>
                                             <Link :href="route('admin.evaluations.edit', ev.id)" class="text-xs font-bold text-slate-500 hover:text-slate-800">Éditer</Link>
                                             <button @click="deleteEvaluation(ev.id)" class="text-xs font-bold text-rose-500 hover:text-rose-700">Supprimer</button>

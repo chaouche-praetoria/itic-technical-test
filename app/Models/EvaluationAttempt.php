@@ -9,12 +9,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class EvaluationAttempt extends Model
 {
     protected $fillable = [
-        'evaluation_id', 'student_id', 'token', 'status',
+        'evaluation_id', 'student_id', 'token', 'status', 'invited_at',
         'started_at', 'expires_at', 'submitted_at',
         'score', 'points_earned', 'points_total',
     ];
 
     protected $casts = [
+        'invited_at' => 'datetime',
         'started_at' => 'datetime',
         'expires_at' => 'datetime',
         'submitted_at' => 'datetime',

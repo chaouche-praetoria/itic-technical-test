@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\EvaluationInvitationMail;
 use App\Models\ClassRoom;
 use App\Models\Evaluation;
 use App\Models\EvaluationAttempt;
+use App\Models\Student;
 use App\Services\EvaluationScoringService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -126,7 +130,7 @@ class EvaluationController extends Controller
             foreach ($evaluation->classroom->students as $student) {
                 $evaluation->attempts()->firstOrCreate(
                     ['student_id' => $student->id],
-                    ['token' => \Illuminate\Support\Str::random(40), 'status' => 'pending'],
+                    ['token' => Str::random(40), 'status' => 'pending'],
                 );
             }
         }
@@ -145,6 +149,98 @@ class EvaluationController extends Controller
                 ->with(['student', 'answers'])
                 ->latest()
                 ->get(),
+        ]);
+    }
+
+    /**
+     * Page to pick which students an evaluation is sent to.
+     */
+    public function sendForm(Evaluation $evaluation)
+    {
+        Gate::authorize('manage-evaluations');
+        $this->authorizeOwnership($evaluation);
+
+        $evaluation->load('classroom.academicLevel');
+        $attempts = $evaluation->attempts()->get()->keyBy('student_id');
+
+        $students = $evaluation->classroom->students()
+            ->orderBy('last_name')
+            ->get()
+            ->map(fn (Student $s) => [
+                'id' => $s->id,
+                'first_name' => $s->first_name,
+                'last_name' => $s->last_name,
+                'email' => $s->email,
+                'invited_at' => $attempts->get($s->id)?->invited_at?->format('d/m/Y H:i'),
+                'attempt_status' => $attempts->get($s->id)?->status,
+            ]);
+
+        return Inertia::render('Admin/Evaluations/Send', [
+            'evaluation' => [
+                'id' => $evaluation->id,
+                'title' => $evaluation->title,
+                'is_published' => $evaluation->is_published,
+                'classroom' => [
+                    'name' => $evaluation->classroom->name,
+                    'level' => $evaluation->classroom->academicLevel?->name,
+                ],
+            ],
+            'students' => $students,
+        ]);
+    }
+
+    /**
+     * Bulk-send the evaluation to the selected students: ensure each has an
+     * attempt, email them their personal link, and stamp invited_at.
+     */
+    public function send(Request $request, Evaluation $evaluation)
+    {
+        Gate::authorize('manage-evaluations');
+        $this->authorizeOwnership($evaluation);
+
+        abort_unless($evaluation->is_published, 422, 'Publiez l\'évaluation avant de l\'envoyer.');
+
+        $validated = $request->validate([
+            'student_ids' => 'required|array|min:1',
+            'student_ids.*' => 'integer',
+        ]);
+
+        // Only students that actually belong to this evaluation's class.
+        $students = $evaluation->classroom->students()
+            ->whereIn('id', $validated['student_ids'])
+            ->get();
+
+        foreach ($students as $student) {
+            $attempt = $evaluation->attempts()->firstOrCreate(
+                ['student_id' => $student->id],
+                ['token' => Str::random(40), 'status' => 'pending'],
+            );
+
+            Mail::to($student->email)->send(new EvaluationInvitationMail($attempt));
+
+            $attempt->update(['invited_at' => now()]);
+        }
+
+        return back()->with('success', $students->count() . ' étudiant(s) notifié(s).');
+    }
+
+    /**
+     * Generate (or fetch) the personal evaluation link for one student.
+     */
+    public function studentLink(Evaluation $evaluation, Student $student)
+    {
+        Gate::authorize('manage-evaluations');
+        $this->authorizeOwnership($evaluation);
+
+        abort_unless($student->classroom_id === $evaluation->classroom_id, 404);
+
+        $attempt = $evaluation->attempts()->firstOrCreate(
+            ['student_id' => $student->id],
+            ['token' => Str::random(40), 'status' => 'pending'],
+        );
+
+        return response()->json([
+            'url' => route('eval.start', $attempt->token),
         ]);
     }
 
