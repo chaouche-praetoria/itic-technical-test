@@ -19,7 +19,7 @@ class Student extends Model
 
     public function classroom(): BelongsTo
     {
-        return $this->belongsTo(ClassRoom::class);
+        return $this->belongsTo(ClassRoom::class, 'classroom_id');
     }
 
     public function attempts(): HasMany

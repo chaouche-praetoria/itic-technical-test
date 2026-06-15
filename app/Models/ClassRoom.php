@@ -40,17 +40,17 @@ class ClassRoom extends Model
 
     public function students(): HasMany
     {
-        return $this->hasMany(Student::class);
+        return $this->hasMany(Student::class, 'classroom_id');
     }
 
     public function invitations(): HasMany
     {
-        return $this->hasMany(ClassInvitation::class);
+        return $this->hasMany(ClassInvitation::class, 'classroom_id');
     }
 
     public function evaluations(): HasMany
     {
-        return $this->hasMany(Evaluation::class);
+        return $this->hasMany(Evaluation::class, 'classroom_id');
     }
 
     public function joinUrl(): string

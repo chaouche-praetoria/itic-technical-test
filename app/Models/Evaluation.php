@@ -26,7 +26,7 @@ class Evaluation extends Model
 
     public function classroom(): BelongsTo
     {
-        return $this->belongsTo(ClassRoom::class);
+        return $this->belongsTo(ClassRoom::class, 'classroom_id');
     }
 
     public function questions(): HasMany
