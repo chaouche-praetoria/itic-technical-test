@@ -30,4 +30,20 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Classes (classrooms) owned by this teacher.
+     */
+    public function classrooms(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ClassRoom::class);
+    }
+
+    /**
+     * Evaluations created by this teacher.
+     */
+    public function evaluations(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Evaluation::class);
+    }
 }

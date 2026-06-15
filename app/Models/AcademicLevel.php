@@ -23,4 +23,9 @@ class AcademicLevel extends Model
     {
         return $this->belongsToMany(TestTemplate::class);
     }
+
+    public function classrooms(): HasMany
+    {
+        return $this->hasMany(ClassRoom::class);
+    }
 }

@@ -17,6 +17,7 @@ class RoleSeeder extends Seeder
         // Create Roles
         $superAdmin = Role::firstOrCreate(['name' => 'super-admin'], ['label' => 'Super Administrateur']);
         $admin = Role::firstOrCreate(['name' => 'admin'], ['label' => 'Administrateur']);
+        $teacher = Role::firstOrCreate(['name' => 'teacher'], ['label' => 'Professeur']);
 
         // Create Permissions
         $permissions = [
@@ -30,6 +31,9 @@ class RoleSeeder extends Seeder
             'manage-candidates' => 'Gérer les candidats',
             'view-results' => 'Voir les résultats des tests',
             'grade-sessions' => 'Évaluer les sessions',
+            'manage-classes' => 'Gérer les classes et les étudiants',
+            'manage-evaluations' => 'Gérer les évaluations',
+            'grade-evaluations' => 'Corriger les tentatives d\'évaluation',
         ];
 
         $allPermissions = [];
@@ -39,6 +43,14 @@ class RoleSeeder extends Seeder
 
         // Give all permissions to admin role
         $admin->permissions()->sync(collect($allPermissions)->pluck('id'));
+
+        // Teacher role: only class & evaluation related permissions
+        $teacherPermissionNames = ['manage-classes', 'manage-evaluations', 'grade-evaluations'];
+        $teacher->permissions()->sync(
+            collect($allPermissions)
+                ->filter(fn ($p) => in_array($p->name, $teacherPermissionNames))
+                ->pluck('id')
+        );
 
         // Give all permissions to Super Admin (implicitly or explicitly)
         // In this implementation, super-admin logic is in HasRoles trait

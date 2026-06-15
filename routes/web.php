@@ -6,6 +6,10 @@ use App\Http\Controllers\Admin\DomainController;
 use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\QuestionController;
 use App\Http\Controllers\Admin\TestTemplateController;
+use App\Http\Controllers\Admin\ClassRoomController;
+use App\Http\Controllers\Admin\EvaluationController;
+use App\Http\Controllers\StudentJoinController;
+use App\Http\Controllers\EvaluationAttemptController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TestController;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +26,19 @@ Route::prefix('test')->name('test.')->group(function () {
     Route::post('/{token}/submit', [TestController::class, 'submit'])->name('submit');
     Route::post('/{token}/activity', [TestController::class, 'logActivity'])->name('activity');
     Route::get('/{token}/result', [TestController::class, 'result'])->name('result');
+});
+
+// Student class-join routes (public, token-based)
+Route::get('/class/join/{token}', [StudentJoinController::class, 'show'])->name('class.join');
+Route::post('/class/join/{token}', [StudentJoinController::class, 'store'])->name('class.store');
+
+// Student evaluation routes (public, token-based)
+Route::prefix('eval')->name('eval.')->group(function () {
+    Route::get('/{token}', [EvaluationAttemptController::class, 'start'])->name('start');
+    Route::post('/{token}/begin', [EvaluationAttemptController::class, 'begin'])->name('begin');
+    Route::post('/{token}/answer', [EvaluationAttemptController::class, 'saveAnswer'])->name('answer');
+    Route::post('/{token}/submit', [EvaluationAttemptController::class, 'submit'])->name('submit');
+    Route::get('/{token}/result', [EvaluationAttemptController::class, 'result'])->name('result');
 });
 
 // Admin routes (authenticated)
@@ -70,6 +87,17 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
 
     // Templates
     Route::resource('templates', TestTemplateController::class)->except(['show']);
+
+    // Classes (classrooms) & students
+    Route::post('/classes/{class}/invite', [ClassRoomController::class, 'invite'])->name('classes.invite');
+    Route::delete('/classes/{class}/students/{student}', [ClassRoomController::class, 'removeStudent'])->name('classes.students.destroy');
+    Route::resource('classes', ClassRoomController::class)->parameters(['classes' => 'class']);
+
+    // Evaluations
+    Route::post('/evaluations/{evaluation}/publish', [EvaluationController::class, 'publish'])->name('evaluations.publish');
+    Route::get('/evaluations/{evaluation}/attempts', [EvaluationController::class, 'attempts'])->name('evaluations.attempts');
+    Route::post('/attempts/{attempt}/grade', [EvaluationController::class, 'grade'])->name('attempts.grade');
+    Route::resource('evaluations', EvaluationController::class);
 
     // Candidates
     Route::post('/candidates/bulk-destroy', [CandidateController::class, 'bulkDestroy'])->name('candidates.bulk-destroy');
